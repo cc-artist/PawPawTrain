@@ -6,14 +6,14 @@ import { usePosts } from '../App'
 import { t } from '../utils/i18n'
 
 const systemVideos = [
-  { id: 'sys-video-1', user: { name: '🐾 精彩瞬间', avatar: '🎬' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/f_auto/vc_auto/v1781608864/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191827_879_dlcj5h.mp4', content: '宠物精彩表演时刻！🐕', likes: 1256, comments: 89, shares: 45, favorites: 321, time: '1小时前', features: { breed: '狗狗', color: '花色', expression: '开心', emotion: 'positive', personalityBoost: { energy: 10, affection: 8, joy: 12, hunger: -3, discipline: 5 }, petType: 'dog' }, isMine: false },
-  { id: 'sys-video-2', user: { name: '🐾 萌宠日常', avatar: '🐱' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/f_auto/vc_auto/v1781608857/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191833_927_lgjwn5.mp4', content: '可爱猫咪的日常玩耍 🐱', likes: 890, comments: 67, shares: 32, favorites: 234, time: '2小时前', features: { breed: '猫咪', color: '橙色', expression: '好奇', emotion: 'positive', personalityBoost: { energy: 8, affection: 10, joy: 10, hunger: -2, discipline: 3 }, petType: 'cat' }, isMine: false },
-  { id: 'sys-video-3', user: { name: '🐾 快乐时光', avatar: '🐕' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/f_auto/vc_auto/v1781608845/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191852_670_bdvfrd.mp4', content: '宠物互动的美好时刻 💕', likes: 1567, comments: 145, shares: 78, favorites: 456, time: '3小时前', features: { breed: '狗狗', color: '黑色', expression: '兴奋', emotion: 'positive', personalityBoost: { energy: 12, affection: 6, joy: 15, hunger: -5, discipline: 4 }, petType: 'dog' }, isMine: false },
-  { id: 'sys-video-4', user: { name: '🐾 小可爱', avatar: '🐰' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/f_auto/vc_auto/v1781608837/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191857_392_xnsyf6.mp4', content: '小兔子的幸福生活 🐰', likes: 789, comments: 56, shares: 23, favorites: 189, time: '4小时前', features: { breed: '兔子', color: '白色', expression: '满足', emotion: 'positive', personalityBoost: { energy: 5, affection: 12, joy: 8, hunger: 8, discipline: 2 }, petType: 'rabbit' }, isMine: false },
-  { id: 'sys-video-5', user: { name: '🐾 萌宠乐园', avatar: '🐾' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/f_auto/vc_auto/v1781608837/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191838_670_bdf1ig.mp4', content: '宠物们的欢乐聚会 🎉', likes: 2345, comments: 234, shares: 156, favorites: 876, time: '5小时前', features: { breed: '猫咪', color: '灰色', expression: '调皮', emotion: 'positive', personalityBoost: { energy: 9, affection: 7, joy: 11, hunger: -4, discipline: 6 }, petType: 'cat' }, isMine: false },
-  { id: 'sys-video-6', user: { name: '🐾 训练时刻', avatar: '🏋️' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/f_auto/vc_auto/v1781608825/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191816_096_e3nbsv.mp4', content: '宠物训练的精彩瞬间 🏆', likes: 1876, comments: 178, shares: 89, favorites: 567, time: '6小时前', features: { breed: '狗狗', color: '金色', expression: '专注', emotion: 'positive', personalityBoost: { energy: 10, affection: 9, joy: 7, hunger: -6, discipline: 10 }, petType: 'dog' }, isMine: false },
-  { id: 'sys-video-7', user: { name: '🐾 温馨时刻', avatar: '💝' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/f_auto/vc_auto/v1781608823/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191847_801_fixhen.mp4', content: '人与宠物的温馨互动 💝', likes: 3456, comments: 456, shares: 234, favorites: 1234, time: '7小时前', features: { breed: '猫咪', color: '白色', expression: '温柔', emotion: 'positive', personalityBoost: { energy: 3, affection: 15, joy: 9, hunger: -1, discipline: 4 }, petType: 'cat' }, isMine: false },
-  { id: 'sys-video-8', user: { name: '🐾 欢乐时光', avatar: '🎉' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/f_auto/vc_auto/v1781608823/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191843_526_jmohgf.mp4', content: '宠物们的欢乐时光！🎊', likes: 2123, comments: 321, shares: 167, favorites: 789, time: '8小时前', features: { breed: '狗狗', color: '棕色', expression: '开心', emotion: 'positive', personalityBoost: { energy: 11, affection: 8, joy: 14, hunger: -4, discipline: 7 }, petType: 'dog' }, isMine: false },
+  { id: 'sys-video-1', user: { name: '🐾 精彩瞬间', avatar: '🎬' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608864/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191827_879_dlcj5h.mp4', content: '宠物精彩表演时刻！🐕', likes: 1256, comments: 89, shares: 45, favorites: 321, time: '1小时前', features: { breed: '狗狗', color: '花色', expression: '开心', emotion: 'positive', personalityBoost: { energy: 10, affection: 8, joy: 12, hunger: -3, discipline: 5 }, petType: 'dog' }, isMine: false },
+  { id: 'sys-video-2', user: { name: '🐾 萌宠日常', avatar: '🐱' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608857/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191833_927_lgjwn5.mp4', content: '可爱猫咪的日常玩耍 🐱', likes: 890, comments: 67, shares: 32, favorites: 234, time: '2小时前', features: { breed: '猫咪', color: '橙色', expression: '好奇', emotion: 'positive', personalityBoost: { energy: 8, affection: 10, joy: 10, hunger: -2, discipline: 3 }, petType: 'cat' }, isMine: false },
+  { id: 'sys-video-3', user: { name: '🐾 快乐时光', avatar: '🐕' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608845/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191852_670_bdvfrd.mp4', content: '宠物互动的美好时刻 💕', likes: 1567, comments: 145, shares: 78, favorites: 456, time: '3小时前', features: { breed: '狗狗', color: '黑色', expression: '兴奋', emotion: 'positive', personalityBoost: { energy: 12, affection: 6, joy: 15, hunger: -5, discipline: 4 }, petType: 'dog' }, isMine: false },
+  { id: 'sys-video-4', user: { name: '🐾 小可爱', avatar: '🐰' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608837/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191857_392_xnsyf6.mp4', content: '小兔子的幸福生活 🐰', likes: 789, comments: 56, shares: 23, favorites: 189, time: '4小时前', features: { breed: '兔子', color: '白色', expression: '满足', emotion: 'positive', personalityBoost: { energy: 5, affection: 12, joy: 8, hunger: 8, discipline: 2 }, petType: 'rabbit' }, isMine: false },
+  { id: 'sys-video-5', user: { name: '🐾 萌宠乐园', avatar: '🐾' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608837/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191838_670_bdf1ig.mp4', content: '宠物们的欢乐聚会 🎉', likes: 2345, comments: 234, shares: 156, favorites: 876, time: '5小时前', features: { breed: '猫咪', color: '灰色', expression: '调皮', emotion: 'positive', personalityBoost: { energy: 9, affection: 7, joy: 11, hunger: -4, discipline: 6 }, petType: 'cat' }, isMine: false },
+  { id: 'sys-video-6', user: { name: '🐾 训练时刻', avatar: '🏋️' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608825/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191816_096_e3nbsv.mp4', content: '宠物训练的精彩瞬间 🏆', likes: 1876, comments: 178, shares: 89, favorites: 567, time: '6小时前', features: { breed: '狗狗', color: '金色', expression: '专注', emotion: 'positive', personalityBoost: { energy: 10, affection: 9, joy: 7, hunger: -6, discipline: 10 }, petType: 'dog' }, isMine: false },
+  { id: 'sys-video-7', user: { name: '🐾 温馨时刻', avatar: '💝' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608823/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191847_801_fixhen.mp4', content: '人与宠物的温馨互动 💝', likes: 3456, comments: 456, shares: 234, favorites: 1234, time: '7小时前', features: { breed: '猫咪', color: '白色', expression: '温柔', emotion: 'positive', personalityBoost: { energy: 3, affection: 15, joy: 9, hunger: -1, discipline: 4 }, petType: 'cat' }, isMine: false },
+  { id: 'sys-video-8', user: { name: '🐾 欢乐时光', avatar: '🎉' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608823/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191843_526_jmohgf.mp4', content: '宠物们的欢乐时光！🎊', likes: 2123, comments: 321, shares: 167, favorites: 789, time: '8小时前', features: { breed: '狗狗', color: '棕色', expression: '开心', emotion: 'positive', personalityBoost: { energy: 11, affection: 8, joy: 14, hunger: -4, discipline: 7 }, petType: 'dog' }, isMine: false },
 ]
 
 const mockPosts = [
@@ -200,41 +200,30 @@ const Feed = () => {
   }, [handleWheel])
 
   useEffect(() => {
-    const video = videoRef.current
-    const currentMedia = allPosts[currentIndex]?.media
-    
-    if (!video || !currentMedia || !isVideo(currentMedia)) {
-      setVideoPlaying(false)
-      return
-    }
-    
-    console.log('Attempting to play video:', currentMedia)
-    
-    setVideoPlaying(false)
-    video.muted = true
-    video.volume = 0
-    
-    const playVideo = () => {
+    // 延迟确保 AnimatePresence 完成过渡后新 video 元素已挂载
+    const timer = setTimeout(() => {
+      const video = videoRef.current
+      const currentMedia = allPosts[currentIndex]?.media
+      
+      if (!video || !currentMedia || !isVideo(currentMedia)) {
+        setVideoPlaying(false)
+        return
+      }
+      
+      console.log('[VIDEO] attempting to play:', currentMedia.substring(0, 80))
+      video.muted = true
+      video.volume = 0
       video.play().then(() => {
-        console.log('Video started playing successfully')
+        console.log('[VIDEO] play() resolved successfully')
         setVideoPlaying(true)
         setVideoError(false)
       }).catch(err => {
-        console.error('Auto-play failed:', err)
+        console.error('[VIDEO] play() rejected:', err.name, err.message)
         setVideoError(true)
       })
-    }
+    }, 150)
     
-    if (video.readyState >= 2) {
-      playVideo()
-    } else {
-      const handleCanPlay = () => {
-        video.removeEventListener('canplay', handleCanPlay)
-        playVideo()
-      }
-      video.addEventListener('canplay', handleCanPlay)
-      return () => video.removeEventListener('canplay', handleCanPlay)
-    }
+    return () => clearTimeout(timer)
   }, [currentIndex, allPosts])
 
   const handlePurchase = async () => {
@@ -261,17 +250,14 @@ const Feed = () => {
   const isCurrentVideo = isVideo(currentPost?.media)
 
   useEffect(() => {
-    const handlePageLoad = async () => {
-      await new Promise(resolve => setTimeout(resolve, 100))
+    const timer = setTimeout(() => {
       const video = videoRef.current
       if (video && isVideo(allPosts[0]?.media)) {
         video.muted = true
-        video.play().catch(err => console.log('Initial play failed:', err))
+        video.play().catch(err => console.log('[VIDEO] initial play failed:', err))
       }
-    }
-    
-    const loadHandler = handlePageLoad()
-    return () => {}
+    }, 200)
+    return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
@@ -293,13 +279,13 @@ const Feed = () => {
   }, [currentIndex, allPosts])
 
   return (
-    <div className="min-h-full bg-black">
-      <div 
-        ref={containerRef}
-        className="relative h-full overflow-hidden select-none"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+    <>
+    <div 
+      ref={containerRef}
+      className="fixed inset-0 overflow-hidden select-none bg-black"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPost.id}
@@ -312,89 +298,48 @@ const Feed = () => {
             <div className="absolute inset-0">
               {typeof currentPost.media === 'string' && (currentPost.media.startsWith('http') || currentPost.media.startsWith('data:image') || currentPost.media.startsWith('data:video')) ? (
                 isCurrentVideo ? (
-                  <div className="absolute inset-0" style={{ zIndex: 1, position: 'absolute', inset: 0, backgroundColor: '#000' }}>
-                    <video 
+                  <div className="absolute inset-0" style={{ zIndex: 10 }}>
+                    <video
                       ref={videoRef}
                       src={currentPost.media}
-                      className="w-full h-full" 
-                      style={{ 
-                        position: 'absolute', 
-                        top: 0, 
-                        left: 0, 
-                        width: '100%', 
-                        height: '100%', 
-                        minWidth: '100%', 
-                        minHeight: '100%', 
-                        objectFit: 'cover', 
-                        zIndex: 'auto',
-                        backgroundColor: '#000',
-                        display: 'block',
-                        visibility: 'visible',
-                        opacity: 1
-                      }}
+                      crossOrigin="anonymous"
                       autoPlay
                       muted
                       loop
                       playsInline
                       preload="auto"
-                      controls={false}
-                      disablePictureInPicture
-                      onLoadedMetadata={(e) => {
-                        console.log('Video metadata loaded', e.currentTarget.videoWidth, 'x', e.currentTarget.videoHeight, 'duration:', e.currentTarget.duration)
-                        e.currentTarget.style.visibility = 'visible'
-                        e.currentTarget.style.opacity = '1'
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block'
                       }}
-                      onCanPlayThrough={() => {
-                        console.log('Video can play through')
-                        videoRef.current?.play().catch(err => console.log('Play on canplaythrough:', err))
+                      onLoadedMetadata={(e) => {
+                        console.log('[VIDEO] metadata loaded:', e.currentTarget.videoWidth, 'x', e.currentTarget.videoHeight, 'duration:', e.currentTarget.duration)
+                      }}
+                      onCanPlay={() => {
+                        console.log('[VIDEO] can play, readyState:', videoRef.current?.readyState)
                       }}
                       onPlay={() => {
-                        console.log('Video is playing')
+                        console.log('[VIDEO] onPlay fired, currentTime:', videoRef.current?.currentTime)
                         setVideoPlaying(true)
                         setVideoError(false)
                       }}
-                      onPause={() => {
-                        console.log('Video paused')
-                      }}
+                      onPause={() => console.log('[VIDEO] paused')}
                       onEnded={() => {
-                        console.log('Video ended, looping...')
-                        videoRef.current?.play().catch(err => console.log('Loop play failed:', err))
+                        console.log('[VIDEO] ended, restarting')
+                        videoRef.current?.play().catch(err => console.log('[VIDEO] loop play failed:', err))
                       }}
                       onError={(e) => {
-                        console.error('Video load error:', e)
-                        console.error('Video URL:', currentPost.media)
+                        const v = e.currentTarget
+                        console.error('[VIDEO] error:', v.error?.code, v.error?.message, 'URL:', currentPost.media?.substring(0, 80))
                         setVideoError(true)
                       }}
-                      onLoadStart={() => {
-                        console.log('Video load started')
-                      }}
-                      onProgress={() => {
-                        if (videoRef.current && videoRef.current.readyState < 2) {
-                          console.log('Video loading, readyState:', videoRef.current.readyState)
-                        }
-                      }}
+                      onLoadStart={() => console.log('[VIDEO] load started')}
+                      onWaiting={() => console.log('[VIDEO] waiting/buffering')}
+                      onStalled={() => console.log('[VIDEO] stalled')}
+                      onSuspend={() => console.log('[VIDEO] suspend')}
                     />
-                    {(!videoPlaying || videoError) && (
-                      <div 
-                        className="absolute inset-0 flex items-center justify-center cursor-pointer"
-                        style={{ zIndex: 20, background: 'rgba(0,0,0,0.5)' }}
-                        onClick={() => {
-                          if (videoRef.current) {
-                            videoRef.current.muted = true
-                            videoRef.current.play().then(() => {
-                              setVideoPlaying(true)
-                              setVideoError(false)
-                            }).catch(err => {
-                              console.log('Manual play also failed:', err)
-                            })
-                          }
-                        }}
-                      >
-                        <div className="w-24 h-24 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center">
-                          <span className="text-5xl text-white">▶️</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ) : (
                   <motion.img 
@@ -432,9 +377,6 @@ const Feed = () => {
               )}
               {!isCurrentVideo && (
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
-              )}
-              {isCurrentVideo && (
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
               )}
             </div>
 
@@ -723,7 +665,7 @@ const Feed = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </>
   )
 }
 
