@@ -65,11 +65,58 @@ const Home = () => {
   const [isResetting, setIsResetting] = useState(false)
   const [isPlayingVoice, setIsPlayingVoice] = useState(false)
   const [activeSkill, setActiveSkill] = useState(null)
+  const [isCheckingPet, setIsCheckingPet] = useState(true)
   const chatEndRef = useRef(null)
   const audioRef = useRef(null)
 
-  // 如果宠物还未加载，显示创建宠物引导
-  if (!pet || !pet.id) {
+  // 尝试从localStorage加载宠物数据（不依赖store）
+  useEffect(() => {
+    // 优先从localStorage直接读取
+    const savedPet = localStorage.getItem('paw_train_pet_state')
+    if (savedPet) {
+      try {
+        const parsedPet = JSON.parse(savedPet)
+        if (parsedPet && parsedPet.type) {
+          if (!pet || !pet.type || pet.type !== parsedPet.type) {
+            setPet(parsedPet)
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse saved pet from localStorage')
+      }
+    }
+    // 延迟一点再取消loading，确保pet有机会被加载
+    const timer = setTimeout(() => {
+      setIsCheckingPet(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // 当store中pet变化时，取消loading状态
+  useEffect(() => {
+    if (pet && pet.type) {
+      setIsCheckingPet(false)
+    }
+  }, [pet])
+
+  // 如果正在检查宠物数据，显示加载动画
+  if (isCheckingPet && (!pet || !pet.type)) {
+    return (
+      <div className="min-h-full flex flex-col items-center justify-center gradient-bg p-4">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="text-5xl mb-4"
+        >
+          🐾
+        </motion.div>
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    )
+  }
+
+  // 如果宠物仍未加载，显示创建宠物引导
+  if (!pet || !pet.type) {
     return (
       <div className="min-h-full flex flex-col items-center justify-center gradient-bg p-4">
         <motion.div
@@ -78,15 +125,15 @@ const Home = () => {
           className="text-center max-w-sm"
         >
           <div className="text-6xl mb-6">🐾</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">欢迎来到 PawPaw Train!</h2>
-          <p className="text-gray-600 mb-6">还没有宠物？快来创建你的专属虚拟宠物吧！</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome to PawPaw Train! / 欢迎来到 PawPaw Train!</h2>
+          <p className="text-gray-600 mb-6">{t('home.noPet')}</p>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/create-pet')}
             className="w-full py-4 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-bold rounded-2xl shadow-lg"
           >
-            🎨 创建虚拟宠物
+            🎨 {t('home.createPet')}
           </motion.button>
         </motion.div>
       </div>
@@ -541,7 +588,7 @@ const Home = () => {
         </div>
 
         <div className="glass-effect rounded-3xl p-4 mb-4 warm-shadow overflow-hidden border border-cyber-blue/30" style={{ height: '350px', position: 'relative' }}>
-          <Pet3D petType={pet.type} onPet={handlePet} postCount={postCount} isResetting={isResetting} />
+          <Pet3D petType={pet.type} onPet={handlePet} postCount={postCount} isResetting={isResetting} imageUrl={pet.imageUrl || null} />
 
           <AnimatePresence>
             {petExpression && (

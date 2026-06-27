@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { t } from '../utils/i18n'
+import { getMediaLibrary, removeMediaRecord, getMediaBySource, UPLOAD_SOURCE } from '../utils/mediaLibrary'
 
 const STORAGE_KEY = 'paw_train_all_posts'
 const PET_STORAGE_KEY = 'paw_train_pet_state'
@@ -62,10 +63,14 @@ const Profile = () => {
   const [selectedPost, setSelectedPost] = useState(null)
   const [currentScrollIndex, setCurrentScrollIndex] = useState(0)
   const [editingPost, setEditingPost] = useState(null)
+  const [mediaRecords, setMediaRecords] = useState([])
+  const [mediaFilter, setMediaFilter] = useState('all') // all/video/image
+  const [mediaViewExpanded, setMediaViewExpanded] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
     setMyPosts(getMyPosts())
+    setMediaRecords(getMediaLibrary())
   }, [])
 
   useEffect(() => {
@@ -89,6 +94,37 @@ const Profile = () => {
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [myPosts, setPet])
+
+  // 定期刷新媒体库（同一窗口内的变化）
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMediaRecords(getMediaLibrary())
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // 刷新媒体库
+  const refreshMediaLibrary = () => {
+    setMediaRecords(getMediaLibrary())
+  }
+
+  // 删除媒体记录
+  const handleDeleteMedia = (recordId) => {
+    if (confirm('确认删除此上传记录？/ Delete this upload record?')) {
+      removeMediaRecord(recordId)
+      refreshMediaLibrary()
+    }
+  }
+
+  // 筛选媒体记录
+  const filteredMedia = mediaFilter === 'all' 
+    ? mediaRecords 
+    : mediaFilter === 'video' 
+      ? mediaRecords.filter(r => r.fileType.startsWith('video/'))
+      : mediaRecords.filter(r => r.fileType.startsWith('image/'));
+
+  const videoCount = mediaRecords.filter(r => r.fileType.startsWith('video/')).length;
+  const imageCount = mediaRecords.filter(r => r.fileType.startsWith('image/')).length;
 
   const handleLogout = () => {
     if (confirm(t('profile.confirmLogout'))) {
@@ -427,6 +463,129 @@ const Profile = () => {
               <p className="text-gray-400 text-sm mt-2">{t('profile.goShare')}</p>
             </motion.div>
           )}
+
+          {/* 媒体库 - 所有上传的图片和视频记录 */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-effect rounded-3xl p-4 mb-6"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <button
+                onClick={() => setMediaViewExpanded(!mediaViewExpanded)}
+                className="flex items-center gap-2 text-left"
+              >
+                <span className="text-xl">🎬</span>
+                <h3 className="text-lg font-bold text-gray-700">
+                  Media Library / 媒体库
+                </h3>
+                <span className={`text-sm text-gray-400 transition-transform ${mediaViewExpanded ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">🎬{videoCount}</span>
+                <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">🖼️{imageCount}</span>
+                <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">📦{mediaRecords.length}</span>
+              </div>
+            </div>
+
+            {mediaViewExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                {/* 筛选按钮 */}
+                <div className="flex gap-2 mb-3">
+                  {[
+                    { key: 'all', label: 'All / 全部', icon: '📦' },
+                    { key: 'video', label: 'Video / 视频', icon: '🎬' },
+                    { key: 'image', label: 'Image / 图片', icon: '🖼️' },
+                  ].map(f => (
+                    <button
+                      key={f.key}
+                      onClick={() => setMediaFilter(f.key)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        mediaFilter === f.key
+                          ? 'bg-gradient-to-r from-orange-400 to-pink-500 text-white shadow-md'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {f.icon} {f.label}
+                    </button>
+                  ))}
+                </div>
+
+                {filteredMedia.length > 0 ? (
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {filteredMedia.map((record) => (
+                      <motion.div
+                        key={record.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group"
+                      >
+                        {/* 缩略图 */}
+                        <div className="w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden bg-gray-200 flex items-center justify-center">
+                          {record.fileType.startsWith('video/') ? (
+                            record.thumbnailUrl ? (
+                              <img src={record.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-2xl">🎬</span>
+                            )
+                          ) : record.thumbnailUrl ? (
+                            <img src={record.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-2xl">🖼️</span>
+                          )}
+                        </div>
+
+                        {/* 信息 */}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-700 truncate" title={record.fileName}>
+                            {record.fileName}
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+                            <span>{record.sourceLabel}</span>
+                            <span>·</span>
+                            <span>{(record.fileSize / 1024 / 1024).toFixed(1)}MB</span>
+                          </div>
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {record.uploadedAtDisplay}
+                          </div>
+                        </div>
+
+                        {/* 删除按钮 */}
+                        <button
+                          onClick={() => handleDeleteMedia(record.id)}
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
+                          title="删除 / Delete"
+                        >
+                          🗑️
+                        </button>
+                      </motion.div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-gray-400 text-sm">
+                    {mediaFilter === 'all' 
+                      ? '还没有上传记录 / No upload records yet'
+                      : mediaFilter === 'video'
+                        ? '还没有视频记录 / No video records yet'
+                        : '还没有图片记录 / No image records yet'
+                    }
+                  </div>
+                )}
+
+                {/* 刷新按钮 */}
+                <button
+                  onClick={refreshMediaLibrary}
+                  className="mt-3 w-full py-2 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  🔄 Refresh / 刷新
+                </button>
+              </motion.div>
+            )}
+          </motion.div>
 
           <div className="glass-effect rounded-2xl overflow-hidden mb-4">
             {[

@@ -15,6 +15,18 @@ const useStore = create((set, get) => ({
     const savedUser = localStorage.getItem(USER_STORAGE_KEY)
     const savedPet = localStorage.getItem(PET_STORAGE_KEY)
     
+    // 始终加载宠物数据（无需登录也可查看宠物主页）
+    if (savedPet) {
+      try {
+        const pet = JSON.parse(savedPet)
+        if (pet && pet.type) {
+          set({ pet })
+        }
+      } catch (e) {
+        console.error('Failed to parse pet data')
+      }
+    }
+    
     if (token) {
       try {
         if (savedUser) {
@@ -24,15 +36,15 @@ const useStore = create((set, get) => ({
           set({ isLoggedIn: true })
         }
         
-        if (savedPet) {
-          const pet = JSON.parse(savedPet)
-          set({ pet })
+        // 如果上面已经加载了宠物，这里不再重复加载
+        if (!savedPet) {
+          // 但可以尝试从后端获取最新的宠物数据
         }
       } catch (e) {
         console.error('Failed to initialize session:', e)
         localStorage.removeItem('token')
         localStorage.removeItem(USER_STORAGE_KEY)
-        localStorage.removeItem(PET_STORAGE_KEY)
+        // 不要清除宠物数据
       }
     }
   },

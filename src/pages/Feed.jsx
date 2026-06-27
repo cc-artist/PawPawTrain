@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import useStore from '../store/useStore'
 import { useUpload } from '../context/UploadContext'
-import { usePosts } from '../App'
+import { usePosts } from '../context/PostsContext'
 import { t } from '../utils/i18n'
 
 const systemVideos = [
@@ -54,7 +54,7 @@ const Feed = () => {
   const [videoPlaying, setVideoPlaying] = useState(false)
   const [videoError, setVideoError] = useState(false)
   const [showPlayIndicator, setShowPlayIndicator] = useState(false)
-  // UI 可见性：视频播放时自动隐藏
+  // UI 始终可见
   const [showUI, setShowUI] = useState(true)
   const hideUITimer = useRef(null)
   const playIndicatorTimer = useRef(null)
@@ -62,6 +62,7 @@ const Feed = () => {
   const videoRef = useRef(null)
   const touchStartY = useRef(0)
   const touchEndY = useRef(0)
+  const touchStartTime = useRef(0)
   const wheelTimeoutRef = useRef(null)
   const { showUpload } = useUpload()
   const currentPet = useStore(state => state.currentPet)
@@ -73,6 +74,21 @@ const Feed = () => {
   const [postLikes, setPostLikes] = useState({})
   const [postFavorites, setPostFavorites] = useState({})
 
+  const isVideo = (media) => {
+    if (!media) return false
+    if (media.startsWith('data:video')) return true
+    if (media.startsWith('blob:')) return true
+    if (media.match(/\.(mp4|mov|webm|ogg|m4v)$/i)) return true
+    if (media.includes('/video/upload/')) return true
+    return false
+  }
+
+  const isImage = (media) => {
+    if (!media) return false
+    if (media.startsWith('blob:')) return false // blob URL 视为视频
+    return media.match(/\.(jpg|jpeg|png|gif|webp)$/i) || media.startsWith('data:image')
+  }
+
   const sharePlatforms = [
     { id: 'facebook', name: 'Facebook', icon: '📘', color: 'from-blue-600 to-blue-800' },
     { id: 'instagram', name: 'Instagram', icon: '📷', color: 'from-purple-500 to-pink-500' },
@@ -82,25 +98,49 @@ const Feed = () => {
     { id: 'discord', name: 'Discord', icon: '💜', color: 'from-indigo-500 to-purple-600' },
   ]
 
-  // 视频播放时自动隐藏 UI
-  useEffect(() => {
-    if (videoPlaying && isVideo(allPosts[currentIndex]?.media)) {
-      if (hideUITimer.current) clearTimeout(hideUITimer.current)
-      hideUITimer.current = setTimeout(() => setShowUI(false), 2000)
-    } else {
-      setShowUI(true)
-    }
-    return () => { if (hideUITimer.current) clearTimeout(hideUITimer.current) }
-  }, [videoPlaying, currentIndex, allPosts])
+  const allPosts = useMemo(() => {
+    const combined = [...systemVideos, ...userPosts, ...mockPosts].filter(post => {
+      if (mediaFilter === 'all') return true
+      if (mediaFilter === 'image') return isImage(post.media)
+      if (mediaFilter === 'video') return isVideo(post.media)
+      return true
+    })
+    const userPet = currentPet || {}
+    const userPetType = userPet.type || 'dog'
+    const userPetTags = userPet.tags || []
+    return combined.sort((a, b) => {
+      let scoreA = 0, scoreB = 0
+      const fa = a.features || {}, fb = b.features || {}
+      if (fa.petType === userPetType) scoreA += 30
+      if (fb.petType === userPetType) scoreB += 30
+      const engA = (a.likes || 0) + (a.comments || 0) * 2 + (a.shares || 0) * 3
+      const engB = (b.likes || 0) + (b.comments || 0) * 2 + (b.shares || 0) * 3
+      if (engA > 500) scoreA += 20; else if (engA > 100) scoreA += 10
+      if (engB > 500) scoreB += 20; else if (engB > 100) scoreB += 10
+      if (a.isTrainingPost) scoreA += 15
+      if (b.isTrainingPost) scoreB += 15
+      if (fa.tags && userPetTags.length > 0) {
+        const matchedA = fa.tags.filter(t => userPetTags.includes(t)).length
+        scoreA += matchedA * 3
+      }
+      if (fb.tags && userPetTags.length > 0) {
+        const matchedB = fb.tags.filter(t => userPetTags.includes(t)).length
+        scoreB += matchedB * 3
+      }
+      return scoreB - scoreA
+    })
+  }, [mediaFilter, userPosts, currentPet])
 
-  // 用户交互时显示 UI
+  // 切换帖子时强制显示 UI
+  useEffect(() => {
+    setShowUI(true)
+  }, [currentIndex])
+
+  // 用户交互时显示 UI（视频播放时延迟后自动隐藏）
   const showUIWithTimeout = useCallback(() => {
     setShowUI(true)
     if (hideUITimer.current) clearTimeout(hideUITimer.current)
-    if (videoPlaying) {
-      hideUITimer.current = setTimeout(() => setShowUI(false), 3000)
-    }
-  }, [videoPlaying])
+  }, [])
 
   // 点赞功能
   const handleLike = useCallback((e) => {
@@ -154,97 +194,39 @@ const Feed = () => {
     showUIWithTimeout()
   }
 
-  const isVideo = (media) => {
-    if (!media) return false
-    if (media.startsWith('data:video')) return true
-    if (media.match(/\.(mp4|mov|webm|ogg|m4v)$/i)) return true
-    if (media.includes('/video/upload/')) return true
-    return false
-  }
-
-  const isImage = (media) => {
-    if (!media) return false
-    return media.match(/\.(jpg|jpeg|png|gif|webp)$/i) || media.startsWith('data:image')
-  }
-
-  const allPosts = useMemo(() => {
-    const combined = [...systemVideos, ...userPosts, ...mockPosts].filter(post => {
-      if (mediaFilter === 'all') return true
-      if (mediaFilter === 'image') return isImage(post.media)
-      if (mediaFilter === 'video') return isVideo(post.media)
-      return true
-    })
-    const userPet = currentPet || {}
-    const userPetType = userPet.type || 'dog'
-    const userPetTags = userPet.tags || []
-    return combined.sort((a, b) => {
-      let scoreA = 0, scoreB = 0
-      const fa = a.features || {}, fb = b.features || {}
-      if (fa.petType === userPetType) scoreA += 30
-      if (fb.petType === userPetType) scoreB += 30
-      const engA = (a.likes || 0) + (a.comments || 0) * 2 + (a.shares || 0) * 3
-      const engB = (b.likes || 0) + (b.comments || 0) * 2 + (b.shares || 0) * 3
-      if (engA > 500) scoreA += 20; else if (engA > 100) scoreA += 10
-      if (engB > 500) scoreB += 20; else if (engB > 100) scoreB += 10
-      if (a.isTrainingPost) scoreA += 15
-      if (b.isTrainingPost) scoreB += 15
-      if (fa.tags && userPetTags.length > 0) {
-        const matchedA = fa.tags.filter(t => userPetTags.includes(t)).length
-        scoreA += matchedA * 3
-      }
-      if (fb.tags && userPetTags.length > 0) {
-        const matchedB = fb.tags.filter(t => userPetTags.includes(t)).length
-        scoreB += matchedB * 3
-      }
-      return scoreB - scoreA
-    })
-  }, [mediaFilter, userPosts, currentPet])
-
   const handlePrev = useCallback(() => {
+    // 暂停当前视频
+    const video = videoRef.current
+    if (video && !video.paused) {
+      video.pause()
+    }
+    setVideoPlaying(false)
     setVideoError(false)
     setCurrentIndex(prev => (prev - 1 + allPosts.length) % allPosts.length)
-    showUIWithTimeout()
-  }, [allPosts.length, showUIWithTimeout])
+  }, [allPosts.length])
 
   const handleNext = useCallback(() => {
+    // 暂停当前视频
+    const video = videoRef.current
+    if (video && !video.paused) {
+      video.pause()
+    }
+    setVideoPlaying(false)
     setVideoError(false)
     setCurrentIndex(prev => (prev + 1) % allPosts.length)
-    showUIWithTimeout()
-  }, [allPosts.length, showUIWithTimeout])
+  }, [allPosts.length])
 
-  const handleKeyDown = useCallback((e) => {
-    if (showUpload) return
-    if (e.key === 'ArrowUp' || e.key === 'PageUp') { handlePrev() }
-    else if (e.key === 'ArrowDown' || e.key === 'PageDown') { handleNext() }
-  }, [handlePrev, handleNext, showUpload])
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
-
-  const handleTouchStart = (e) => {
-    touchStartY.current = e.touches[0].clientY
-  }
-
-  const handleTouchEnd = (e) => {
-    if (showUpload) return
-    touchEndY.current = e.changedTouches[0].clientY
-    const diff = touchStartY.current - touchEndY.current
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) { handleNext() } else { handlePrev() }
-    } else {
-      handleVideoClick()
-    }
-  }
-
-  // 修复播放/暂停功能
+  // 播放/暂停功能（必须在 handleKeyDown 之前定义）
   const handleVideoClick = useCallback(() => {
     const video = videoRef.current
     const currentMedia = allPosts[currentIndex]?.media
     if (!video || !isVideo(currentMedia)) return
 
-    if (video.paused || video.ended) {
+    // 用户交互时显示 UI
+    showUIWithTimeout()
+
+    const isPaused = video.paused || video.ended
+    if (isPaused) {
       video.play().then(() => {
         setVideoPlaying(true)
       }).catch(() => {})
@@ -253,28 +235,69 @@ const Feed = () => {
       setVideoPlaying(false)
     }
 
+    // 立即显示播放状态指示器
     setShowPlayIndicator(true)
-    showUIWithTimeout()
     if (playIndicatorTimer.current) clearTimeout(playIndicatorTimer.current)
     playIndicatorTimer.current = setTimeout(() => setShowPlayIndicator(false), 800)
   }, [currentIndex, allPosts, showUIWithTimeout])
 
+  const handleKeyDown = useCallback((e) => {
+    if (showUpload) return
+    // 忽略在输入框中的按键
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return
+    if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'k') {
+      e.preventDefault()
+      handlePrev()
+    } else if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'j') {
+      e.preventDefault()
+      handleNext()
+    } else if (e.key === ' ') {
+      // 空格键暂停/播放
+      e.preventDefault()
+      handleVideoClick()
+    }
+  }, [handlePrev, handleNext, showUpload, handleVideoClick])
+
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY
+    touchStartTime.current = Date.now()
+  }
+
+  const handleTouchEnd = (e) => {
+    if (showUpload) return
+    touchEndY.current = e.changedTouches[0].clientY
+    const diffY = touchStartY.current - touchEndY.current
+    const diffTime = Date.now() - (touchStartTime.current || 0)
+
+    // 滑动距离超过阈值 → 切换视频
+    if (Math.abs(diffY) > 50 && diffTime < 500) {
+      if (diffY > 0) { handleNext() } else { handlePrev() }
+      return
+    }
+
+    // 轻触（短时间 + 小距离）→ 播放/暂停
+    if (Math.abs(diffY) < 15 && diffTime < 300) {
+      handleVideoClick()
+    }
+  }
+
   const handleWheel = useCallback((e) => {
     if (showUpload) return
     e.preventDefault()
+    e.stopPropagation()
     if (wheelTimeoutRef.current) { clearTimeout(wheelTimeoutRef.current) }
     const deltaY = e.deltaY
     wheelTimeoutRef.current = setTimeout(() => {
-      if (deltaY > 0) { handleNext() } else { handlePrev() }
-    }, 100)
+      if (Math.abs(deltaY) > 30) {
+        if (deltaY > 0) { handleNext() } else { handlePrev() }
+      }
+    }, 80)
   }, [handlePrev, handleNext, showUpload])
 
+  // 滚轮事件绑定在 window 上以避免被视频元素拦截
   useEffect(() => {
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener('wheel', handleWheel, { passive: false })
-      return () => container.removeEventListener('wheel', handleWheel)
-    }
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    return () => window.removeEventListener('wheel', handleWheel)
   }, [handleWheel])
 
   // 切换帖子时自动播放视频
@@ -286,6 +309,8 @@ const Feed = () => {
         setVideoPlaying(false)
         return
       }
+      // 重置视频到开头
+      video.currentTime = 0
       video.muted = false
       video.volume = 0.8
       video.play().then(() => {
@@ -293,7 +318,15 @@ const Feed = () => {
         setVideoError(false)
       }).catch(err => {
         console.error('[VIDEO] play() rejected:', err.name, err.message)
-        setVideoError(true)
+        // 如果自动播放被阻止，尝试静音播放
+        video.muted = true
+        video.play().then(() => {
+          setVideoPlaying(true)
+          setVideoError(false)
+        }).catch(err2 => {
+          console.error('[VIDEO] muted play also rejected:', err2.name)
+          setVideoError(true)
+        })
       })
     }, 150)
     return () => clearTimeout(timer)
@@ -355,6 +388,17 @@ const Feed = () => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [currentIndex, allPosts])
 
+  // 视频播放时自动隐藏悬浮按钮，暂停时显示
+  useEffect(() => {
+    if (videoPlaying && isCurrentVideo) {
+      if (hideUITimer.current) clearTimeout(hideUITimer.current)
+      hideUITimer.current = setTimeout(() => setShowUI(false), 2000)
+    } else {
+      if (hideUITimer.current) clearTimeout(hideUITimer.current)
+      setShowUI(true)
+    }
+  }, [videoPlaying, isCurrentVideo])
+
   return (
     <>
     <div 
@@ -379,7 +423,7 @@ const Feed = () => {
             className="absolute inset-0"
           >
             <div className="absolute inset-0">
-              {typeof currentPost.media === 'string' && (currentPost.media.startsWith('http') || currentPost.media.startsWith('data:image') || currentPost.media.startsWith('data:video')) ? (
+              {typeof currentPost.media === 'string' && (currentPost.media.startsWith('http') || currentPost.media.startsWith('data:image') || currentPost.media.startsWith('data:video') || currentPost.media.startsWith('blob:')) ? (
                 isCurrentVideo ? (
                   <div className="absolute inset-0 flex items-center justify-center bg-black" style={{ zIndex: 10 }} onClick={(e) => { e.stopPropagation(); handleVideoClick(); }}>
                     <video
@@ -458,7 +502,7 @@ const Feed = () => {
               )}
             </div>
 
-            {/* 底部信息区 - 视频播放时自动隐藏 */}
+            {/* 左下侧悬浮 - 宠物头像+发布文字 */}
             <AnimatePresence>
               {showUI && (
                 <motion.div
@@ -466,142 +510,172 @@ const Feed = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="absolute bottom-0 left-0 right-0 p-6"
+                  className="absolute bottom-6 left-4 z-20"
                 >
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-end justify-between">
-                      <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-3">
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                      className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 p-1 shadow-lg shadow-purple-500/50"
+                    >
+                      <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center text-2xl">
+                        {petEmoji}
+                      </div>
+                    </motion.div>
+                    <div className="text-white text-sm leading-relaxed max-w-[200px] drop-shadow-lg">
+                      {currentPost.content}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 右侧悬浮按钮区 - 用户头像、点赞、分享、收藏 */}
+            <AnimatePresence>
+              {showUI && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute right-4 bottom-28 z-20 flex flex-col items-center gap-5"
+                >
+                  {/* 用户头像 */}
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 25, delay: 0.05 }}
+                    className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-2xl shadow-lg shadow-blue-500/50"
+                  >
+                    {currentPost.user.avatar}
+                  </motion.div>
+                  {/* 点赞按钮 */}
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 25, delay: 0.1 }}
+                    className="flex flex-col items-center"
+                  >
+                    <button
+                      type="button"
+                      onClick={handleLike}
+                      className={`w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center text-2xl transition-all hover:scale-110 active:scale-90 ${
+                        likedPosts[postId] ? 'bg-red-500/60 text-white scale-110' : 'bg-white/20 hover:bg-white/30'
+                      }`}
+                      title={t('feed.like')}
+                    >
+                      {likedPosts[postId] ? '❤️' : '🤍'}
+                    </button>
+                    <span className="text-white text-xs mt-1 font-medium drop-shadow-lg">{displayLikes}</span>
+                  </motion.div>
+                  {/* 分享按钮 */}
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 25, delay: 0.15 }}
+                    className="flex flex-col items-center relative"
+                  >
+                    <button 
+                      type="button" 
+                      onClick={(e) => { e.stopPropagation(); setShowShareMenu(!showShareMenu); showUIWithTimeout(); }}
+                      className={`w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center text-2xl transition-all hover:scale-110 ${
+                        showShareMenu ? 'bg-white/30' : 'bg-white/20 hover:bg-white/30'
+                      }`}
+                      title={t('feed.share')}
+                    >
+                      ↗️
+                    </button>
+                    <span className="text-white text-xs mt-1 font-medium drop-shadow-lg">{currentPost.shares || 0}</span>
+                    <AnimatePresence>
+                      {showShareMenu && (
                         <motion.div
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                          className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 p-1 shadow-lg shadow-purple-500/50"
+                          initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute bottom-full mb-2 right-0 bg-gray-900/95 backdrop-blur-lg rounded-xl p-2 border border-white/10 shadow-xl"
                         >
-                          <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center text-2xl">
-                            {petEmoji}
+                          <div className="grid grid-cols-3 gap-2">
+                            {sharePlatforms.map((platform) => (
+                              <motion.button
+                                key={platform.id}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={(e) => { e.stopPropagation(); handleShare(platform); }}
+                                className={`w-12 h-12 rounded-lg bg-gradient-to-br ${platform.color} flex items-center justify-center text-xl shadow-md`}
+                                title={platform.name}
+                              >
+                                {platform.icon}
+                              </motion.button>
+                            ))}
                           </div>
                         </motion.div>
-                        <div className="text-white text-sm leading-relaxed max-w-xs">
-                          {currentPost.content}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-5">
-                        <motion.div
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ type: 'spring', stiffness: 500, damping: 25, delay: 0.1 }}
-                          className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-2xl shadow-lg shadow-blue-500/50"
-                        >
-                          {currentPost.user.avatar}
-                        </motion.div>
-                        {/* 点赞按钮 */}
-                        <div className="flex flex-col items-center">
-                          <button
-                            type="button"
-                            onClick={handleLike}
-                            className={`w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center text-2xl transition-all hover:scale-110 active:scale-90 ${
-                              likedPosts[postId] ? 'bg-red-500/60 text-white scale-110' : 'bg-white/20 hover:bg-white/30'
-                            }`}
-                            title={t('feed.like')}
-                          >
-                            {likedPosts[postId] ? '❤️' : '🤍'}
-                          </button>
-                          <span className="text-white text-xs mt-1 font-medium">{displayLikes}</span>
-                        </div>
-                        {/* 分享按钮 */}
-                        <div className="flex flex-col items-center relative">
-                          <button 
-                            type="button" 
-                            onClick={(e) => { e.stopPropagation(); setShowShareMenu(!showShareMenu); showUIWithTimeout(); }}
-                            className={`w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center text-2xl transition-all hover:scale-110 ${
-                              showShareMenu ? 'bg-white/30' : 'bg-white/20 hover:bg-white/30'
-                            }`}
-                            title={t('feed.share')}
-                          >
-                            ↗️
-                          </button>
-                          <span className="text-white text-xs mt-1 font-medium">{currentPost.shares || 0}</span>
-                          <AnimatePresence>
-                            {showShareMenu && (
-                              <motion.div
-                                initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                                transition={{ duration: 0.2 }}
-                                className="absolute bottom-full mb-2 right-0 bg-gray-900/95 backdrop-blur-lg rounded-xl p-2 border border-white/10 shadow-xl"
-                              >
-                                <div className="grid grid-cols-3 gap-2">
-                                  {sharePlatforms.map((platform) => (
-                                    <motion.button
-                                      key={platform.id}
-                                      whileHover={{ scale: 1.1 }}
-                                      whileTap={{ scale: 0.95 }}
-                                      onClick={(e) => { e.stopPropagation(); handleShare(platform); }}
-                                      className={`w-12 h-12 rounded-lg bg-gradient-to-br ${platform.color} flex items-center justify-center text-xl shadow-md`}
-                                      title={platform.name}
-                                    >
-                                      {platform.icon}
-                                    </motion.button>
-                                  ))}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                        {/* 收藏按钮 */}
-                        <div className="flex flex-col items-center">
-                          <button
-                            type="button"
-                            onClick={handleFavorite}
-                            className={`w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center text-2xl transition-all hover:scale-110 active:scale-90 ${
-                              favoritedPosts[postId] ? 'bg-yellow-500/60 text-white scale-110' : 'bg-white/20 hover:bg-white/30'
-                            }`}
-                            title={t('feed.save')}
-                          >
-                            {favoritedPosts[postId] ? '⭐' : '💾'}
-                          </button>
-                          <span className="text-white text-xs mt-1 font-medium">{displayFavorites}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 底部快捷操作栏 */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="flex justify-center gap-2"
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                  {/* 收藏按钮 */}
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 25, delay: 0.2 }}
+                    className="flex flex-col items-center"
+                  >
+                    <button
+                      type="button"
+                      onClick={handleFavorite}
+                      className={`w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center text-2xl transition-all hover:scale-110 active:scale-90 ${
+                        favoritedPosts[postId] ? 'bg-yellow-500/60 text-white scale-110' : 'bg-white/20 hover:bg-white/30'
+                      }`}
+                      title={t('feed.save')}
                     >
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => { e.stopPropagation(); showUIWithTimeout(); }}
-                        className="w-8 h-8 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center shadow-md shadow-orange-500/30"
-                        title={t('feed.adopt')}
-                      >🐱</motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => { e.stopPropagation(); showUIWithTimeout(); }}
-                        className="w-8 h-8 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full flex items-center justify-center shadow-md shadow-blue-500/30"
-                        title={t('feed.swap')}
-                      >🔄</motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => { e.stopPropagation(); showUIWithTimeout(); }}
-                        className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center shadow-md shadow-purple-500/30"
-                        title={t('feed.coop')}
-                      >🤝</motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => { e.stopPropagation(); showUIWithTimeout(); }}
-                        className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-md shadow-green-500/30"
-                        title={t('feed.addFriend')}
-                      >👥</motion.button>
-                    </motion.div>
+                      {favoritedPosts[postId] ? '⭐' : '💾'}
+                    </button>
+                    <span className="text-white text-xs mt-1 font-medium drop-shadow-lg">{displayFavorites}</span>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 底部快捷操作栏 */}
+            <AnimatePresence>
+              {showUI && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20"
+                >
+                  <div className="flex justify-center gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => { e.stopPropagation(); showUIWithTimeout(); }}
+                      className="w-8 h-8 bg-gradient-to-r from-orange-400 to-orange-500 rounded-full flex items-center justify-center shadow-md shadow-orange-500/30"
+                      title={t('feed.adopt')}
+                    >🐱</motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => { e.stopPropagation(); showUIWithTimeout(); }}
+                      className="w-8 h-8 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full flex items-center justify-center shadow-md shadow-blue-500/30"
+                      title={t('feed.swap')}
+                    >🔄</motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => { e.stopPropagation(); showUIWithTimeout(); }}
+                      className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center shadow-md shadow-purple-500/30"
+                      title={t('feed.coop')}
+                    >🤝</motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={(e) => { e.stopPropagation(); showUIWithTimeout(); }}
+                      className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-md shadow-green-500/30"
+                      title={t('feed.addFriend')}
+                    >👥</motion.button>
                   </div>
                 </motion.div>
               )}

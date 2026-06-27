@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import { tasksAPI } from '../services/api';
 import { t } from '../utils/i18n';
+import { usePosts } from '../context/PostsContext';
+import { checkDuplicate, addMediaRecord, UPLOAD_SOURCE } from '../utils/mediaLibrary';
 
 const MAX_VIDEOS = 3;
 const MAX_DURATION = 60;
@@ -11,6 +13,7 @@ const MAX_DURATION = 60;
 const DailyUploadPage = () => {
   const navigate = useNavigate();
   const { pet, setPet, updatePetStats, isLoggedIn } = useStore();
+  const { addPost } = usePosts();
   const [videos, setVideos] = useState([]);
   const [step, setStep] = useState('upload');
   const [analysisData, setAnalysisData] = useState(null);
@@ -25,13 +28,26 @@ const DailyUploadPage = () => {
   const petType = pet?.type || 'dog';
 
   const addVideos = useCallback((files) => {
+    const skippedDuplicates = [];
     const newVideos = [];
-    Array.from(files).forEach(file => {
+    let checkedCount = 0;
+    const filesArray = Array.from(files);
+    
+    filesArray.forEach(file => {
       if (!file.type.startsWith('video/')) return;
+      
+      // 检查重复
+      const duplicate = checkDuplicate(file);
+      if (duplicate) {
+        skippedDuplicates.push(file.name);
+        return;
+      }
+      
       const url = URL.createObjectURL(file);
       const video = document.createElement('video');
       video.src = url;
       video.onloadedmetadata = () => {
+        checkedCount++;
         if (video.duration > MAX_DURATION) {
           URL.revokeObjectURL(url);
           alert(`${t('taskGenerator.videoTooLong_')}${MAX_DURATION}${t('training.sec')}\nVideo cannot exceed ${MAX_DURATION}sec`);
@@ -40,11 +56,18 @@ const DailyUploadPage = () => {
         }
         newVideos.push({ id: Date.now() + Math.random(), file, preview: url, duration: Math.floor(video.duration) });
         video.remove();
-        if (newVideos.length > 0) {
-          setVideos(prev => [...prev, ...newVideos].slice(0, MAX_VIDEOS));
+        if (checkedCount === filesArray.length - skippedDuplicates.length) {
+          if (newVideos.length > 0) {
+            setVideos(prev => [...prev, ...newVideos].slice(0, MAX_VIDEOS));
+          }
         }
       };
     });
+    
+    if (skippedDuplicates.length > 0) {
+      const warningMsg = `⚠️ 以下视频已上传过，已跳过：\n${skippedDuplicates.map(n => '  · ' + n).join('\n')}\n\n视频可在"动态"和"我的"页面查看。\nVideo already uploaded, skipped. Check Feed or Profile page.`;
+      setTimeout(() => alert(warningMsg), 300);
+    }
   }, []);
 
   const removeVideo = useCallback((index) => {
@@ -75,6 +98,39 @@ const DailyUploadPage = () => {
         setAnalysisData(data);
         setAdvice(data.advice || []);
         setSelectedTags(data.tags?.map(t => t.id) || []);
+        
+        // 保存视频到媒体库
+        const mediaPromises = videos.map(v =>
+          addMediaRecord(v.file, UPLOAD_SOURCE.DAILY_TASKS, {
+            petType,
+            petName,
+            tags: data.tags?.map(t => t.label || t.id) || [],
+          })
+        );
+        await Promise.allSettled(mediaPromises);
+        
+        // 将原始视频同步到动态Feed
+        videos.forEach(v => {
+          const postId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+          addPost({
+            id: postId,
+            user: { name: `🐾 ${petName}的日常`, avatar: '📋' },
+            media: v.preview,
+            content: `🎬 ${petName}任务分析原始视频 · 已检测到 ${data.detectedActions?.length || 0} 种行为 / Task analysis raw video · ${data.detectedActions?.length || 0} behaviors detected`,
+            likes: 0, comments: 0, shares: 0, favorites: 0,
+            time: '刚刚 / Just now',
+            features: {
+              petType, breed: petType, color: '分析中', expression: '好奇', emotion: 'positive',
+              tags: data.tags?.map(t => t.label || t.id) || [],
+              personalityBoost: {},
+            },
+            isMine: true,
+            isTaskPost: true,
+            source: 'daily_tasks_raw',
+            createdAt: new Date().toISOString(),
+          });
+        });
+        
         setStep('select-tags');
       }
     } catch (err) {
@@ -111,6 +167,29 @@ const DailyUploadPage = () => {
           custom: true,
         }));
         localStorage.setItem('paw_train_tasks', JSON.stringify({ date: today, tasks: taskItems, completedTasks: [], source: 'video_analysis', analysisId }));
+        
+        // 将任务生成结果同步到Feed
+        const taskPostId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const taskNames = taskItems.slice(0, 3).map(t => t.icon + ' ' + (t.nameKey || '任务')).join(' ');
+        addPost({
+          id: taskPostId,
+          user: { name: `🐾 ${petName}的任务`, avatar: '📋' },
+          media: videos[0]?.preview || (petType === 'dog' ? '🐶' : petType === 'cat' ? '🐱' : '🐰'),
+          content: `✨ 基于视频分析为 ${petName} 生成了 ${taskItems.length} 个日常任务！\n${taskNames}${taskItems.length > 3 ? ' ... 等' : ''}\n\nBased on video analysis, ${taskItems.length} daily tasks generated for ${petName}!`,
+          likes: 0, comments: 0, shares: 0, favorites: 0,
+          time: '刚刚 / Just now',
+          features: {
+            petType, breed: petType, color: '任务中', expression: '专注', emotion: 'positive',
+            tags: selectedTags || [],
+            personalityBoost: {},
+          },
+          isMine: true,
+          isTaskPost: true,
+          source: 'daily_tasks_result',
+          taskCount: taskItems.length,
+          createdAt: new Date().toISOString(),
+        });
+        
         setStep('result');
       }
     } catch (err) {
@@ -129,8 +208,8 @@ const DailyUploadPage = () => {
       <div className="max-w-lg mx-auto">
         <div className="text-center mb-6">
           <motion.div className="text-6xl mb-4">📋</motion.div>
-          <h1 className="text-2xl font-bold text-violet-400 mb-2">{t('taskGenerator.title')}</h1>
-          <p className="text-gray-400 text-sm">
+          <h1 className="text-2xl font-bold text-violet-400 mb-2 whitespace-pre-line">{t('taskGenerator.title')}</h1>
+          <p className="text-gray-400 text-sm whitespace-pre-line">
             {step === 'upload' && t('taskGenerator.uploadDesc')}
             {step === 'analyzing' && t('taskGenerator.analyzingDesc')}
             {step === 'select-tags' && t('taskGenerator.selectTagsDesc')}
@@ -161,7 +240,7 @@ const DailyUploadPage = () => {
         {step === 'upload' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <div className="mb-4 p-3 rounded-xl bg-white/5 border border-white/10">
-              <div className="text-xs text-white/50 mb-2">🧬 {t('taskGenerator.techDesc')}</div>
+              <div className="text-xs text-white/50 mb-2">🧬 Tech: Behavior Recognition → Tag Generation → Task Recommendation / 技术方案：行为识别 → 标签生成 → 任务推荐</div>
               <div className="flex flex-wrap gap-2">
                 {[
                   t('taskGenerator.deepSVDD'),
@@ -208,7 +287,7 @@ const DailyUploadPage = () => {
               <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 onClick={handleAnalyze}
                 className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-500 text-white font-bold text-lg shadow-lg shadow-violet-500/30">
-                🔍 {t('taskGenerator.startAnalysis')} ({videos.length} videos / 个视频)
+                🔍 {t('taskGenerator.startAnalysis')} ({videos.length} videos)
               </motion.button>
             )}
           </motion.div>
@@ -218,7 +297,7 @@ const DailyUploadPage = () => {
         {step === 'analyzing' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-effect rounded-2xl p-8 text-center">
             <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} className="text-6xl mb-4 inline-block">🔍</motion.div>
-            <h3 className="text-white font-bold text-lg mb-2">{t('taskGenerator.analyzing_')}</h3>
+            <h3 className="text-white font-bold text-lg mb-2 whitespace-pre-line">{t('taskGenerator.analyzing_')}</h3>
             <p className="text-gray-400 text-sm">{t('taskGenerator.analyzingPetBehavior')}{petName}{t('taskGenerator.behaviorPattern')}</p>
             <div className="mt-4 space-y-2">
               {[
@@ -261,7 +340,7 @@ const DailyUploadPage = () => {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-white font-medium text-sm">🏷️ {t('taskGenerator.selectFeatureTags')}</h3>
                 <button onClick={toggleAllTags} className="text-xs px-3 py-1 rounded-full bg-white/10 text-white/60 hover:bg-white/20 transition-colors">
-                  {selectedTags.length === (analysisData.tags?.length || 0) ? t('taskGenerator.deselectAll') : t('taskGenerator.selectAll')}
+                  {selectedTags.length === (analysisData.tags?.length || 0) ? 'Deselect All / 取消全选' : 'Select All / 全选'}
                 </button>
               </div>
               <p className="text-gray-500 text-xs mb-3">{t('taskGenerator.tagSelectHint')}</p>
@@ -292,11 +371,11 @@ const DailyUploadPage = () => {
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
               onClick={handleGenerateTasks} disabled={isLoading}
               className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-500 text-white font-bold text-lg shadow-lg shadow-violet-500/30 disabled:opacity-50">
-              {isLoading ? `⏳ ${t('taskGenerator.generating')}` : `✨ ${t('taskGenerator.generateTasks')} (${selectedTags.length}${t('taskGenerator.tagsCount')})`}
+              {isLoading ? `⏳ Generating... / 生成中...` : `✨ Generate Pet Tasks / 生成养宠任务 (${selectedTags.length} tags / 个标签)`}
             </motion.button>
             <button onClick={() => { setStep('upload'); setAnalysisData(null); }}
               className="w-full mt-3 py-3 rounded-xl text-gray-400 text-sm hover:text-white transition-colors">
-              ← {t('taskGenerator.reuploadVideo')}
+              ← Re-upload Video / 重新上传视频
             </button>
           </motion.div>
         )}
@@ -307,7 +386,7 @@ const DailyUploadPage = () => {
             <div className="glass-effect rounded-2xl overflow-hidden mb-4">
               <div className="bg-gradient-to-r from-violet-500 to-purple-500 p-6 text-white text-center">
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }} className="text-6xl mb-3">🎉</motion.div>
-                <h2 className="text-2xl font-bold mb-1">{t('taskGenerator.taskSuccess')}</h2>
+                <h2 className="text-2xl font-bold mb-1 whitespace-pre-line">{t('taskGenerator.taskSuccess')}</h2>
                 <p className="opacity-90 text-sm">{t('taskGenerator.generatedFor')}{petName} {generatedTasks.length} {t('taskGenerator.dailyTasksCount')}</p>
               </div>
               <div className="p-6">
@@ -321,8 +400,8 @@ const DailyUploadPage = () => {
                         <div className="text-gray-400 text-xs">{task.description || task.descKey}</div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <div className="text-amber-400 text-sm font-bold">+{task.points} 💰 {t('taskGenerator.points')}</div>
-                        <div className="text-violet-400 text-xs">+{task.exp} {t('taskGenerator.exp')}</div>
+                        <div className="text-amber-400 text-sm font-bold">+{task.points} 💰 Points / 积分</div>
+                        <div className="text-violet-400 text-xs">+{task.exp} EXP / 经验</div>
                       </div>
                     </motion.div>
                   ))}
@@ -338,11 +417,11 @@ const DailyUploadPage = () => {
                 </div>
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => navigate('/')}
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-500 text-white font-bold text-lg shadow-lg shadow-violet-500/30 mb-3">
-                  🏠 {t('taskGenerator.goHome')}
+                  🏠 Go to Home / 前往首页完成任务
                 </motion.button>
                 <button onClick={() => { setStep('upload'); setVideos([]); setAnalysisData(null); setSelectedTags([]); setGeneratedTasks([]); }}
                   className="w-full py-3 rounded-xl text-gray-400 text-sm hover:text-white transition-colors">
-                  🔄 {t('taskGenerator.reanalyze')}
+                  🔄 Re-analyze / 重新分析新视频
                 </button>
               </div>
             </div>

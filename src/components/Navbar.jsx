@@ -160,8 +160,8 @@ const plusMenuItems = [
   {
     id: 'pet-creator',
     icon: '🐾',
-    label: '虚拟宠物形象生成器',
-    description: 'AI生成专属虚拟宠物形象',
+    label: 'Virtual Pet Image Generator\n虚拟宠物形象生成器',
+    description: 'AI generates exclusive virtual pet images\nAI生成专属虚拟宠物形象',
     path: '/create-pet',
     gradient: 'from-amber-500 to-orange-500',
     bgLight: 'bg-amber-50',
@@ -169,8 +169,8 @@ const plusMenuItems = [
   {
     id: 'pet-trainer',
     icon: '🎯',
-    label: '虚拟宠物动作训练器',
-    description: '训练宠物动作与技能',
+    label: 'Virtual Pet Action Trainer\n虚拟宠物动作训练器',
+    description: 'Train pet actions and skills\n训练宠物动作与技能',
     path: '/training',
     gradient: 'from-emerald-500 to-teal-500',
     bgLight: 'bg-emerald-50',
@@ -178,8 +178,8 @@ const plusMenuItems = [
   {
     id: 'task-generator',
     icon: '📋',
-    label: '养宠任务生成器',
-    description: '每日养宠任务与互动',
+    label: 'Pet Task Generator\n养宠任务生成器',
+    description: 'Daily pet tasks and interactions\n每日养宠任务与互动',
     path: '/daily',
     gradient: 'from-violet-500 to-purple-500',
     bgLight: 'bg-violet-50',
@@ -311,8 +311,8 @@ const Navbar = () => {
 
               {/* 标题 */}
               <div className="px-6 pb-1">
-                <h3 className="text-lg font-bold text-white text-center">✨ 选择功能</h3>
-                <p className="text-xs text-white/50 text-center mt-0.5">点击选择要使用的工具</p>
+                <h3 className="text-lg font-bold text-white text-center">✨ Select Feature / 选择功能</h3>
+                <p className="text-xs text-white/50 text-center mt-0.5">Click to select a tool / 点击选择要使用的工具</p>
               </div>
 
               {/* 菜单项 */}
@@ -334,8 +334,8 @@ const Navbar = () => {
                     </div>
                     {/* 文字 */}
                     <div className="flex-1 min-w-0">
-                      <div className="text-white font-semibold text-sm">{item.label}</div>
-                      <div className="text-white/40 text-xs mt-0.5">{item.description}</div>
+                      <div className="text-white font-semibold text-sm whitespace-pre-line">{item.label}</div>
+                      <div className="text-white/40 text-xs mt-0.5 whitespace-pre-line">{item.description}</div>
                     </div>
                     {/* 箭头 */}
                     <span className="text-white/30 text-lg flex-shrink-0 group-hover:text-cyber-blue group-hover:translate-x-1 transition-all duration-200">→</span>
@@ -351,7 +351,7 @@ const Navbar = () => {
                   onClick={() => setShowPlusMenu(false)}
                   className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/60 text-sm font-medium hover:text-white hover:border-white/20 transition-all duration-200"
                 >
-                  取消
+                  Cancel / 取消
                 </motion.button>
               </div>
             </motion.div>

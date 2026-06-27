@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
-const Pet3D = ({ petType, onPet, postCount = 0, isResetting = false }) => {
+const Pet3D = ({ petType, onPet, postCount = 0, isResetting = false, imageUrl = null }) => {
   const [isPetting, setIsPetting] = useState(false);
   const [showRollAnimation, setShowRollAnimation] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
 
   useEffect(() => {
     if (isResetting) {
@@ -266,14 +267,28 @@ const Pet3D = ({ petType, onPet, postCount = 0, isResetting = false }) => {
             />
 
             <div 
-              className="transition-transform duration-200"
+              className="transition-transform duration-200 flex items-center justify-center"
               style={{
-                fontSize: style.fontSize,
-                filter: `drop-shadow(0 0 10px ${style.glowColor})`,
+                width: '140px',
+                height: '140px',
+                borderRadius: '50%',
+                overflow: 'hidden',
                 animation: showRollAnimation ? 'roll-emoji 0.5s ease-in-out 6' : 'bounce-subtle 2s ease-in-out infinite'
               }}
             >
-              {showRollAnimation ? '🙀' : getStageEmoji()}
+              {showRollAnimation ? (
+                <span style={{ fontSize: style.fontSize, filter: `drop-shadow(0 0 10px ${style.glowColor})` }}>🙀</span>
+              ) : imageUrl && !imageLoadError ? (
+                <img 
+                  src={imageUrl}
+                  alt="Pet"
+                  className="w-full h-full object-cover"
+                  style={{ borderRadius: '50%' }}
+                  onError={() => setImageLoadError(true)}
+                />
+              ) : (
+                <span style={{ fontSize: style.fontSize, filter: `drop-shadow(0 0 10px ${style.glowColor})` }}>{getStageEmoji()}</span>
+              )}
             </div>
 
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
