@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: '/api',
-  timeout: 10000
+  timeout: 120000  // 增加到2分钟，图像生成API可能需要较长时间
 })
 
 api.interceptors.request.use((config) => {

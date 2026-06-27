@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.claude/
+.playwright/
+.playwright-cli/
+feed-current.png
+feed-page.png
+frontend/
+backend/src/uploads/
+backend/.env
