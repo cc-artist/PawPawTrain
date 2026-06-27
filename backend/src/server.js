@@ -5,6 +5,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import petRoutes from './routes/pet.js';
+import trainingRoutes from './routes/training.js';
+import tasksRoutes from './routes/tasks.js';
+import postsRoutes from './routes/posts.js';
 
 // 加载环境变量
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
@@ -28,6 +31,9 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/pet', petRoutes);
 app.use('/api/pets', petRoutes);
+app.use('/api/training', trainingRoutes);
+app.use('/api/tasks', tasksRoutes);
+app.use('/api/posts', postsRoutes);
 
 // 健康检查
 app.get('/api/health', (req, res) => {

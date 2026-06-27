@@ -155,12 +155,44 @@ const pagePreviews = {
   }
 }
 
+// "+"按钮弹出的功能菜单项
+const plusMenuItems = [
+  {
+    id: 'pet-creator',
+    icon: '🐾',
+    label: '虚拟宠物形象生成器',
+    description: 'AI生成专属虚拟宠物形象',
+    path: '/create-pet',
+    gradient: 'from-amber-500 to-orange-500',
+    bgLight: 'bg-amber-50',
+  },
+  {
+    id: 'pet-trainer',
+    icon: '🎯',
+    label: '虚拟宠物动作训练器',
+    description: '训练宠物动作与技能',
+    path: '/training',
+    gradient: 'from-emerald-500 to-teal-500',
+    bgLight: 'bg-emerald-50',
+  },
+  {
+    id: 'task-generator',
+    icon: '📋',
+    label: '养宠任务生成器',
+    description: '每日养宠任务与互动',
+    path: '/daily',
+    gradient: 'from-violet-500 to-purple-500',
+    bgLight: 'bg-violet-50',
+  },
+]
+
 const Navbar = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { isLoggedIn, logout, user } = useStore()
   const [hoveredPath, setHoveredPath] = useState(null)
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 })
+  const [showPlusMenu, setShowPlusMenu] = useState(false)
 
   const navItems = [
     { path: '/', icon: '🏠', label: '首页', locked: true },
@@ -181,16 +213,17 @@ const Navbar = () => {
     }
     
     if (path === '/upload') {
-      const petState = localStorage.getItem('paw_train_pet_state')
-      const hasPet = !!petState && JSON.parse(petState)
-      if (hasPet) {
-        navigate('/daily')
-      } else {
-        navigate('/create-pet')
-      }
+      // 点击"+"弹出功能选择面板
+      setShowPlusMenu(true)
+      return
     } else {
       navigate(path)
     }
+  }
+
+  const handlePlusMenuItem = (path) => {
+    setShowPlusMenu(false)
+    navigate(path)
   }
 
   const handleAuthClick = () => {
@@ -214,6 +247,7 @@ const Navbar = () => {
 
   return (
     <>
+      {/* 页面预览悬浮提示 */}
       <AnimatePresence>
         {hoveredPath && pagePreviews[hoveredPath] && (
           <motion.div
@@ -247,6 +281,81 @@ const Navbar = () => {
               <div className="w-3 h-3 bg-white border-r border-b border-gray-200" />
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* "+"按钮功能选择面板 */}
+      <AnimatePresence>
+        {showPlusMenu && (
+          <>
+            {/* 半透明遮罩 */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999]"
+              onClick={() => setShowPlusMenu(false)}
+            />
+            {/* 底部弹出面板 */}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 z-[10001] bg-gradient-to-t from-[#0a0a2e] to-[#1a1a4e] rounded-t-3xl border-t border-cyber-blue/30 shadow-2xl"
+            >
+              {/* 拖拽指示条 */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 bg-white/20 rounded-full" />
+              </div>
+
+              {/* 标题 */}
+              <div className="px-6 pb-1">
+                <h3 className="text-lg font-bold text-white text-center">✨ 选择功能</h3>
+                <p className="text-xs text-white/50 text-center mt-0.5">点击选择要使用的工具</p>
+              </div>
+
+              {/* 菜单项 */}
+              <div className="px-4 pb-6 pt-3 space-y-3">
+                {plusMenuItems.map((item, index) => (
+                  <motion.button
+                    key={item.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.08 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handlePlusMenuItem(item.path)}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyber-blue/50 hover:bg-white/10 transition-all duration-200 text-left group"
+                  >
+                    {/* 图标 */}
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg flex-shrink-0 group-hover:scale-110 transition-transform duration-200`}>
+                      <span className="text-2xl">{item.icon}</span>
+                    </div>
+                    {/* 文字 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white font-semibold text-sm">{item.label}</div>
+                      <div className="text-white/40 text-xs mt-0.5">{item.description}</div>
+                    </div>
+                    {/* 箭头 */}
+                    <span className="text-white/30 text-lg flex-shrink-0 group-hover:text-cyber-blue group-hover:translate-x-1 transition-all duration-200">→</span>
+                  </motion.button>
+                ))}
+              </div>
+
+              {/* 关闭按钮 */}
+              <div className="px-4 pb-8">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setShowPlusMenu(false)}
+                  className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/60 text-sm font-medium hover:text-white hover:border-white/20 transition-all duration-200"
+                >
+                  取消
+                </motion.button>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
@@ -294,7 +403,7 @@ const Navbar = () => {
             )
           })}
 
-          {/* 中央 + 按钮 */}
+          {/* 中央 + 按钮 - 点击弹出功能选择面板 */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -304,6 +413,8 @@ const Navbar = () => {
             <motion.div
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
+              animate={showPlusMenu ? { rotate: 45 } : { rotate: 0 }}
+              transition={{ duration: 0.25 }}
               className="w-16 h-16 bg-gradient-to-br from-cyber-blue to-cyber-purple rounded-full flex items-center justify-center shadow-lg shadow-cyber-blue/50 border-4 border-cyber-dark"
             >
               <span className="text-4xl text-cyber-dark font-bold leading-none -mt-1 neon-text">+</span>

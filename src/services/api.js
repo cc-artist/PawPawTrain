@@ -16,7 +16,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && window.location.pathname !== '/login') {
       localStorage.removeItem('token')
       window.location.href = '/login'
     }
@@ -72,6 +72,42 @@ export const chatAPI = {
 export const aiAPI = {
   analyzeImage: (imageBase64, content) => api.post('/ai/analyze-image', { image_base64: imageBase64, content }),
   getPetTypes: () => api.get('/ai/pet-types')
+}
+
+// 训练相关API
+export const trainingAPI = {
+  uploadVideos: (formData) => api.post('/training/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 180000,
+  }),
+  getStatus: (taskId) => api.get(`/training/status/${taskId}`),
+  getHistory: () => api.get('/training/history'),
+  getPosts: () => api.get('/training/posts'),
+  getAnalysis: (taskId) => api.get(`/training/analysis/${taskId}`),
+}
+
+// 任务相关API
+export const tasksAPI = {
+  analyze: (formData) => api.post('/tasks/analyze', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 180000,
+  }),
+  generate: (data) => api.post('/tasks/generate', data),
+  complete: (taskId, taskBatchId) => api.post('/tasks/complete', { taskId, taskBatchId }),
+  getCurrent: () => api.get('/tasks/current'),
+  getHistory: () => api.get('/tasks/history'),
+  getAdvice: () => api.get('/tasks/advice'),
+  getFeedbackLoop: () => api.get('/tasks/feedback-loop'),
+}
+
+// 帖子相关API
+export const postsAPI = {
+  create: (formData) => api.post('/posts/create', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  getFeed: (params) => api.get('/posts/feed', { params }),
+  recordView: (postId, postFeatures) => api.post('/posts/record-view', { postId, postFeatures }),
+  getUserPreferences: () => api.get('/posts/user-preferences'),
 }
 
 export default api
