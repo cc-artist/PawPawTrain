@@ -13,18 +13,45 @@ const useStore = create((set, get) => ({
   initializeSession: () => {
     const token = localStorage.getItem('token')
     const savedUser = localStorage.getItem(USER_STORAGE_KEY)
-    const savedPet = localStorage.getItem(PET_STORAGE_KEY)
+    let savedPet = localStorage.getItem(PET_STORAGE_KEY)
+    
+    // 如果没有宠物数据，创建一个默认宠物供展示
+    if (!savedPet) {
+      const defaultPet = {
+        type: 'cat',
+        name: '爪爪',
+        personality: 'gentle',
+        level: 5,
+        exp: 45,
+        expToNext: 200,
+        points: 100,
+        intimacy: 75,
+        hunger: 80,
+        joy: 85,
+        energy: 90,
+        health: 100,
+        discipline: 60,
+        exploration: 30,
+        affection: 75,
+        learnedSkills: [
+          { id: 1, name: '撒娇', animation: 'squint' },
+          { id: 2, name: '打滚', animation: 'roll' }
+        ],
+        imageUrl: null,
+        voice: null
+      }
+      localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(defaultPet))
+      savedPet = JSON.stringify(defaultPet)
+    }
     
     // 始终加载宠物数据（无需登录也可查看宠物主页）
-    if (savedPet) {
-      try {
-        const pet = JSON.parse(savedPet)
-        if (pet && pet.type) {
-          set({ pet })
-        }
-      } catch (e) {
-        console.error('Failed to parse pet data')
+    try {
+      const pet = JSON.parse(savedPet)
+      if (pet && pet.type) {
+        set({ pet })
       }
+    } catch (e) {
+      console.error('Failed to parse pet data')
     }
     
     if (token) {
@@ -34,11 +61,6 @@ const useStore = create((set, get) => ({
           set({ user, isLoggedIn: true })
         } else {
           set({ isLoggedIn: true })
-        }
-        
-        // 如果上面已经加载了宠物，这里不再重复加载
-        if (!savedPet) {
-          // 但可以尝试从后端获取最新的宠物数据
         }
       } catch (e) {
         console.error('Failed to initialize session:', e)
