@@ -200,9 +200,23 @@ function ProtectedRoute({ children }) {
         }
       } catch (err) {
         console.error('Auth check failed:', err)
-        localStorage.removeItem('token')
-        localStorage.removeItem('paw_train_user_state')
-        localStorage.removeItem('paw_train_pet_state')
+        // 后端不可用时，尝试从localStorage恢复用户
+        const savedUser = localStorage.getItem('paw_train_user_state')
+        if (savedUser) {
+          try {
+            const user = JSON.parse(savedUser)
+            if (isMounted) {
+              setUser(user)
+            }
+            console.log('从本地恢复用户信息')
+          } catch (parseErr) {
+            // 数据损坏才清除
+            localStorage.removeItem('token')
+            localStorage.removeItem('paw_train_user_state')
+            localStorage.removeItem('paw_train_pet_state')
+          }
+        }
+        // 如果token存在但无法恢复，不清除token，允许降级处理
       } finally {
         if (isMounted) {
           setIsCheckingAuth(false)

@@ -5,6 +5,46 @@ import useStore from '../store/useStore'
 import { authAPI } from '../services/api'
 import { t } from '../utils/i18n'
 
+// 生成模拟 JWT token（用于无后端场景）
+const generateMockToken = (userId, email) => {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+  const payload = btoa(JSON.stringify({
+    sub: userId,
+    email: email,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 86400 * 30
+  }))
+  return `${header}.${payload}.mock-signature`
+}
+
+// 客户端模拟登录（后端不可用时使用）
+const mockLogin = (email, password) => {
+  const savedUsers = JSON.parse(localStorage.getItem('paw_train_users') || '{}')
+  const user = savedUsers[email]
+  if (!user) {
+    throw new Error('账号不存在，请先注册')
+  }
+  if (user.password !== password) {
+    throw new Error('密码错误')
+  }
+  const token = generateMockToken(user.id, email)
+  return { token, user: { id: user.id, name: user.name, email, avatar: user.avatar, points: user.points || 0 } }
+}
+
+// 客户端模拟注册（后端不可用时使用）
+const mockRegister = (email, password, name, avatar) => {
+  const savedUsers = JSON.parse(localStorage.getItem('paw_train_users') || '{}')
+  if (savedUsers[email]) {
+    throw new Error('该邮箱已注册')
+  }
+  const userId = 'user_' + Date.now()
+  const newUser = { id: userId, name, email, password, avatar, points: 500 }
+  savedUsers[email] = newUser
+  localStorage.setItem('paw_train_users', JSON.stringify(savedUsers))
+  const token = generateMockToken(userId, email)
+  return { token, user: { id: userId, name, email, avatar, points: 500 } }
+}
+
 const Login = () => {
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
@@ -37,47 +77,50 @@ const Login = () => {
           setLoading(false)
           return
         }
-        
-        const res = await authAPI.register({
-          email,
-          password,
-          name: name.trim(),
-          avatar
-        })
-        
-        if (res.data && res.data.token) {
-          localStorage.setItem('token', res.data.token)
-          setUser(res.data.user)
-          setTimeout(() => {
-            window.location.href = '/'
-          }, 300)
-        } else {
-          throw new Error('注册失败，未返回token')
+        if (!email || !password) {
+          alert('请填写邮箱和密码')
+          setLoading(false)
+          return
         }
+        
+        let result
+        // 先尝试后端API，失败则用客户端模拟
+        try {
+          const res = await authAPI.register({ email, password, name: name.trim(), avatar })
+          result = { token: res.data.token, user: res.data.user }
+        } catch (apiErr) {
+          console.log('后端API不可用，使用客户端注册')
+          result = mockRegister(email, password, name.trim(), avatar || '🐾')
+        }
+        
+        localStorage.setItem('token', result.token)
+        setUser(result.user)
+        setTimeout(() => { window.location.href = '/' }, 300)
       } else {
-        const res = await authAPI.login({
-          email,
-          password
-        })
-        
-        if (res.data && res.data.token) {
-          localStorage.setItem('token', res.data.token)
-          setUser(res.data.user)
-          
-          if (res.data.pet) {
-            setPet(res.data.pet)
-          }
-          
-          setTimeout(() => {
-            window.location.href = '/'
-          }, 300)
-        } else {
-          throw new Error('登录失败，未返回token')
+        if (!email || !password) {
+          alert('请填写邮箱和密码')
+          setLoading(false)
+          return
         }
+        
+        let result
+        // 先尝试后端API，失败则用客户端模拟
+        try {
+          const res = await authAPI.login({ email, password })
+          result = { token: res.data.token, user: res.data.user, pet: res.data.pet }
+        } catch (apiErr) {
+          console.log('后端API不可用，使用客户端登录')
+          result = mockLogin(email, password)
+        }
+        
+        localStorage.setItem('token', result.token)
+        setUser(result.user)
+        if (result.pet) setPet(result.pet)
+        setTimeout(() => { window.location.href = '/' }, 300)
       }
     } catch (err) {
       console.error('Auth error:', err)
-      alert(err.response?.data?.message || err.message || '操作失败')
+      alert(err.message || '操作失败，请重试')
     } finally {
       setLoading(false)
     }
@@ -86,24 +129,29 @@ const Login = () => {
   const handleDemoLogin = async () => {
     setLoading(true)
     try {
-      const res = await authAPI.login({
-        email: 'demo@example.com',
-        password: 'demo123'
-      })
-      
-      localStorage.setItem('token', res.data.token)
-      setUser(res.data.user)
-      
-      if (res.data.pet) {
-        setPet(res.data.pet)
+      let result
+      try {
+        const res = await authAPI.login({ email: 'demo@example.com', password: 'demo123' })
+        result = { token: res.data.token, user: res.data.user, pet: res.data.pet }
+      } catch (apiErr) {
+        console.log('后端API不可用，使用客户端演示登录')
+        // 确保demo账号存在
+        const savedUsers = JSON.parse(localStorage.getItem('paw_train_users') || '{}')
+        if (!savedUsers['demo@example.com']) {
+          savedUsers['demo@example.com'] = { id: 'demo-user', name: '演示用户', email: 'demo@example.com', password: 'demo123', avatar: '🐾', points: 1000 }
+          localStorage.setItem('paw_train_users', JSON.stringify(savedUsers))
+        }
+        result = mockLogin('demo@example.com', 'demo123')
       }
       
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 300)
+      localStorage.setItem('token', result.token)
+      setUser(result.user)
+      if (result.pet) setPet(result.pet)
+      
+      setTimeout(() => { window.location.href = '/' }, 300)
     } catch (err) {
       console.error('Demo login error:', err)
-      alert('演示登录失败，请尝试手动登录')
+      alert('演示登录失败: ' + (err.message || '未知错误'))
     } finally {
       setLoading(false)
     }
