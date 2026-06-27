@@ -28,25 +28,57 @@ const CreatePetPage = () => {
   ];
 
   const commonPetTypes = [
-    { type: 'dog', name: '小狗狗', enName: 'Dog', emoji: '🐕', breeds: ['金毛', '泰迪', '哈士奇', '柯基', '柴犬'], colors: ['金色', '棕色', '黑色', '白色', '花色'] },
-    { type: 'cat', name: '小猫咪', enName: 'Cat', emoji: '🐱', breeds: ['英短', '布偶', '橘猫', '暹罗', '加菲'], colors: ['白色', '黑色', '橘色', '灰色', '花色'] },
-    { type: 'rabbit', name: '小兔兔', enName: 'Rabbit', emoji: '🐰', breeds: ['垂耳兔', '侏儒兔', '狮子兔'], colors: ['白色', '灰色', '黑色', '花色'] },
-    { type: 'hamster', name: '仓鼠', enName: 'Hamster', emoji: '🐹', breeds: ['金丝熊', '银狐', '布丁'], colors: ['金色', '白色', '灰色'] },
-    { type: 'bird', name: '小鸟', enName: 'Bird', emoji: '🐦', breeds: ['鹦鹉', '文鸟', '珍珠鸟'], colors: ['绿色', '黄色', '蓝色', '彩色'] },
-    { type: 'fish', name: '小鱼', enName: 'Fish', emoji: '🐟', breeds: ['金鱼', '热带鱼', '锦鲤'], colors: ['红色', '金色', '彩色', '黑色'] },
+    { type: 'dog', name: '小狗狗', enName: 'Dog', emoji: '🐕',
+      breeds: ['金毛', '泰迪', '哈士奇', '柯基', '柴犬', '拉布拉多', '萨摩耶', '比熊', '博美', '边牧', '德牧', '法斗', '巴哥', '吉娃娃', '雪纳瑞', '秋田', '阿拉斯加', '贵宾', '约克夏', '蝴蝶犬', '杜宾', '松狮', '罗威纳', '马尔济斯', '大麦町', '喜乐蒂', '伯恩山', '可卡犬', '腊肠犬', '京巴'],
+      colors: ['金色', '棕色', '黑色', '白色', '花色', '黑白', '灰色', '黄白', '红棕', '奶油', '巧克力', '银灰', '三色', '陨石', '虎斑', '纯黑', '纯白', '虎纹'] },
+    { type: 'cat', name: '小猫咪', enName: 'Cat', emoji: '🐱',
+      breeds: ['英短', '布偶', '橘猫', '暹罗', '加菲', '美短', '波斯', '缅因', '无毛', '折耳', '德文', '阿比西尼亚', '孟加拉豹猫', '异短', '挪威森林', '俄罗斯蓝猫', '东方短毛', '苏格兰折耳', '曼基康', '褴褛猫', '索马里', '雪鞋猫', '土耳其梵', '新加坡猫', '柯尼斯卷毛'],
+      colors: ['白色', '黑色', '橘色', '灰色', '花色', '三花', '虎斑', '蓝灰', '玳瑁', '奶牛', '纯黑', '纯白', '银色', '金色', '乳白', '巧克力', '丁香', '红虎斑', '银虎斑', '重点色'] },
+    { type: 'rabbit', name: '小兔兔', enName: 'Rabbit', emoji: '🐰',
+      breeds: ['垂耳兔', '侏儒兔', '狮子兔', '安哥拉兔', '海棠兔', '荷兰兔', '雷克斯兔', '喜马拉雅兔', '巨型花明兔', '波兰兔', '泽西长毛兔', '迷你垂耳兔', '道奇兔', '佛兰德巨兔'],
+      colors: ['白色', '灰色', '黑色', '花色', '棕色', '米色', '金色', '黑白', '斑点', '银灰', '奶油', '蓝灰', '巧克力', '虎斑'] },
+    { type: 'hamster', name: '仓鼠', enName: 'Hamster', emoji: '🐹',
+      breeds: ['金丝熊', '银狐', '布丁', '三线', '公婆鼠', '一线鼠', '奶茶', '紫仓', '白熊', '黑熊', '老公公', '老婆婆'],
+      colors: ['金色', '白色', '灰色', '棕色', '花色', '黑色', '奶油', '银白', '紫灰', '黄白'] },
+    { type: 'bird', name: '小鸟', enName: 'Bird', emoji: '🐦',
+      breeds: ['鹦鹉', '文鸟', '珍珠鸟', '金丝雀', '百灵', '画眉', '八哥', '黄鹂', '绣眼', '蜡嘴', '蓝鹊', '夜莺'],
+      colors: ['绿色', '黄色', '蓝色', '彩色', '红色', '白色', '橙色', '紫色', '灰白', '黑白'] },
+    { type: 'fish', name: '小鱼', enName: 'Fish', emoji: '🐟',
+      breeds: ['金鱼', '热带鱼', '锦鲤', '孔雀鱼', '斗鱼', '神仙鱼', '龙鱼', '罗汉鱼', '蝶鱼', '小丑鱼', '天使鱼', '虎皮鱼', '剑尾鱼', '斑马鱼'],
+      colors: ['红色', '金色', '彩色', '黑色', '蓝色', '银色', '橙色', '白色', '黄红', '蓝绿'] },
   ];
 
   const uncommonPetTypes = [
-    { type: 'turtle', name: '乌龟', enName: 'Turtle', emoji: '🐢', breeds: ['巴西龟', '草龟', '陆龟'], colors: ['绿色', '棕色', '黑色'] },
-    { type: 'snake', name: '蛇', enName: 'Snake', emoji: '🐍', breeds: ['玉米蛇', '球蟒', '王蛇'], colors: ['绿色', '黄色', '黑色', '花色'] },
-    { type: 'lizard', name: '蜥蜴', enName: 'Lizard', emoji: '🦎', breeds: ['鬃狮蜥', '绿鬣蜥', '守宫'], colors: ['绿色', '棕色', '黄色'] },
-    { type: 'frog', name: '青蛙', enName: 'Frog', emoji: '🐸', breeds: ['角蛙', '树蛙', '牛蛙'], colors: ['绿色', '棕色', '黄色'] },
-    { type: 'hedgehog', name: '刺猬', enName: 'Hedgehog', emoji: '🦔', breeds: ['非洲迷你刺猬'], colors: ['棕色', '白色', '花色'] },
-    { type: 'guinea_pig', name: '豚鼠', enName: 'Guinea Pig', emoji: '🐹', breeds: ['短顺', '长逆', '无毛'], colors: ['白色', '黑色', '棕色', '花色'] },
-    { type: 'chinchilla', name: '龙猫', enName: 'Chinchilla', emoji: '🐭', breeds: ['标准灰', '米色', '银斑'], colors: ['灰色', '白色', '米色'] },
-    { type: 'ferret', name: '雪貂', enName: 'Ferret', emoji: '🦨', breeds: ['安格鲁', '玛雪儿'], colors: ['白色', '棕色', '黑色'] },
-    { type: 'parrot', name: '鹦鹉', enName: 'Parrot', emoji: '🦜', breeds: ['玄凤', '虎皮', '牡丹'], colors: ['绿色', '黄色', '蓝色', '彩色'] },
-    { type: 'tropical_fish', name: '热带鱼', enName: 'Tropical Fish', emoji: '🐠', breeds: ['孔雀鱼', '神仙鱼', '斗鱼'], colors: ['红色', '蓝色', '彩色'] },
+    { type: 'turtle', name: '乌龟', enName: 'Turtle', emoji: '🐢',
+      breeds: ['巴西龟', '草龟', '陆龟', '金钱龟', '鳄龟', '麝香龟', '地图龟', '猪鼻龟', '黄缘龟', '苏卡达陆龟', '红耳龟', '锦龟'],
+      colors: ['绿色', '棕色', '黑色', '黄色', '深绿', '浅棕'] },
+    { type: 'snake', name: '蛇', enName: 'Snake', emoji: '🐍',
+      breeds: ['玉米蛇', '球蟒', '王蛇', '奶蛇', '绿森蚺', '眼镜蛇', '红尾蚺', '猪鼻蛇', '翠青蛇', '黑王蛇'],
+      colors: ['绿色', '黄色', '黑色', '花色', '白色', '红色', '橙色', '灰色'] },
+    { type: 'lizard', name: '蜥蜴', enName: 'Lizard', emoji: '🦎',
+      breeds: ['鬃狮蜥', '绿鬣蜥', '豹纹守宫', '睫角守宫', '日行守宫', '蓝舌石龙子', '犀牛鬣蜥', '变色龙'],
+      colors: ['绿色', '棕色', '黄色', '橙色', '红色', '蓝色'] },
+    { type: 'frog', name: '青蛙', enName: 'Frog', emoji: '🐸',
+      breeds: ['角蛙', '树蛙', '牛蛙', '箭毒蛙', '雨蛙', '钟角蛙', '老爷树蛙', '红眼树蛙'],
+      colors: ['绿色', '棕色', '黄色', '红色', '蓝色', '花色'] },
+    { type: 'hedgehog', name: '刺猬', enName: 'Hedgehog', emoji: '🦔',
+      breeds: ['非洲迷你刺猬', '欧洲刺猬', '四趾刺猬', '长耳刺猬'],
+      colors: ['棕色', '白色', '花色', '灰色', '巧克力色'] },
+    { type: 'guinea_pig', name: '豚鼠', enName: 'Guinea Pig', emoji: '🐹',
+      breeds: ['短顺', '长逆', '无毛', '泰迪', '荷兰猪', '冠毛', '喜马拉雅', '阿比西尼亚'],
+      colors: ['白色', '黑色', '棕色', '花色', '黄色', '三色'] },
+    { type: 'chinchilla', name: '龙猫', enName: 'Chinchilla', emoji: '🐭',
+      breeds: ['标准灰', '米色', '银斑', '紫灰', '纯黑', '纯白', '金粉', '丝绒黑', '咖色'],
+      colors: ['灰色', '白色', '米色', '黑色', '紫色', '金色', '咖啡'] },
+    { type: 'ferret', name: '雪貂', enName: 'Ferret', emoji: '🦨',
+      breeds: ['安格鲁', '玛雪儿', '香槟貂', '黑眼白貂'],
+      colors: ['白色', '棕色', '黑色', '花色', '香槟', '银色'] },
+    { type: 'parrot', name: '鹦鹉', enName: 'Parrot', emoji: '🦜',
+      breeds: ['玄凤', '虎皮', '牡丹', '金刚鹦鹉', '葵花鹦鹉', '灰鹦鹉', '小太阳', '吸蜜鹦鹉', '凯克鹦鹉', '亚马逊鹦鹉'],
+      colors: ['绿色', '黄色', '蓝色', '彩色', '红色', '白色', '橙色'] },
+    { type: 'tropical_fish', name: '热带鱼', enName: 'Tropical Fish', emoji: '🐠',
+      breeds: ['孔雀鱼', '神仙鱼', '斗鱼', '小丑鱼', '蓝魔', '蝶鱼', '刺尾鱼', '火焰虾虎', '雷达鱼', '海马'],
+      colors: ['红色', '蓝色', '彩色', '黄色', '橙色', '紫色'] },
   ];
 
   const ART_STYLES = [
@@ -82,6 +114,12 @@ const CreatePetPage = () => {
   const [showCustomPetForm, setShowCustomPetForm] = useState(false);
   const [customPetName, setCustomPetName] = useState('');
   const [customPetEmoji, setCustomPetEmoji] = useState('🐾');
+  const [showCustomBreedInput, setShowCustomBreedInput] = useState(false);
+  const [showCustomColorInput, setShowCustomColorInput] = useState(false);
+  const [customBreedValue, setCustomBreedValue] = useState('');
+  const [customColorValue, setCustomColorValue] = useState('');
+  const [customBreeds, setCustomBreeds] = useState([]);
+  const [customColors, setCustomColors] = useState([]);
 
   const steps = useMemo(() => [
     { number: 1, title: '选择宠物类型', enTitle: 'Select Pet Type' },
@@ -134,6 +172,48 @@ const CreatePetPage = () => {
     setCustomPetName('');
     setCustomPetEmoji('🐾');
   }, [customPetName, customPetEmoji]);
+
+  const handleAddCustomBreed = useCallback(() => {
+    const breed = customBreedValue.trim();
+    if (!breed) {
+      alert('请输入品种名称');
+      return;
+    }
+    if (customBreeds.includes(breed) || selectedPetType?.breeds.includes(breed)) {
+      alert('该品种已存在');
+      return;
+    }
+    setCustomBreeds(prev => [...prev, breed]);
+    setSelectedBreed(breed);
+    setCustomBreedValue('');
+    setShowCustomBreedInput(false);
+  }, [customBreedValue, customBreeds, selectedPetType]);
+
+  const handleAddCustomColor = useCallback(() => {
+    const color = customColorValue.trim();
+    if (!color) {
+      alert('请输入毛色名称');
+      return;
+    }
+    if (customColors.includes(color) || selectedPetType?.colors.includes(color)) {
+      alert('该毛色已存在');
+      return;
+    }
+    setCustomColors(prev => [...prev, color]);
+    setSelectedColor(color);
+    setCustomColorValue('');
+    setShowCustomColorInput(false);
+  }, [customColorValue, customColors, selectedPetType]);
+
+  // 切换宠物类型时清空自定义品种和毛色
+  useEffect(() => {
+    setCustomBreeds([]);
+    setCustomColors([]);
+    setShowCustomBreedInput(false);
+    setShowCustomColorInput(false);
+    setCustomBreedValue('');
+    setCustomColorValue('');
+  }, [selectedPetType?.type]);
 
   const handleImageUpload = useCallback((e) => {
     const files = e.target.files;
@@ -469,6 +549,56 @@ const CreatePetPage = () => {
                   {breed}
                 </button>
               ))}
+              {customBreeds.map((breed) => (
+                <button
+                  key={'custom-' + breed}
+                  type="button"
+                  onClick={() => setSelectedBreed(breed)}
+                  className={`px-4 py-2 rounded-lg text-sm transition-all border border-dashed border-green-500/50 ${
+                    selectedBreed === breed
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-600 text-green-400 hover:bg-gray-500'
+                  }`}
+                >
+                  ✨ {breed}
+                </button>
+              ))}
+              {!showCustomBreedInput ? (
+                <button
+                  type="button"
+                  onClick={() => setShowCustomBreedInput(true)}
+                  className="px-4 py-2 rounded-lg text-sm bg-gray-600/50 text-orange-400 border border-dashed border-orange-500/40 hover:bg-gray-500 hover:border-orange-500 transition-all"
+                >
+                  + 自定义品种
+                </button>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={customBreedValue}
+                    onChange={(e) => setCustomBreedValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddCustomBreed(); }}
+                    placeholder="输入品种名"
+                    className="w-28 px-3 py-2 bg-gray-600 text-white rounded-lg text-sm outline-none border border-orange-500/50 focus:border-orange-500"
+                    maxLength={12}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomBreed}
+                    className="px-2 py-2 bg-green-500 text-white rounded-lg text-xs hover:bg-green-400 transition-colors"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowCustomBreedInput(false); setCustomBreedValue(''); }}
+                    className="px-2 py-2 bg-gray-500 text-white rounded-lg text-xs hover:bg-gray-400 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -489,12 +619,62 @@ const CreatePetPage = () => {
                   {color}
                 </button>
               ))}
+              {customColors.map((color) => (
+                <button
+                  key={'custom-' + color}
+                  type="button"
+                  onClick={() => setSelectedColor(color)}
+                  className={`px-4 py-2 rounded-lg text-sm transition-all border border-dashed border-blue-500/50 ${
+                    selectedColor === color
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-600 text-blue-400 hover:bg-gray-500'
+                  }`}
+                >
+                  ✨ {color}
+                </button>
+              ))}
+              {!showCustomColorInput ? (
+                <button
+                  type="button"
+                  onClick={() => setShowCustomColorInput(true)}
+                  className="px-4 py-2 rounded-lg text-sm bg-gray-600/50 text-orange-400 border border-dashed border-orange-500/40 hover:bg-gray-500 hover:border-orange-500 transition-all"
+                >
+                  + 自定义毛色
+                </button>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={customColorValue}
+                    onChange={(e) => setCustomColorValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddCustomColor(); }}
+                    placeholder="输入毛色名"
+                    className="w-28 px-3 py-2 bg-gray-600 text-white rounded-lg text-sm outline-none border border-orange-500/50 focus:border-orange-500"
+                    maxLength={12}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomColor}
+                    className="px-2 py-2 bg-blue-500 text-white rounded-lg text-xs hover:bg-blue-400 transition-colors"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowCustomColorInput(false); setCustomColorValue(''); }}
+                    className="px-2 py-2 bg-gray-500 text-white rounded-lg text-xs hover:bg-gray-400 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
       )}
     </div>
-  ), [selectedPetType, selectedBreed, selectedColor, handleCommonPetSelect, handleUncommonPetSelect, handleCustomPetCreate, showCustomPetForm, customPetName, customPetEmoji]);
+  ), [selectedPetType, selectedBreed, selectedColor, handleCommonPetSelect, handleUncommonPetSelect, handleCustomPetCreate, showCustomPetForm, customPetName, customPetEmoji, showCustomBreedInput, showCustomColorInput, customBreedValue, customColorValue, customBreeds, customColors, handleAddCustomBreed, handleAddCustomColor]);
 
   const Step2Content = useCallback(() => (
     <div className="space-y-6">
