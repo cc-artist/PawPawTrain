@@ -59,6 +59,8 @@ const Feed = () => {
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [videoPlaying, setVideoPlaying] = useState(false)
   const [videoError, setVideoError] = useState(false)
+  const [showPlayIndicator, setShowPlayIndicator] = useState(false)
+  const playIndicatorTimer = useRef(null)
   const containerRef = useRef(null)
   const videoRef = useRef(null)
   const touchStartY = useRef(0)
@@ -169,8 +171,28 @@ const Feed = () => {
       } else {
         handlePrev()
       }
+    } else {
+      // 轻触：切换播放/暂停
+      handleVideoClick()
     }
   }
+
+  const handleVideoClick = useCallback(() => {
+    const video = videoRef.current
+    if (!video || !isVideo(allPosts[currentIndex]?.media)) return
+
+    if (video.paused) {
+      video.play().catch(() => {})
+      setVideoPlaying(true)
+    } else {
+      video.pause()
+      setVideoPlaying(false)
+    }
+
+    setShowPlayIndicator(true)
+    if (playIndicatorTimer.current) clearTimeout(playIndicatorTimer.current)
+    playIndicatorTimer.current = setTimeout(() => setShowPlayIndicator(false), 800)
+  }, [currentIndex, allPosts])
 
   const handleWheel = useCallback((e) => {
     if (showUpload) return
@@ -300,7 +322,7 @@ const Feed = () => {
             <div className="absolute inset-0">
               {typeof currentPost.media === 'string' && (currentPost.media.startsWith('http') || currentPost.media.startsWith('data:image') || currentPost.media.startsWith('data:video')) ? (
                 isCurrentVideo ? (
-                  <div className="absolute inset-0" style={{ zIndex: 10 }}>
+                  <div className="absolute inset-0" style={{ zIndex: 10 }} onClick={handleVideoClick}>
                     <video
                       ref={videoRef}
                       src={currentPost.media}
@@ -326,7 +348,10 @@ const Feed = () => {
                         setVideoPlaying(true)
                         setVideoError(false)
                       }}
-                      onPause={() => console.log('[VIDEO] paused')}
+                      onPause={() => {
+                        console.log('[VIDEO] paused')
+                        setVideoPlaying(false)
+                      }}
                       onEnded={() => {
                         console.log('[VIDEO] ended, restarting')
                         videoRef.current?.play().catch(err => console.log('[VIDEO] loop play failed:', err))
@@ -341,6 +366,23 @@ const Feed = () => {
                       onStalled={() => console.log('[VIDEO] stalled')}
                       onSuspend={() => console.log('[VIDEO] suspend')}
                     />
+                    {/* 播放/暂停指示器 */}
+                    <AnimatePresence>
+                      {showPlayIndicator && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.5 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                          style={{ zIndex: 20 }}
+                        >
+                          <div className="w-20 h-20 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                            <span className="text-4xl">{videoPlaying ? '⏸' : '▶'}</span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 ) : (
                   <motion.img 
