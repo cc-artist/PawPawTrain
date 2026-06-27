@@ -309,22 +309,37 @@ const Feed = () => {
             <div className="absolute inset-0">
               {typeof currentPost.media === 'string' && (currentPost.media.startsWith('http') || currentPost.media.startsWith('data:image') || currentPost.media.startsWith('data:video')) ? (
                 isCurrentVideo ? (
-                  <div className="absolute inset-0 bg-black">
+                  <div className="absolute inset-0" style={{ zIndex: 1, position: 'absolute', inset: 0, backgroundColor: '#000' }}>
                     <video 
                       ref={videoRef}
                       src={currentPost.media}
-                      className="w-full h-full object-cover" 
-                      style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '100%', objectFit: 'cover', zIndex: 1 }}
-                      autoPlay={true}
-                      muted={true}
-                      loop={true}
-                      playsInline={true}
+                      className="w-full h-full" 
+                      style={{ 
+                        position: 'absolute', 
+                        top: 0, 
+                        left: 0, 
+                        width: '100%', 
+                        height: '100%', 
+                        minWidth: '100%', 
+                        minHeight: '100%', 
+                        objectFit: 'cover', 
+                        zIndex: 'auto',
+                        backgroundColor: '#000',
+                        display: 'block',
+                        visibility: 'visible',
+                        opacity: 1
+                      }}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
                       preload="auto"
                       controls={false}
-                      disablePictureInPicture={true}
-                      playsInline={true}
-                      onLoadedMetadata={() => {
-                        console.log('Video metadata loaded')
+                      disablePictureInPicture
+                      onLoadedMetadata={(e) => {
+                        console.log('Video metadata loaded', e.currentTarget.videoWidth, 'x', e.currentTarget.videoHeight, 'duration:', e.currentTarget.duration)
+                        e.currentTarget.style.visibility = 'visible'
+                        e.currentTarget.style.opacity = '1'
                       }}
                       onCanPlayThrough={() => {
                         console.log('Video can play through')
@@ -347,10 +362,19 @@ const Feed = () => {
                         console.error('Video URL:', currentPost.media)
                         setVideoError(true)
                       }}
+                      onLoadStart={() => {
+                        console.log('Video load started')
+                      }}
+                      onProgress={() => {
+                        if (videoRef.current && videoRef.current.readyState < 2) {
+                          console.log('Video loading, readyState:', videoRef.current.readyState)
+                        }
+                      }}
                     />
                     {(!videoPlaying || videoError) && (
                       <div 
-                        className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer bg-black/50"
+                        className="absolute inset-0 flex items-center justify-center cursor-pointer"
+                        style={{ zIndex: 20, background: 'rgba(0,0,0,0.5)' }}
                         onClick={() => {
                           if (videoRef.current) {
                             videoRef.current.muted = true
