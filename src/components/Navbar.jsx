@@ -252,7 +252,8 @@ const Navbar = () => {
 
       <div className="fixed bottom-0 left-0 right-0 glass-effect border-t border-cyber-blue/50 z-[10000]">
         <div className="w-full flex items-center justify-around">
-          {navItems.map((item) => {
+          {/* 左侧3个导航项：首页、动态、商城 */}
+          {navItems.slice(0, 3).map((item) => {
             const isActive = location.pathname === item.path
             const isLocked = item.locked && !isLoggedIn
             
@@ -292,23 +293,64 @@ const Navbar = () => {
               </motion.button>
             )
           })}
-          
-          {isLoggedIn && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleClick('/upload')}
-              className="relative -mt-6 z-10 flex-none w-auto"
+
+          {/* 中央 + 按钮 */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleClick('/upload')}
+            className="relative -mt-6 z-10 flex-none w-auto"
+          >
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-16 h-16 bg-gradient-to-br from-cyber-blue to-cyber-purple rounded-full flex items-center justify-center shadow-lg shadow-cyber-blue/50 border-4 border-cyber-dark"
             >
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="w-16 h-16 bg-gradient-to-br from-cyber-blue to-cyber-purple rounded-full flex items-center justify-center shadow-lg shadow-cyber-blue/50 border-4 border-cyber-dark"
+              <span className="text-4xl text-cyber-dark font-bold leading-none -mt-1 neon-text">+</span>
+            </motion.div>
+          </motion.button>
+
+          {/* 右侧3个导航项：社交、我的 + 登录/注册 */}
+          {navItems.slice(3, 5).map((item) => {
+            const isActive = location.pathname === item.path
+            const isLocked = item.locked && !isLoggedIn
+            
+            return (
+              <motion.button
+                key={item.path}
+                whileHover={!isLocked ? { scale: 1.05 } : {}}
+                whileTap={!isLocked ? { scale: 0.95 } : {}}
+                onClick={() => handleClick(item.path)}
+                onMouseEnter={(e) => !isLocked && handleMouseEnter(item.path, e)}
+                onMouseLeave={() => setHoveredPath(null)}
+                disabled={isLocked}
+                className={`
+                  flex-1 py-3 flex flex-col items-center gap-1 transition-colors duration-200 relative min-h-[60px]
+                  ${isActive && !isLocked ? 'text-cyber-blue' : ''}
+                  ${isLocked ? 'text-gray-600 cursor-not-allowed' : ''}
+                  ${!isLocked && !isActive ? 'text-cyber-blue/50' : ''}
+                `}
               >
-                <span className="text-4xl text-cyber-dark font-bold leading-none -mt-1 neon-text">+</span>
-              </motion.div>
-            </motion.button>
-          )}
+                {isLocked ? (
+                  <div className="relative">
+                    <span className="text-2xl opacity-40">{item.icon}</span>
+                    <span className="absolute -top-1 -right-1 text-xs text-gray-500">🔒</span>
+                  </div>
+                ) : (
+                  <>
+                    <span className="text-2xl">{item.icon}</span>
+                    <span className="text-xs font-medium opacity-70">{item.label}</span>
+                  </>
+                )}
+                {isActive && !isLocked && (
+                  <motion.div
+                    layoutId="nav-indicator"
+                    className="absolute bottom-0 w-10 h-1 bg-gradient-to-r from-cyber-blue to-cyber-purple rounded-full shadow-lg shadow-cyber-blue/50"
+                  />
+                )}
+              </motion.button>
+            )
+          })}
           
           <motion.button
             whileHover={{ scale: 1.05 }}
