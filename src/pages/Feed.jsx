@@ -111,7 +111,10 @@ const Feed = () => {
 
   const isVideo = (media) => {
     if (!media) return false
-    return media.match(/\.(mp4|mov|webm)$/i) || media.startsWith('data:video')
+    if (media.startsWith('data:video')) return true
+    if (media.match(/\.(mp4|mov|webm|ogg|m4v)$/i)) return true
+    if (media.includes('/video/upload/')) return true
+    return false
   }
 
   const isImage = (media) => {
@@ -427,7 +430,12 @@ const Feed = () => {
                   </motion.span>
                 </motion.div>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+              {!isCurrentVideo && (
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+              )}
+              {isCurrentVideo && (
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+              )}
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 p-6">

@@ -36,7 +36,8 @@
         transparent 2px
       );
     pointer-events: none;
-    z-index: 9999;
+    z-index: 1;
+    mix-blend-mode: overlay;
   }
 }
 
