@@ -211,8 +211,8 @@ const Feed = () => {
       }
       
       console.log('[VIDEO] attempting to play:', currentMedia.substring(0, 80))
-      video.muted = true
-      video.volume = 0
+      video.muted = false
+      video.volume = 0.8
       video.play().then(() => {
         console.log('[VIDEO] play() resolved successfully')
         setVideoPlaying(true)
@@ -253,7 +253,8 @@ const Feed = () => {
     const timer = setTimeout(() => {
       const video = videoRef.current
       if (video && isVideo(allPosts[0]?.media)) {
-        video.muted = true
+        video.muted = false
+        video.volume = 0.8
         video.play().catch(err => console.log('[VIDEO] initial play failed:', err))
       }
     }, 200)
@@ -268,7 +269,8 @@ const Feed = () => {
       } else if (video && !document.hidden) {
         const currentMedia = allPosts[currentIndex]?.media
         if (isVideo(currentMedia)) {
-          video.muted = true
+          video.muted = false
+          video.volume = 0.8
           video.play().catch(err => console.log('Play on visibility change:', err))
         }
       }
@@ -304,7 +306,6 @@ const Feed = () => {
                       src={currentPost.media}
                       crossOrigin="anonymous"
                       autoPlay
-                      muted
                       loop
                       playsInline
                       preload="auto"
