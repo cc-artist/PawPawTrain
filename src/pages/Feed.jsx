@@ -14,6 +14,11 @@ const systemVideos = [
   { id: 'sys-video-6', user: { name: '🐾 Training / 训练时刻', avatar: '🏋️' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608825/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191816_096_e3nbsv.mp4', content: 'Amazing pet training 🏆 / 宠物训练的精彩瞬间 🏆', likes: 1876, comments: 178, shares: 89, favorites: 567, time: '6h ago / 6小时前', features: { breed: 'dog / 狗狗', color: 'golden / 金色', expression: 'focused / 专注', emotion: 'positive', personalityBoost: { energy: 10, affection: 9, joy: 7, hunger: -6, discipline: 10 }, petType: 'dog' }, isMine: false },
   { id: 'sys-video-7', user: { name: '🐾 Warm Moment / 温馨时刻', avatar: '💝' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608823/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191847_801_fixhen.mp4', content: 'Human-pet warm interaction 💝 / 人与宠物的温馨互动 💝', likes: 3456, comments: 456, shares: 234, favorites: 1234, time: '7h ago / 7小时前', features: { breed: 'cat / 猫咪', color: 'white / 白色', expression: 'gentle / 温柔', emotion: 'positive', personalityBoost: { energy: 3, affection: 15, joy: 9, hunger: -1, discipline: 4 }, petType: 'cat' }, isMine: false },
   { id: 'sys-video-8', user: { name: '🐾 Joy Time / 欢乐时光', avatar: '🎉' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608823/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191843_526_jmohgf.mp4', content: 'Pets joyful time! 🎊 / 宠物们的欢乐时光！🎊', likes: 2123, comments: 321, shares: 167, favorites: 789, time: '8h ago / 8小时前', features: { breed: 'dog / 狗狗', color: 'brown / 棕色', expression: 'happy / 开心', emotion: 'positive', personalityBoost: { energy: 11, affection: 8, joy: 14, hunger: -4, discipline: 7 }, petType: 'dog' }, isMine: false },
+  { id: 'sys-video-9', user: { name: '🐾 Paw Paw Star / 爪爪明星', avatar: '⭐' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/v1782537437/1995813682_iy6q6g.mp4', content: 'Superstar pet moment! 🌟 / 明星宠物闪耀时刻！🌟', likes: 1890, comments: 234, shares: 156, favorites: 567, time: '9h ago / 9小时前', features: { breed: 'dog / 狗狗', color: 'white / 白色', expression: 'playful / 调皮', emotion: 'positive', personalityBoost: { energy: 12, affection: 9, joy: 15, hunger: -5, discipline: 8 }, petType: 'dog' }, isMine: false },
+  { id: 'sys-video-10', user: { name: '🐾 Sweet Home / 甜蜜之家', avatar: '🏠' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/v1782537417/930545201_scbn5a.mp4', content: 'Cozy home with my pet 🏡 / 和宠物宅家的温馨时光 🏡', likes: 1345, comments: 189, shares: 98, favorites: 432, time: '10h ago / 10小时前', features: { breed: 'cat / 猫咪', color: 'orange / 橙色', expression: 'relaxed / 放松', emotion: 'calm', personalityBoost: { energy: 4, affection: 14, joy: 10, hunger: -3, discipline: 5 }, petType: 'cat' }, isMine: false },
+  { id: 'sys-video-11', user: { name: '🐾 Outdoor Fun / 户外乐趣', avatar: '🌳' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/v1782537412/535416673_w2mefz.mp4', content: 'Exploring the great outdoors! 🌿 / 探索户外大自然！🌿', likes: 2100, comments: 312, shares: 189, favorites: 678, time: '11h ago / 11小时前', features: { breed: 'dog / 狗狗', color: 'golden / 金色', expression: 'excited / 兴奋', emotion: 'positive', personalityBoost: { energy: 15, affection: 7, joy: 18, hunger: -8, discipline: 6 }, petType: 'dog' }, isMine: false },
+  { id: 'sys-video-12', user: { name: '🐾 Cute Attack / 可爱暴击', avatar: '💕' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/v1782537409/167735843_ji9gla.mp4', content: 'Cuteness overload! 💖 / 可爱暴击！💖', likes: 3456, comments: 567, shares: 345, favorites: 1234, time: '12h ago / 12小时前', features: { breed: 'cat / 猫咪', color: 'white / 白色', expression: 'curious / 好奇', emotion: 'positive', personalityBoost: { energy: 7, affection: 15, joy: 13, hunger: -2, discipline: 4 }, petType: 'cat' }, isMine: false },
+  { id: 'sys-video-13', user: { name: '🐾 Play Time / 玩乐时光', avatar: '🎾' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/v1782537396/1622777298_jkj5am.mp4', content: 'Play hard, nap harder! 😴 / 尽情玩耍，尽情睡觉！😴', likes: 2678, comments: 456, shares: 234, favorites: 890, time: '13h ago / 13小时前', features: { breed: 'dog / 狗狗', color: 'brown / 棕色', expression: 'energetic / 活力', emotion: 'positive', personalityBoost: { energy: 14, affection: 10, joy: 16, hunger: -6, discipline: 7 }, petType: 'dog' }, isMine: false },
 ]
 
 const mockPosts = [
@@ -376,7 +381,7 @@ const Feed = () => {
             <div className="absolute inset-0">
               {typeof currentPost.media === 'string' && (currentPost.media.startsWith('http') || currentPost.media.startsWith('data:image') || currentPost.media.startsWith('data:video')) ? (
                 isCurrentVideo ? (
-                  <div className="absolute inset-0" style={{ zIndex: 10 }} onClick={(e) => { e.stopPropagation(); handleVideoClick(); }}>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black" style={{ zIndex: 10 }} onClick={(e) => { e.stopPropagation(); handleVideoClick(); }}>
                     <video
                       ref={videoRef}
                       src={currentPost.media}
@@ -385,7 +390,7 @@ const Feed = () => {
                       loop
                       playsInline
                       preload="auto"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block' }}
                       onPlay={() => { setVideoPlaying(true); setVideoError(false); }}
                       onPause={() => setVideoPlaying(false)}
                       onEnded={() => { videoRef.current?.play().catch(() => {}); }}
