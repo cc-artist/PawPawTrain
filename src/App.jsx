@@ -1,3 +1,4 @@
+// Build: v2.0 - Feed UI restore + Training result confirmation
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom'
