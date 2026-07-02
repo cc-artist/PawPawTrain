@@ -1089,9 +1089,27 @@ const CreatePetPage = () => {
     }
   }, [currentStep, Step1Content, Step2Content, Step3Content, Step4Content, Step5Content]);
 
+  // 安全兜底：如果 ProtectedRoute 未能拦截未登录用户，用 useEffect 跳转
+  // 避免在 render 期间调用 navigate（React 反模式，可能导致白屏/黑屏）
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/login', { replace: true });
+    }
+  }, [isLoggedIn, navigate]);
+
   if (!isLoggedIn) {
-    navigate('/login');
-    return null;
+    // 显示加载状态，等 navigate 生效
+    return (
+      <div className="min-h-full flex items-center justify-center gradient-bg">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+          className="text-4xl"
+        >
+          🐾
+        </motion.div>
+      </div>
+    );
   }
 
   // 预览模式：生成成功后展示图片供用户确认

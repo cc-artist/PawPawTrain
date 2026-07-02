@@ -306,7 +306,19 @@ const TrainingPage = () => {
     };
   }, []);
 
-  if (!isLoggedIn) { navigate('/login'); return null; }
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/login', { replace: true });
+    }
+  }, [isLoggedIn, navigate]);
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-full flex items-center justify-center gradient-bg">
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} className="text-4xl">🎯</motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-bg p-4 pb-28">

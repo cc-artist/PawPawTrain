@@ -82,12 +82,12 @@ function ProtectedRoute({ children }) {
       const token = localStorage.getItem('token')
       
       if (!token) {
-        setIsCheckingAuth(false)
+        if (isMounted) setIsCheckingAuth(false)
         return
       }
       
       if (isLoggedIn) {
-        setIsCheckingAuth(false)
+        if (isMounted) setIsCheckingAuth(false)
         return
       }
       
@@ -116,8 +116,11 @@ function ProtectedRoute({ children }) {
             localStorage.removeItem('paw_train_user_state')
             localStorage.removeItem('paw_train_pet_state')
           }
+        } else if (isMounted) {
+          // 关键修复：token存在但API失败且无本地缓存 → 创建临时用户避免子组件黑屏
+          console.warn('No saved user, creating temp user to prevent blank screen')
+          setUser({ id: 'temp-user', name: '用户', points: 0 })
         }
-        // 如果token存在但无法恢复，不清除token，允许降级处理
       } finally {
         if (isMounted) {
           setIsCheckingAuth(false)
@@ -128,10 +131,10 @@ function ProtectedRoute({ children }) {
     const timeout = setTimeout(() => {
       console.warn('Auth check timeout, proceeding with token-based login state')
       const token = localStorage.getItem('token')
-      if (token && !isLoggedIn) {
+      if (token && !isLoggedIn && isMounted) {
         setUser({ id: 'temp-user', name: '用户', points: 0 })
       }
-      setIsCheckingAuth(false)
+      if (isMounted) setIsCheckingAuth(false)
     }, 5000)
 
     checkAuth()
