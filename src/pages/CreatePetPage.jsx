@@ -125,6 +125,7 @@ const CreatePetPage = () => {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [showHistoryPanel, setShowHistoryPanel] = useState(false);
   const [previewImageIndex, setPreviewImageIndex] = useState(null);
+  const [imageLoadedState, setImageLoadedState] = useState({ loading: false, error: false });
 
   const steps = useMemo(() => [
     { number: 1, title: 'Select Pet Type\n选择宠物类型', enTitle: 'Select Pet Type' },
@@ -300,6 +301,7 @@ const CreatePetPage = () => {
     }
 
     setIsSubmitting(true);
+    setImageLoadedState({ loading: true, error: false });
     try {
       const petEmoji = selectedPetType?.emoji || '🐾';
       const petTypeName = selectedBreed || '宠物';
@@ -1095,8 +1097,9 @@ const CreatePetPage = () => {
   // 预览模式：生成成功后展示图片供用户确认
   if (showPreview && lastGeneratedResult) {
     const artStyleName = ART_STYLES.find(s => s.id === selectedArtStyle)?.name || selectedArtStyle;
+    const hasImage = lastGeneratedResult.imageUrl && lastGeneratedResult.imageUrl.length > 0;
     return (
-      <div className="min-h-full gradient-bg flex flex-col items-center justify-center p-4">
+      <div className="min-h-full gradient-bg flex flex-col items-center justify-center p-4 pb-28">
         <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring' }} className="w-full max-w-md">
           <div className="text-center mb-6">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }} className="text-6xl mb-2">🎉</motion.div>
@@ -1112,26 +1115,42 @@ const CreatePetPage = () => {
             className="relative mb-6"
           >
             <div className="rounded-3xl overflow-hidden bg-gray-800/50 p-2 border-2 border-orange-500/30 shadow-2xl shadow-orange-500/20">
-              {lastGeneratedResult.imageUrl ? (
-                <img 
-                  src={lastGeneratedResult.imageUrl} 
-                  alt="Generated Pet"
-                  className="w-full rounded-2xl object-cover"
-                  style={{ minHeight: '280px', maxHeight: '400px' }}
-                  onError={(e) => { 
-                    e.target.style.display = 'none'; 
-                    e.target.nextSibling.style.display = 'flex'; 
-                  }}
-                />
+              {hasImage ? (
+                <>
+                  {/* 加载中指示器 */}
+                  {imageLoadedState.loading && !imageLoadedState.error && (
+                    <div className="w-full rounded-2xl flex flex-col items-center justify-center bg-gray-700/50" style={{ minHeight: '280px', maxHeight: '400px' }}>
+                      <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} className="text-5xl mb-3">⏳</motion.div>
+                      <p className="text-gray-400 text-sm">Loading image... / 图片加载中...</p>
+                    </div>
+                  )}
+                  {/* 图片 */}
+                  <img 
+                    src={lastGeneratedResult.imageUrl} 
+                    alt="Generated Pet"
+                    className={`w-full rounded-2xl object-cover ${imageLoadedState.loading && !imageLoadedState.error ? 'hidden' : ''}`}
+                    style={{ minHeight: '280px', maxHeight: '400px' }}
+                    onLoad={() => setImageLoadedState({ loading: false, error: false })}
+                    onError={(e) => { 
+                      console.warn('⚠️ 图片加载失败，显示占位图');
+                      setImageLoadedState({ loading: false, error: true });
+                      e.target.style.display = 'none'; 
+                      if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex'; 
+                    }}
+                  />
+                  {/* 图片加载失败的替换 */}
+                  <div className={`w-full rounded-2xl items-center justify-center bg-gray-700/50 ${imageLoadedState.error ? 'flex' : 'hidden'}`} style={{ minHeight: '280px' }}>
+                    <div className="text-center">
+                      <span className="text-6xl block mb-2">{selectedPetType?.emoji || '🐾'}</span>
+                      <p className="text-gray-400 text-sm">{lastGeneratedResult.name || 'Pet / 宠物'}</p>
+                    </div>
+                  </div>
+                </>
               ) : (
                 <div className="w-full rounded-2xl flex items-center justify-center bg-gray-700/50" style={{ minHeight: '280px' }}>
                   <span className="text-6xl">{selectedPetType?.emoji || '🐾'}</span>
                 </div>
               )}
-              {/* 图片加载失败的替换 */}
-              <div className="w-full rounded-2xl items-center justify-center bg-gray-700/50 hidden" style={{ minHeight: '280px' }}>
-                <span className="text-6xl">{selectedPetType?.emoji || '🐾'}</span>
-              </div>
             </div>
             
             {/* 状态标签 */}
@@ -1141,7 +1160,7 @@ const CreatePetPage = () => {
               </span>
               {lastGeneratedResult.isPlaceholder && (
                 <span className="px-3 py-1 bg-yellow-600/30 text-yellow-300 rounded-full text-xs border border-yellow-500/30">
-                  Placeholder / 占位图
+                  Fallback / 降级图片
                 </span>
               )}
             </div>
@@ -1175,6 +1194,7 @@ const CreatePetPage = () => {
               <button
                 onClick={() => {
                   setShowPreview(false);
+                  setImageLoadedState({ loading: false, error: false });
                   setCurrentStep(4);
                 }}
                 className="flex-1 py-3 bg-gray-700 text-gray-300 rounded-2xl font-medium hover:bg-gray-600 transition-all"
@@ -1193,7 +1213,7 @@ const CreatePetPage = () => {
 
   if (showSuccess) {
     return (
-      <div className="min-h-full gradient-bg flex flex-col items-center justify-center p-4">
+      <div className="min-h-full gradient-bg flex flex-col items-center justify-center p-4 pb-28">
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }} className="text-8xl mb-4">🎉</motion.div>
         <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-2xl font-bold text-white mb-2">Virtual Pet Created! / 虚拟宠物创建成功！</motion.h2>
         {lastGeneratedResult?.imageUrl && (

@@ -290,8 +290,10 @@ class ImageService {
   <text x="700" y="550" font-size="22" opacity="0.10">🐾</text>
 </svg>`.trim();
 
+    // 使用 encodeURIComponent 代替 base64，避免中文/emoji 在部分浏览器环境下渲染失败
+    const dataUri = `data:image/svg+xml,${encodeURIComponent(svg)}`;
     return {
-      imageUrl: `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`,
+      imageUrl: dataUri,
       generationId: `svg_${Date.now()}`
     };
   }

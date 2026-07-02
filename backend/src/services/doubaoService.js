@@ -210,8 +210,8 @@ class DoubaoService {
       </svg>
     `.trim();
 
-    const svgBase64 = Buffer.from(svgContent).toString('base64');
-    const imageUrl = `data:image/svg+xml;base64,${svgBase64}`;
+    // 使用 encodeURIComponent 代替 base64，避免中文/emoji 在部分浏览器环境下渲染失败
+    const imageUrl = `data:image/svg+xml,${encodeURIComponent(svgContent)}`;
 
     return {
       imageUrl,
