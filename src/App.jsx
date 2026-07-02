@@ -199,7 +199,11 @@ function AppContent() {
           
           <Route 
             path="/" 
-            element={<PublicLayout><Home /></PublicLayout>}
+            element={
+              <ProtectedRoute>
+                <PublicLayout><Home /></PublicLayout>
+              </ProtectedRoute>
+            }
           />
           <Route 
             path="/shop" 
