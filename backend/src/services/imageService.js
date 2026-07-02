@@ -7,7 +7,7 @@ dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '.
 
 /**
  * 多模型图像生成服务
- * 支持: 豆包 Seedream 5.0 (ARK), Stability AI, 本地SVG生成(降级)
+ * 支持: 豆包 Seedream 5.0 (ARK), 腾讯混元, Stability AI, 本地SVG生成(降级)
  */
 class ImageService {
   constructor() {
@@ -15,21 +15,90 @@ class ImageService {
     this.arkApiKey = process.env.ARK_API_KEY || process.env.DOUBAO_API_KEY;
     this.arkBaseUrl = process.env.DOUBAO_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3';
     
+    // 腾讯混元 API
+    this.hunyuanApiKey = process.env.HUNYUAN_API_KEY;
+    this.hunyuanBaseUrl = 'https://api.hunyuan.cloud.tencent.com/hunyuan/v1/images/generations';
+    
     // Stability AI
     this.stabilityApiKey = process.env.STABILITY_API_KEY;
     
-    // 模型优先级
+    // 请求限流队列
+    this.requestQueue = [];
+    this.isProcessingQueue = false;
+    this.lastRequestTime = 0;
+    this.minRequestInterval = 2000; // 最小请求间隔 2 秒
+    
+    // 模型优先级 (豆包 -> 混元 -> Stability AI)
     this.modelPriority = [
       { name: 'doubao', endpoint: 'ark', models: [
         'doubao-seedream-5.0-250630',
         'doubao-seedream-4.0-250628',
         'doubao-seedream-4.5'
       ]},
+      { name: 'hunyuan', endpoint: 'hunyuan', models: ['hunyuan-turbo']},
       { name: 'stability', endpoint: 'stability', models: [
         'stable-diffusion-xl-1024-v1-0',
         'sd3.5-large'
       ]}
     ];
+  }
+
+  /**
+   * 等待限流队列（确保请求间隔）
+   */
+  async waitForRateLimit() {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    
+    if (timeSinceLastRequest < this.minRequestInterval) {
+      const waitTime = this.minRequestInterval - timeSinceLastRequest;
+      console.log(`⏳ 限流等待: ${waitTime}ms`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    
+    this.lastRequestTime = Date.now();
+  }
+
+  /**
+   * 带重试的 API 调用（指数退避）
+   */
+  async callWithRetry(apiCallFn, maxRetries = 2) {
+    let lastError;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        // 等待限流
+        await this.waitForRateLimit();
+        
+        // 执行 API 调用
+        return await apiCallFn();
+      } catch (err) {
+        lastError = err;
+        
+        // 如果是最后一次尝试，直接抛出错误
+        if (attempt === maxRetries) {
+          throw err;
+        }
+        
+        // 检查是否是配额错误（14003）或限流错误
+        const isQuotaError = err.response?.data?.error?.code === 14003 || 
+                           err.response?.status === 429 ||
+                           err.message?.includes('quota') ||
+                           err.message?.includes('限额');
+        
+        if (isQuotaError) {
+          console.warn(`⚠️ 检测到配额/限流错误，跳过重试: ${err.message}`);
+          throw err; // 配额错误不重试，直接跳过
+        }
+        
+        // 计算退避时间（指数退避）
+        const backoffTime = Math.min(1000 * Math.pow(2, attempt), 10000);
+        console.warn(`⚠️ API 调用失败，第 ${attempt + 1} 次重试，等待 ${backoffTime}ms: ${err.message}`);
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
+      }
+    }
+    
+    throw lastError;
   }
 
   /**
@@ -72,94 +141,144 @@ class ImageService {
   }
 
   /**
-   * 调用豆包 ARK API 生成图像
+   * 调用豆包 ARK API 生成图像（带重试）
    */
   async callArkAPI(prompt, model) {
     if (!this.arkApiKey) {
       throw new Error('ARK API Key 未配置');
     }
 
-    console.log(`🎨 调用 ARK API, Model: ${model}`);
-    
-    const response = await axios.post(
-      `${this.arkBaseUrl}/images/generations`,
-      {
-        model: model,
-        prompt: prompt,
-        n: 1,
-        size: '1024x1024',
-        response_format: 'url',
-        quality: 'standard'
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${this.arkApiKey}`,
-          'Content-Type': 'application/json'
+    return await this.callWithRetry(async () => {
+      console.log(`🎨 调用 ARK API, Model: ${model}`);
+      
+      const response = await axios.post(
+        `${this.arkBaseUrl}/images/generations`,
+        {
+          model: model,
+          prompt: prompt,
+          n: 1,
+          size: '1024x1024',
+          response_format: 'url',
+          quality: 'standard'
         },
-        timeout: 45000
+        {
+          headers: {
+            'Authorization': `Bearer ${this.arkApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 45000
+        }
+      );
+
+      if (response.data?.data?.length > 0 && response.data.data[0].url) {
+        return {
+          imageUrl: response.data.data[0].url,
+          provider: 'doubao',
+          model: model
+        };
       }
-    );
 
-    if (response.data?.data?.length > 0 && response.data.data[0].url) {
-      return {
-        imageUrl: response.data.data[0].url,
-        provider: 'doubao',
-        model: model
-      };
-    }
-
-    throw new Error('ARK API 返回数据格式异常');
+      throw new Error('ARK API 返回数据格式异常');
+    });
   }
 
   /**
-   * 调用 Stability AI API 生成图像
+   * 调用腾讯混元 API 生成图像
+   */
+  async callHunyuanAPI(prompt) {
+    if (!this.hunyuanApiKey) {
+      throw new Error('腾讯混元 API Key 未配置');
+    }
+
+    return await this.callWithRetry(async () => {
+      console.log('🎨 调用腾讯混元 API...');
+      
+      const response = await axios.post(
+        this.hunyuanBaseUrl,
+        {
+          model: 'hunyuan-turbo',
+          prompt: prompt,
+          n: 1,
+          size: '1024x1024',
+          response_format: 'url'
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.hunyuanApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 60000
+        }
+      );
+
+      if (response.data?.data?.length > 0 && response.data.data[0].url) {
+        return {
+          imageUrl: response.data.data[0].url,
+          provider: 'hunyuan',
+          model: 'hunyuan-turbo'
+        };
+      }
+
+      throw new Error('腾讯混元 API 返回数据格式异常');
+    });
+  }
+
+  /**
+   * 调用 Stability AI API 生成图像（带重试）
    */
   async callStabilityAPI(prompt) {
     if (!this.stabilityApiKey) {
       throw new Error('Stability API Key 未配置');
     }
 
-    console.log('🎨 调用 Stability AI API...');
+    return await this.callWithRetry(async () => {
+      console.log('🎨 调用 Stability AI API...');
 
-    const response = await axios.post(
-      'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image',
-      {
-        text_prompts: [{ text: prompt, weight: 1 }],
-        cfg_scale: 7,
-        height: 1024,
-        width: 1024,
-        samples: 1,
-        steps: 30,
-        style_preset: 'fantasy-art'
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${this.stabilityApiKey}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+      const response = await axios.post(
+        'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image',
+        {
+          text_prompts: [{ text: prompt, weight: 1 }],
+          cfg_scale: 7,
+          height: 1024,
+          width: 1024,
+          samples: 1,
+          steps: 30,
+          style_preset: 'fantasy-art'
         },
-        timeout: 60000
+        {
+          headers: {
+            'Authorization': `Bearer ${this.stabilityApiKey}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          timeout: 60000
+        }
+      );
+
+      if (response.data?.artifacts?.length > 0) {
+        const base64 = response.data.artifacts[0].base64;
+        return {
+          imageUrl: `data:image/png;base64,${base64}`,
+          provider: 'stability',
+          model: 'SDXL-1.0'
+        };
       }
-    );
 
-    if (response.data?.artifacts?.length > 0) {
-      const base64 = response.data.artifacts[0].base64;
-      return {
-        imageUrl: `data:image/png;base64,${base64}`,
-        provider: 'stability',
-        model: 'SDXL-1.0'
-      };
-    }
-
-    throw new Error('Stability API 返回数据为空');
+      throw new Error('Stability API 返回数据为空');
+    });
   }
 
   /**
    * 主入口：生成宠物图像（按优先级尝试多个API）
+   * @param {Object} petData - 宠物数据
+   * @param {string} imageBase64 - 用户上传的图片（可选）
    */
-  async generateImage(petData) {
+  async generateImage(petData, imageBase64 = null) {
     const prompt = this.buildPrompt(petData);
     console.log(`🎨 生成 Prompt: "${prompt.substring(0, 100)}..."`);
+    if (imageBase64) {
+      console.log(`📷 使用用户上传图片: ${imageBase64.substring(0, 50)}...`);
+    }
 
     const errors = [];
 
@@ -176,6 +295,18 @@ class ImageService {
             console.warn(`⚠️ ${msg}`);
             errors.push(msg);
           }
+        }
+      }
+
+      if (provider.endpoint === 'hunyuan') {
+        try {
+          const result = await this.callHunyuanAPI(prompt);
+          console.log('✅ 腾讯混元 API 成功');
+          return { ...result, generationId: `hunyuan_${Date.now()}` };
+        } catch (err) {
+          const msg = `Hunyuan: ${err.message}`;
+          console.warn(`⚠️ ${msg}`);
+          errors.push(msg);
         }
       }
 
@@ -197,7 +328,7 @@ class ImageService {
     console.warn('错误详情:', errors.join('; '));
 
     return {
-      ...this.generateEnhancedSVG(petData),
+      ...this.generateEnhancedSVG(petData, imageBase64),
       isPlaceholder: true,
       fallbackReason: errors.slice(0, 3).join('; ')
     };
@@ -206,8 +337,10 @@ class ImageService {
   /**
    * 生成增强版 SVG 占位图
    * 当所有外部 API 都不可用时的本地降级方案
+   * @param {Object} petData - 宠物数据
+   * @param {string} imageBase64 - 用户上传的图片（可选）
    */
-  generateEnhancedSVG(petData) {
+  generateEnhancedSVG(petData, imageBase64 = null) {
     const { type = 'cat', name = '宠物', color = '花色', artStyle = '3d_cartoon' } = petData;
 
     const petEmojis = {
@@ -245,6 +378,7 @@ class ImageService {
     <pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse">
       <circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.08)"/>
     </pattern>
+    <clipPath id="imgClip"><circle cx="512" cy="380" r="230"/></clipPath>
   </defs>
 
   <!-- 背景 -->
@@ -270,8 +404,7 @@ class ImageService {
   <!-- 主体圆形背景 -->
   <circle cx="512" cy="380" r="230" fill="url(#circleGrad)" filter="url(#shadow)"/>
 
-  <!-- 主 Emoji -->
-  <text x="512" y="430" text-anchor="middle" font-size="240" filter="url(#glow)">${emoji}</text>
+  ${imageBase64 && imageBase64.startsWith('data:image') ? `<image href="${imageBase64.replace(/"/g, '&quot;')}" x="282" y="150" width="460" height="460" preserveAspectRatio="xMidYMid slice" clip-path="url(#imgClip)" opacity="0.9"/>` : `<!-- 主 Emoji --><text x="512" y="430" text-anchor="middle" font-size="240" filter="url(#glow)">${emoji}</text>`}
 
   <!-- 宠物名称 -->
   <text x="512" y="680" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="52" font-weight="800" fill="white" opacity="0.95" filter="url(#shadow)">${name}</text>

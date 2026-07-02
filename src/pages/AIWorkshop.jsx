@@ -163,7 +163,16 @@ function AIWorkshop() {
         }
       } catch (err) {
         const status = err.response?.status;
-        console.log(`⚠️ 后端生成失败 (HTTP ${status || 'network error'}), 回退到本地生成`);
+        const errorCode = err.response?.data?.error?.code;
+        const errorMsg = err.response?.data?.error?.message || err.message;
+        
+        // 检查是否是配额错误（14003）
+        if (errorCode === 14003 || errorMsg?.includes('限额') || errorMsg?.includes('quota')) {
+          console.warn('⚠️ AI 模型配额不足，已切换为本地生成模式');
+          setSuccessMessage('AI 模型资源暂时不可用，已使用本地引擎生成');
+        } else {
+          console.log(`⚠️ 后端生成失败 (HTTP ${status || 'network error'}), 回退到本地生成`);
+        }
       }
     }
 
@@ -438,6 +447,14 @@ function AIWorkshop() {
               </motion.div>
             )}
           </motion.div>
+
+          {/* API Status Indicator */}
+            {backendAvailable === false && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-3 p-2 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center gap-2 text-sm">
+                <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                <span className="text-yellow-200">本地模式：AI 模型未连接，将使用本地引擎生成</span>
+              </motion.div>
+            )}
 
           {/* Step 3: Generate Button */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>

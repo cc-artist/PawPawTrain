@@ -102,7 +102,7 @@ const createWorkshopRoutes = (dataStore) => {
                   '3d_cartoon'
       };
 
-      const result = await imageService.generateImage(petData);
+      const result = await imageService.generateImage(petData, imageBase64);
 
       const creationId = uuidv4();
       const creation = {
