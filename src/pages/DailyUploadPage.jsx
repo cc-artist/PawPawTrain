@@ -27,6 +27,40 @@ const DailyUploadPage = () => {
   const petName = pet?.name || t('training.pet');
   const petType = pet?.type || 'dog';
 
+  const isMountedRef = useRef(false);
+  const savedStateRef = useRef(false);
+
+  // 恢复页面状态：切换页面时保留上传痕迹
+  useEffect(() => {
+    if (savedStateRef.current) return;
+    const saved = useStore.getState().getPageState('daily');
+    if (saved) {
+      if (saved.step) setStep(saved.step);
+      if (saved.analysisData) setAnalysisData(saved.analysisData);
+      if (saved.analysisId) setAnalysisId(saved.analysisId);
+      if (saved.selectedTags) setSelectedTags(saved.selectedTags);
+      if (saved.generatedTasks) setGeneratedTasks(saved.generatedTasks);
+      if (saved.advice) setAdvice(saved.advice);
+      console.log('📋 每日任务页面状态已恢复 / Daily tasks state restored');
+    }
+    isMountedRef.current = true;
+    savedStateRef.current = true;
+  }, []);
+
+  // 保存页面状态：离开页面时不丢失任务进度
+  useEffect(() => {
+    if (!isMountedRef.current) return;
+    useStore.getState().savePageState('daily', {
+      step, analysisData, analysisId, selectedTags, generatedTasks, advice
+    });
+  }, [step, analysisData, analysisId, selectedTags, generatedTasks, advice]);
+
+  // 任务完成后清除保存的状态
+  const clearDailyState = useCallback(() => {
+    useStore.getState().clearPageState('daily');
+    savedStateRef.current = false;
+  }, []);
+
   const addVideos = useCallback((files) => {
     const skippedDuplicates = [];
     const newVideos = [];
@@ -415,11 +449,11 @@ const DailyUploadPage = () => {
                     <p>🔜 {t('taskGenerator.reobservePending')}</p>
                   </div>
                 </div>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => navigate('/')}
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { clearDailyState(); navigate('/'); }}
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-500 text-white font-bold text-lg shadow-lg shadow-violet-500/30 mb-3">
                   🏠 Go to Home / 前往首页完成任务
                 </motion.button>
-                <button onClick={() => { setStep('upload'); setVideos([]); setAnalysisData(null); setSelectedTags([]); setGeneratedTasks([]); }}
+                <button onClick={() => { clearDailyState(); setStep('upload'); setVideos([]); setAnalysisData(null); setSelectedTags([]); setGeneratedTasks([]); }}
                   className="w-full py-3 rounded-xl text-gray-400 text-sm hover:text-white transition-colors">
                   🔄 Re-analyze / 重新分析新视频
                 </button>

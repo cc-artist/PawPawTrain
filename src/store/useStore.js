@@ -2,6 +2,7 @@ import { create } from 'zustand'
 
 const PET_STORAGE_KEY = 'paw_train_pet_state'
 const USER_STORAGE_KEY = 'paw_train_user_state'
+const PAGE_STATES_KEY = 'paw_train_page_states'
 
 const useStore = create((set, get) => ({
   user: null,
@@ -9,6 +10,7 @@ const useStore = create((set, get) => ({
   isLoggedIn: false,
   isLoadingPet: false,
   isLoadingUser: false,
+  pageStates: {},
   
   initializeSession: () => {
     const token = localStorage.getItem('token')
@@ -112,7 +114,8 @@ const useStore = create((set, get) => ({
     localStorage.removeItem(PET_STORAGE_KEY)
     localStorage.removeItem(USER_STORAGE_KEY)
     localStorage.removeItem('token')
-    set({ user: null, pet: null, isLoggedIn: false })
+    localStorage.removeItem(PAGE_STATES_KEY)
+    set({ user: null, pet: null, isLoggedIn: false, pageStates: {} })
   },
   
   updatePetStats: (stats) => {
@@ -152,7 +155,44 @@ const useStore = create((set, get) => ({
   
   updateUserPoints: (points) => set((state) => ({
     user: state.user ? { ...state.user, points } : null
-  }))
+  })),
+  
+  // 页面状态持久化：切换页面时保留录入/上传痕迹
+  initializePageStates: () => {
+    const savedStates = localStorage.getItem(PAGE_STATES_KEY)
+    if (savedStates) {
+      try {
+        const states = JSON.parse(savedStates)
+        set({ pageStates: states })
+      } catch (e) {
+        localStorage.removeItem(PAGE_STATES_KEY)
+      }
+    }
+  },
+  
+  savePageState: (key, state) => {
+    const current = get().pageStates
+    const updated = { ...current, [key]: state }
+    localStorage.setItem(PAGE_STATES_KEY, JSON.stringify(updated))
+    set({ pageStates: updated })
+  },
+  
+  getPageState: (key) => {
+    return get().pageStates[key] || null
+  },
+  
+  clearPageState: (key) => {
+    const current = get().pageStates
+    const updated = { ...current }
+    delete updated[key]
+    localStorage.setItem(PAGE_STATES_KEY, JSON.stringify(updated))
+    set({ pageStates: updated })
+  },
+  
+  clearAllPageStates: () => {
+    localStorage.removeItem(PAGE_STATES_KEY)
+    set({ pageStates: {} })
+  }
 }))
 
 export default useStore

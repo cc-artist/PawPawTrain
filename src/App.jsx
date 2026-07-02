@@ -56,19 +56,16 @@ function UploadModal() {
 
 function PublicLayout({ children }) {
   return (
-    <div className="min-h-full">
+    <div className="min-h-full pb-24">
       {children}
-      <Navbar />
     </div>
   )
 }
 
 function AppLayout({ children }) {
   return (
-    <div className="min-h-full">
+    <div className="min-h-full pb-24">
       {children}
-      <Navbar />
-      <UploadModal />
     </div>
   )
 }
@@ -208,140 +205,154 @@ function HomeGate() {
 }
 
 function AppContent() {
-  const { initializeSession } = useStore()
+  const { initializeSession, initializePageStates, clearAllPageStates } = useStore()
   
   useEffect(() => {
     initializeSession()
-  }, [initializeSession])
+    initializePageStates()
+    
+    // 页面刷新/关闭时清除临时页面状态
+    const handleBeforeUnload = () => {
+      clearAllPageStates()
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [initializeSession, initializePageStates, clearAllPageStates])
   
   return (
     <PostsProvider>
       <UploadProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          <Route 
-            path="/feed" 
-            element={<PublicLayout><Feed /></PublicLayout>}
-          />
-          
-          <Route 
-            path="/" 
-            element={<HomeGate />}
-          />
-          <Route 
-            path="/shop" 
-            element={
-              <ProtectedRoute>
-                <AppLayout><Shop /></AppLayout>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/social" 
-            element={
-              <ProtectedRoute>
-                <AppLayout><Social /></AppLayout>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute>
-                <AppLayout><Profile /></AppLayout>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/adopt" 
-            element={
-              <ProtectedRoute>
-                <Adopt />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/ai-goods" 
-            element={
-              <ProtectedRoute>
-                <AppLayout><AIGoodsDesigner /></AppLayout>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/task-history" 
-            element={
-              <ProtectedRoute>
-                <AppLayout><TaskHistory /></AppLayout>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/upload" 
-            element={
-              <ProtectedRoute>
-                <UploadPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/create-pet" 
-            element={
-              <ProtectedRoute>
-                <AppLayout><CreatePetPage /></AppLayout>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/daily" 
-            element={
-              <ProtectedRoute>
-                <DailyUploadPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/training" 
-            element={
-              <ProtectedRoute>
-                <TrainingPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/training-history" 
-            element={
-              <ProtectedRoute>
-                <TrainingHistory />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/pets" 
-            element={
-              <ProtectedRoute>
-                <PetsPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/history" 
-            element={
-              <ProtectedRoute>
-                <GenerationHistory />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/recharge" 
-            element={
-              <ProtectedRoute>
-                <RechargePage />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
+        <div className="min-h-full pb-24">
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            <Route 
+              path="/feed" 
+              element={<PublicLayout><Feed /></PublicLayout>}
+            />
+            
+            <Route 
+              path="/" 
+              element={<HomeGate />}
+            />
+            <Route 
+              path="/shop" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><Shop /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/social" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><Social /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><Profile /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/adopt" 
+              element={
+                <ProtectedRoute>
+                  <Adopt />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/ai-goods" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><AIGoodsDesigner /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/task-history" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><TaskHistory /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/upload" 
+              element={
+                <ProtectedRoute>
+                  <UploadPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/create-pet" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout><CreatePetPage /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/daily" 
+              element={
+                <ProtectedRoute>
+                  <DailyUploadPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/training" 
+              element={
+                <ProtectedRoute>
+                  <TrainingPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/training-history" 
+              element={
+                <ProtectedRoute>
+                  <TrainingHistory />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/pets" 
+              element={
+                <ProtectedRoute>
+                  <PetsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/history" 
+              element={
+                <ProtectedRoute>
+                  <GenerationHistory />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/recharge" 
+              element={
+                <ProtectedRoute>
+                  <RechargePage />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </div>
+        <Navbar />
+        <UploadModal />
       </UploadProvider>
     </PostsProvider>
   )

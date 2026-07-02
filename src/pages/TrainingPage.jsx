@@ -35,9 +35,45 @@ const TrainingPage = () => {
   const [syncingToHome, setSyncingToHome] = useState(false);
   const [beforePetSnapshot, setBeforePetSnapshot] = useState(null);
   const pollRef = useRef(null);
+  const isMountedRef = useRef(false);
+  const savedStateRef = useRef(false);
 
   const petName = pet?.name || t('training.pet');
   const petType = pet?.type || 'dog';
+
+  // 恢复页面状态：切换页面时保留训练痕迹
+  useEffect(() => {
+    if (savedStateRef.current) return;
+    const saved = useStore.getState().getPageState('training');
+    if (saved) {
+      if (saved.taskId) setTaskId(saved.taskId);
+      if (saved.phases) setPhases(saved.phases);
+      if (saved.currentPhase !== undefined) setCurrentPhase(saved.currentPhase);
+      if (saved.analysisResult) setAnalysisResult(saved.analysisResult);
+      if (saved.isComplete) setIsComplete(saved.isComplete);
+      if (saved.isConfirmed) setIsConfirmed(saved.isConfirmed);
+      if (saved.pendingResults) setPendingResults(saved.pendingResults);
+      if (saved.beforePetSnapshot) setBeforePetSnapshot(saved.beforePetSnapshot);
+      console.log('📋 训练页面状态已恢复 / Training state restored');
+    }
+    isMountedRef.current = true;
+    savedStateRef.current = true;
+  }, []);
+
+  // 保存页面状态：离开页面时不丢失训练进度
+  useEffect(() => {
+    if (!isMountedRef.current) return;
+    useStore.getState().savePageState('training', {
+      taskId, phases, currentPhase, analysisResult,
+      isComplete, isConfirmed, pendingResults, beforePetSnapshot
+    });
+  }, [taskId, phases, currentPhase, analysisResult, isComplete, isConfirmed, pendingResults, beforePetSnapshot]);
+
+  // 训练完成后清除保存的状态
+  const clearTrainingState = useCallback(() => {
+    useStore.getState().clearPageState('training');
+    savedStateRef.current = false;
+  }, []);
 
   const addVideos = useCallback((files) => {
     const skippedDuplicates = [];
@@ -249,6 +285,7 @@ const TrainingPage = () => {
       });
       
       setIsConfirmed(true);
+      clearTrainingState();
       
       // 3s 后自动返回首页
       setTimeout(() => {
