@@ -110,4 +110,11 @@ export const postsAPI = {
   getUserPreferences: () => api.get('/posts/user-preferences'),
 }
 
+// AI创作工坊API
+export const workshopAPI = {
+  generate: (data) => api.post('/workshop/generate', data),
+  getCreations: () => api.get('/workshop/creations'),
+  getProductTypes: () => api.get('/workshop/product-types'),
+}
+
 export default api

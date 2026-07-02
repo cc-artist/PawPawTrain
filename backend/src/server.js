@@ -10,6 +10,7 @@ import createPetRoutes from './routes/pet.js';
 import createTrainingRoutes from './routes/training.js';
 import createTasksRoutes from './routes/tasks.js';
 import createPostsRoutes from './routes/posts.js';
+import createWorkshopRoutes from './routes/workshop.js';
 
 // 加载环境变量
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
@@ -37,6 +38,7 @@ const dataStore = {
   adviceHistory: persistedData.adviceHistory,
   posts: persistedData.posts,
   userPreferences: persistedData.userPreferences,
+  workshopCreations: persistedData.workshopCreations,
 };
 
 // 设置推荐系统的持久化回调（当推荐数据变更时同步到 dataStore）
@@ -63,6 +65,7 @@ app.use('/api/pets', createPetRoutes(dataStore));
 app.use('/api/training', createTrainingRoutes(dataStore));
 app.use('/api/tasks', createTasksRoutes(dataStore));
 app.use('/api/posts', createPostsRoutes(dataStore));
+app.use('/api/workshop', createWorkshopRoutes(dataStore));
 
 // 健康检查
 app.get('/api/health', (req, res) => {

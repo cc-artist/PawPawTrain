@@ -56,19 +56,18 @@ const useStore = create((set, get) => ({
       console.error('Failed to parse pet data')
     }
     
-    if (token) {
+    // 只有在 token 和 user 数据同时存在时才设置登录状态
+    // 仅有 token 没有 user 数据时，交由 ProtectedRoute 做实际鉴权
+    if (token && savedUser) {
       try {
-        if (savedUser) {
-          const user = JSON.parse(savedUser)
+        const user = JSON.parse(savedUser)
+        if (user && user.id) {
           set({ user, isLoggedIn: true })
-        } else {
-          set({ isLoggedIn: true })
         }
       } catch (e) {
-        console.error('Failed to initialize session:', e)
+        console.error('Failed to parse saved user, clearing invalid data:', e)
         localStorage.removeItem('token')
         localStorage.removeItem(USER_STORAGE_KEY)
-        // 不要清除宠物数据
       }
     }
   },

@@ -184,6 +184,15 @@ const plusMenuItems = [
     gradient: 'from-violet-500 to-purple-500',
     bgLight: 'bg-violet-50',
   },
+  {
+    id: 'ai-workshop',
+    icon: '🤖',
+    label: 'AI Creation Workshop\nAI创作工坊',
+    description: 'Create products from pet photos\n用宠物照片制作各种商品',
+    path: '/ai-workshop',
+    gradient: 'from-cyan-500 to-blue-500',
+    bgLight: 'bg-cyan-50',
+  },
 ]
 
 const Navbar = () => {

@@ -20,6 +20,7 @@ import TrainingPage from './pages/TrainingPage'
 import TrainingHistory from './pages/TrainingHistory'
 import PetsPage from './pages/PetsPage'
 import GenerationHistory from './pages/GenerationHistory'
+import AIWorkshop from './pages/AIWorkshop'
 import { UploadProvider } from './context/UploadContext'
 import PetPostUploader from './components/PetPostUploader'
 import { useUpload } from './context/UploadContext'
@@ -71,7 +72,7 @@ function AppLayout({ children }) {
 }
 
 function ProtectedRoute({ children }) {
-  const { isLoggedIn, setUser, setPet } = useStore()
+  const { isLoggedIn, user, setUser, setPet } = useStore()
   const navigate = useNavigate()
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
@@ -81,16 +82,19 @@ function ProtectedRoute({ children }) {
     const checkAuth = async () => {
       const token = localStorage.getItem('token')
       
+      // 没有 token → 直接判定为未登录
       if (!token) {
         if (isMounted) setIsCheckingAuth(false)
         return
       }
       
-      if (isLoggedIn) {
+      // 已经通过完整鉴权（有 token + 有有效 user 对象 + isLoggedIn）→ 放行
+      if (isLoggedIn && user && user.id) {
         if (isMounted) setIsCheckingAuth(false)
         return
       }
       
+      // 有 token 但未完成鉴权 → 向后端发起真实鉴权请求
       try {
         const res = await authAPI.getProfile()
         if (isMounted) {
@@ -101,25 +105,26 @@ function ProtectedRoute({ children }) {
         }
       } catch (err) {
         console.error('Auth check failed:', err)
-        // 后端不可用时，尝试从localStorage恢复用户
+        // 后端不可用时，尝试从localStorage恢复用户（仅恢复之前确实登录过的用户）
         const savedUser = localStorage.getItem('paw_train_user_state')
         if (savedUser) {
           try {
-            const user = JSON.parse(savedUser)
-            if (isMounted) {
-              setUser(user)
+            const cachedUser = JSON.parse(savedUser)
+            if (cachedUser && cachedUser.id && isMounted) {
+              setUser(cachedUser)
+              console.log('从本地缓存恢复用户信息')
             }
-            console.log('从本地恢复用户信息')
           } catch (parseErr) {
-            // 数据损坏才清除
+            console.error('本地用户数据损坏，清除认证信息')
             localStorage.removeItem('token')
             localStorage.removeItem('paw_train_user_state')
             localStorage.removeItem('paw_train_pet_state')
           }
         } else if (isMounted) {
-          // 关键修复：token存在但API失败且无本地缓存 → 创建临时用户避免子组件黑屏
-          console.warn('No saved user, creating temp user to prevent blank screen')
-          setUser({ id: 'temp-user', name: '用户', points: 0 })
+          // token 无效且无本地缓存 → 清除无效 token，强制重新登录
+          console.warn('Token验证失败且无本地缓存，清除认证信息')
+          localStorage.removeItem('token')
+          localStorage.removeItem('paw_train_user_state')
         }
       } finally {
         if (isMounted) {
@@ -128,14 +133,30 @@ function ProtectedRoute({ children }) {
       }
     }
 
+    // 鉴权超时保护
     const timeout = setTimeout(() => {
-      console.warn('Auth check timeout, proceeding with token-based login state')
       const token = localStorage.getItem('token')
       if (token && !isLoggedIn && isMounted) {
-        setUser({ id: 'temp-user', name: '用户', points: 0 })
+        // 超时：检查是否有本地缓存可恢复
+        const savedUser = localStorage.getItem('paw_train_user_state')
+        if (savedUser) {
+          try {
+            const cachedUser = JSON.parse(savedUser)
+            if (cachedUser && cachedUser.id) {
+              console.warn('Auth check timeout, restoring from cache')
+              setUser(cachedUser)
+            }
+          } catch (e) {
+            localStorage.removeItem('token')
+          }
+        } else {
+          // 没有缓存 → 清除 token，需要重新登录
+          console.warn('Auth check timeout with no cache, clearing token')
+          localStorage.removeItem('token')
+        }
       }
       if (isMounted) setIsCheckingAuth(false)
-    }, 5000)
+    }, 8000)
 
     checkAuth()
 
@@ -143,7 +164,7 @@ function ProtectedRoute({ children }) {
       isMounted = false
       clearTimeout(timeout)
     }
-  }, [isLoggedIn, setUser, setPet])
+  }, [isLoggedIn, user, setUser, setPet])
 
   if (isCheckingAuth) {
     return (
@@ -277,6 +298,14 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <AppLayout><AIGoodsDesigner /></AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/ai-workshop" 
+              element={
+                <ProtectedRoute>
+                  <AIWorkshop />
                 </ProtectedRoute>
               } 
             />
