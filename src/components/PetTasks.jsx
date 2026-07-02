@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { t } from '../utils/i18n'
+import { setTaskTrigger, consumePendingCompletions } from '../utils/taskTracker'
 import PointsNotificationModal from './PointsNotificationModal'
 
 const DEFAULT_TASKS = [
-  { id: 1, nameKey: 'tasks.playWithPet', descKey: 'tasks.playWithPetDesc', icon: '🎮', points: 10, exp: 5 },
-  { id: 2, nameKey: 'tasks.feedPet', descKey: 'tasks.feedPetDesc', icon: '🍖', points: 15, exp: 8 },
-  { id: 3, nameKey: 'tasks.petPet', descKey: 'tasks.petPetDesc', icon: '🤗', points: 8, exp: 4 },
-  { id: 4, nameKey: 'tasks.postFeed', descKey: 'tasks.postFeedDesc', icon: '📷', points: 20, exp: 10 },
-  { id: 5, nameKey: 'tasks.chatPet', descKey: 'tasks.chatPetDesc', icon: '💬', points: 12, exp: 6 },
-  { id: 6, nameKey: 'tasks.walkPet', descKey: 'tasks.walkPetDesc', icon: '🚶', points: 25, exp: 12 }
+  { id: 1, nameKey: 'tasks.playWithPet', descKey: 'tasks.playWithPetDesc', icon: '🎮', points: 10, exp: 5, actionKey: 'play', path: null },
+  { id: 2, nameKey: 'tasks.feedPet', descKey: 'tasks.feedPetDesc', icon: '🍖', points: 15, exp: 8, actionKey: 'feed', path: null },
+  { id: 3, nameKey: 'tasks.petPet', descKey: 'tasks.petPetDesc', icon: '🤗', points: 8, exp: 4, actionKey: 'pet', path: null },
+  { id: 4, nameKey: 'tasks.postFeed', descKey: 'tasks.postFeedDesc', icon: '📷', points: 20, exp: 10, actionKey: 'post', path: '/upload' },
+  { id: 5, nameKey: 'tasks.chatPet', descKey: 'tasks.chatPetDesc', icon: '💬', points: 12, exp: 6, actionKey: 'chat', path: null },
+  { id: 6, nameKey: 'tasks.walkPet', descKey: 'tasks.walkPetDesc', icon: '🚶', points: 25, exp: 12, actionKey: 'walk', path: '/training' }
 ]
 
-const PetTasks = () => {
+const PetTasks = ({ onTriggerPlay, onTriggerFeed, onTriggerPet, onTriggerChat }) => {
   const { pet, updatePetStats, setPet } = useStore()
   const navigate = useNavigate()
   const [tasks, setTasks] = useState([])
@@ -22,63 +23,94 @@ const PetTasks = () => {
   const [showPointsModal, setShowPointsModal] = useState(false)
   const [earnedPoints, setEarnedPoints] = useState(0)
 
+  // 加载 + 消费待完成项
   useEffect(() => {
     const today = new Date().toDateString()
     const saved = localStorage.getItem('paw_train_tasks')
-    
+
+    let loadedTasks = DEFAULT_TASKS
+    let loadedCompleted = []
+
     if (saved) {
       const data = JSON.parse(saved)
       if (data.date === today) {
-        setTasks(data.tasks || DEFAULT_TASKS)
-        setCompletedTasks(data.completedTasks || [])
-        return
+        loadedTasks = data.tasks || DEFAULT_TASKS
+        loadedCompleted = data.completedTasks || []
       }
     }
-    
-    setTasks(DEFAULT_TASKS)
-    setCompletedTasks([])
+
+    // 消费从其他页面传回的待完成项
+    const pendingIds = consumePendingCompletions()
+    if (pendingIds.length > 0) {
+      const newCompleted = [...loadedCompleted]
+      pendingIds.forEach(taskId => {
+        if (!newCompleted.includes(taskId)) {
+          newCompleted.push(taskId)
+          // 给予奖励
+          processReward(taskId)
+        }
+      })
+      loadedCompleted = newCompleted
+      saveTasksToStorage(loadedTasks, loadedCompleted)
+    }
+
+    setTasks(loadedTasks)
+    setCompletedTasks(loadedCompleted)
   }, [])
 
-  const saveTasks = useCallback((updatedTasks, updatedCompleted) => {
+  // 轮询检查待完成项（用户从其他页面返回时）
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const pendingIds = consumePendingCompletions()
+      if (pendingIds.length > 0) {
+        setCompletedTasks(prev => {
+          const next = [...prev]
+          let changed = false
+          pendingIds.forEach(taskId => {
+            if (!next.includes(taskId)) {
+              next.push(taskId)
+              changed = true
+              processReward(taskId)
+            }
+          })
+          if (changed) {
+            saveTasksToStorage(tasks, next)
+          }
+          return changed ? next : prev
+        })
+      }
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [tasks, pet])
+
+  const saveTasksToStorage = (updatedTasks, updatedCompleted) => {
     const today = new Date().toDateString()
     localStorage.setItem('paw_train_tasks', JSON.stringify({
       date: today,
       tasks: updatedTasks,
       completedTasks: updatedCompleted
     }))
-  }, [])
+  }
 
-  const saveTaskToHistory = useCallback((taskId) => {
-    const today = new Date().toISOString().split('T')[0]
-    const savedHistory = localStorage.getItem('paw_train_task_history')
-    const history = savedHistory ? JSON.parse(savedHistory) : []
-
-    history.push({
-      id: Date.now(),
-      taskId,
-      date: today,
-      completedAt: new Date().toISOString()
-    })
-
-    localStorage.setItem('paw_train_task_history', JSON.stringify(history))
-  }, [])
-
-  const completeTask = useCallback((taskId) => {
-    if (completedTasks.includes(taskId)) return
-
+  const processReward = useCallback((taskId) => {
     const task = tasks.find(t => t.id === taskId)
     if (!task) return
 
-    const newCompleted = [...completedTasks, taskId]
-    setCompletedTasks(newCompleted)
-    saveTasks(tasks, newCompleted)
-    saveTaskToHistory(taskId)
+    // 记录历史
+    const today = new Date().toISOString().split('T')[0]
+    const savedHistory = localStorage.getItem('paw_train_task_history')
+    const history = savedHistory ? JSON.parse(savedHistory) : []
+    history.push({ id: Date.now(), taskId, date: today, completedAt: new Date().toISOString() })
+    localStorage.setItem('paw_train_task_history', JSON.stringify(history))
 
+    // 更新宠物属性
+    const currentPet = JSON.parse(localStorage.getItem('paw_train_pet_state') || '{}')
     const newPet = {
-      ...pet,
-      points: (pet.points || 0) + task.points,
-      exp: (pet.exp || 0) + task.exp,
-      intimacy: Math.min(100, (pet.intimacy || 0) + 1)
+      ...currentPet,
+      points: (currentPet.points || 0) + task.points,
+      exp: (currentPet.exp || 0) + task.exp,
+      intimacy: Math.min(100, (currentPet.intimacy || 0) + 1)
     }
 
     if (newPet.exp >= (newPet.expToNext || 200)) {
@@ -87,8 +119,8 @@ const PetTasks = () => {
       newPet.expToNext = Math.floor((newPet.expToNext || 200) * 1.2)
     }
 
-    setPet(newPet)
     localStorage.setItem('paw_train_pet_state', JSON.stringify(newPet))
+    setPet(newPet)
     updatePetStats({
       points: newPet.points,
       exp: newPet.exp,
@@ -98,7 +130,28 @@ const PetTasks = () => {
 
     setEarnedPoints(task.points)
     setTimeout(() => setShowPointsModal(true), 300)
-  }, [completedTasks, tasks, pet, setPet, updatePetStats, saveTasks])
+  }, [tasks, setPet, updatePetStats])
+
+  const handleTaskClick = useCallback((task) => {
+    if (completedTasks.includes(task.id)) return
+
+    // 设置触发器
+    setTaskTrigger(task.actionKey, task.id)
+
+    if (task.path) {
+      // 有目标页面 → 导航过去
+      navigate(task.path)
+    } else {
+      // 首页操作 → 触发对应行为
+      switch (task.actionKey) {
+        case 'play': onTriggerPlay?.(); break
+        case 'feed': onTriggerFeed?.(); break
+        case 'pet': onTriggerPet?.(); break
+        case 'chat': onTriggerChat?.(); break
+        default: break
+      }
+    }
+  }, [completedTasks, navigate, onTriggerPlay, onTriggerFeed, onTriggerPet, onTriggerChat])
 
   const completedCount = completedTasks.length
   const totalCount = tasks.length
@@ -170,7 +223,7 @@ const PetTasks = () => {
                 </div>
                 {!isCompleted && (
                   <button
-                    onClick={() => completeTask(task.id)}
+                    onClick={() => handleTaskClick(task)}
                     className="mt-2 w-full py-2 bg-gradient-to-r from-cyber-blue to-cyber-purple text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
                   >
                     {t('home.completeTask')}

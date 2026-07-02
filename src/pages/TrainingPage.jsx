@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import { trainingAPI } from '../services/api';
 import { t } from '../utils/i18n';
+import { claimTrigger } from '../utils/taskTracker';
 import { usePosts } from '../context/PostsContext';
 import { checkDuplicate, addMediaRecord, UPLOAD_SOURCE } from '../utils/mediaLibrary';
 
@@ -202,6 +203,7 @@ const TrainingPage = () => {
             clearInterval(pollRef.current);
             setIsComplete(true);
             setIsUploading(false);
+            claimTrigger('walk');
             
             // 构建人格影响数据
             const impact = task.analysis?.personalityImpact || {};

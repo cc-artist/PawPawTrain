@@ -10,7 +10,7 @@ const GENERATION_COUNT_KEY = 'paw_train_generation_count';
 
 const CreatePetPage = () => {
   const navigate = useNavigate();
-  const { setPet, isLoggedIn, user } = useStore();
+  const { pet, setPet, isLoggedIn, user } = useStore();
   const [generationCount, setGenerationCount] = useState(0);
   const [generationHistory, setGenerationHistory] = useState([]);
 

@@ -6,6 +6,7 @@ import { petAPI, chatAPI, aiAPI } from '../services/api'
 import Pet3D from '../components/Pet3D'
 import PetTasks from '../components/PetTasks'
 import { useUpload } from '../context/UploadContext'
+import { claimTrigger } from '../utils/taskTracker'
 import { t } from '../utils/i18n'
 
 const petTypeEmojis = {
@@ -66,6 +67,7 @@ const Home = () => {
   const [isPlayingVoice, setIsPlayingVoice] = useState(false)
   const [activeSkill, setActiveSkill] = useState(null)
   const [isCheckingPet, setIsCheckingPet] = useState(true)
+  const [chatAnimation, setChatAnimation] = useState(null)
   const chatEndRef = useRef(null)
   const audioRef = useRef(null)
 
@@ -115,26 +117,22 @@ const Home = () => {
     )
   }
 
-  // 如果宠物仍未加载，显示创建宠物引导
+  // 如果宠物仍未加载，重定向到动态页
+  useEffect(() => {
+    if (!pet || !pet.type) {
+      navigate('/feed', { replace: true })
+    }
+  }, [pet, navigate])
+
   if (!pet || !pet.type) {
     return (
-      <div className="min-h-full flex flex-col items-center justify-center gradient-bg p-4">
+      <div className="min-h-full flex items-center justify-center gradient-bg">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-sm"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+          className="text-4xl"
         >
-          <div className="text-6xl mb-6">🐾</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Welcome to PawPaw Train! / 欢迎来到 PawPaw Train!</h2>
-          <p className="text-gray-600 mb-6">{t('home.noPet')}</p>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/create-pet')}
-            className="w-full py-4 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-bold rounded-2xl shadow-lg"
-          >
-            🎨 {t('home.createPet')}
-          </motion.button>
+          🐾
         </motion.div>
       </div>
     )
@@ -308,10 +306,12 @@ const Home = () => {
         if (res.data.cooldown) {
           setCooldowns(prev => ({ ...prev, pet: res.data.cooldown }))
         }
+        claimTrigger('pet')
       }
     } catch (err) {
       showInteraction(t('home.petting'), getPetSound(pet.type), 'rub')
       setCooldowns(prev => ({ ...prev, pet: 10 }))
+      claimTrigger('pet')
     }
   }
 
@@ -332,10 +332,12 @@ const Home = () => {
         if (res.data.cooldown) {
           setCooldowns(prev => ({ ...prev, feed: res.data.cooldown }))
         }
+        claimTrigger('feed')
       }
     } catch (err) {
       showInteraction(t('home.feeding'), getPetSound(pet.type), 'squint')
       setCooldowns(prev => ({ ...prev, feed: 30 * 60 }))
+      claimTrigger('feed')
     }
   }
 
@@ -360,12 +362,14 @@ const Home = () => {
         if (res.data.cooldown) {
           setCooldowns(prev => ({ ...prev, play: res.data.cooldown }))
         }
+        claimTrigger('play')
       } else if (res.data.error) {
         showInteraction(res.data.error, getPetSound(pet.type), 'yawn')
       }
     } catch (err) {
       showInteraction(t('home.playing'), getPetSound(pet.type), 'spin')
       setCooldowns(prev => ({ ...prev, play: 5 * 60 }))
+      claimTrigger('play')
     }
   }
 
@@ -425,7 +429,7 @@ const Home = () => {
       if (!res.data.success) {
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: `提示: ${res.data.error}`,
+          content: `Tip: ${res.data.error}`,
           action: '',
           time: new Date().toLocaleTimeString()
         }])
@@ -433,28 +437,42 @@ const Home = () => {
         return
       }
 
+      const replyContent = res.data.response || res.data.reply || 'Woof!'
+      const replyEmotion = res.data.emotion || 'happy'
+      const replyAnimation = res.data.animation || null
+
       const replyMsg = {
         role: 'assistant',
-        content: res.data.response,
-        action: res.data.action,
-        emotion: res.data.emotion,
+        content: replyContent,
+        action: res.data.action || '',
+        emotion: replyEmotion,
         time: new Date().toLocaleTimeString()
       }
       setMessages(prev => [...prev, replyMsg])
       setDailyChatCount(res.data.dailyChatCount || dailyChatCount + 1)
       setRemainingChats(res.data.remainingChats || Math.max(0, remainingChats - 1))
 
-      const expressionType = res.data.emotion || 'happy'
+      // Update pet stats if returned
+      if (res.data.pet) {
+        updatePetStats(res.data.pet)
+      }
+
+      // 聊天互动任务完成
+      claimTrigger('chat')
+
+      // Trigger surprise animation on pet bubble
+      if (replyAnimation) {
+        setChatAnimation(replyAnimation)
+        setTimeout(() => setChatAnimation(null), 2000)
+      }
+
+      const expressionType = replyEmotion || 'happy'
       const expressionList = expressions[expressionType] || expressions.happy
       const randomExpression = expressionList[Math.floor(Math.random() * expressionList.length)]
       
       setPetExpression(randomExpression)
-      setPetSound(res.data.sound || getPetSound(pet.type))
+      setPetSound(getPetSound(pet.type))
       setShowSound(true)
-
-      if (res.data.animation) {
-        playAnimation(res.data.animation.animation)
-      }
 
       setTimeout(() => {
         setPetExpression(null)
@@ -465,24 +483,32 @@ const Home = () => {
     } catch (err) {
       const personality = pet.personality || 'gentle'
       const mockReplies = {
-        active: ['汪汪汪！', '陪我玩！', '好开心！'],
-        tsundere: ['哼！', '才不是呢！', '...'],
-        gentle: ['喵~', '主人好~', '咕噜咕噜'],
-        mischievous: ['嘿嘿~', '来抓我呀！', '这个归我了！'],
-        lazy: ['zzz...', '好累啊...', '不想动...'],
-        curious: ['这是什么？', '让我看看！', '外面有声音！']
+        active: ['Woof woof! Let\'s play!', 'Come on, throw the ball!', 'I\'m so energetic today! 🎾'],
+        tsundere: ['Hmph! It\'s not like I was waiting for you...', '...Fine, I guess you can pet me.', 'Don\'t get the wrong idea! *blush*'],
+        gentle: ['Meow~ Hello there!', 'You look nice today~', 'Purrr... this is so relaxing...'],
+        mischievous: ['Hehe~ Catch me if you can!', 'I hid your sock! Guess where?', 'This is mine now! *runs away*'],
+        lazy: ['Zzz... five more minutes...', '*yawn* So... tired...', 'Can we just nap together?'],
+        curious: ['What\'s that? Let me see!', 'I hear something outside!', 'Ooh, what does this button do? 👀']
       }
       const replies = mockReplies[personality] || mockReplies.gentle
       const randomReply = replies[Math.floor(Math.random() * replies.length)]
+
+      // Random fallback animation for offline mode
+      const fallbackAnimations = ['bounce', 'wiggle', 'pulse', 'spin']
+      const randomAnim = fallbackAnimations[Math.floor(Math.random() * fallbackAnimations.length)]
+      setChatAnimation(randomAnim)
+      setTimeout(() => setChatAnimation(null), 2000)
       
       const replyMsg = {
         role: 'assistant',
         content: randomReply,
-        action: '摇尾巴',
+        action: 'wags tail happily',
         emotion: 'happy',
         time: new Date().toLocaleTimeString()
       }
       setMessages(prev => [...prev, replyMsg])
+
+      claimTrigger('chat')
 
       const expressionType = personality === 'tsundere' ? 'tsundere' : personality === 'gentle' ? 'gentle' : 'happy'
       const expressionList = expressions[expressionType] || expressions.happy
@@ -588,7 +614,7 @@ const Home = () => {
         </div>
 
         <div className="glass-effect rounded-3xl p-4 mb-4 warm-shadow overflow-hidden border border-cyber-blue/30" style={{ height: '350px', position: 'relative' }}>
-          <Pet3D petType={pet.type} onPet={handlePet} postCount={postCount} isResetting={isResetting} imageUrl={pet.imageUrl || null} />
+          <Pet3D petType={pet.type} onPet={handlePet} postCount={postCount} isResetting={isResetting} imageUrl={pet.imageUrl || null} animation={chatAnimation} />
 
           <AnimatePresence>
             {petExpression && (
@@ -750,7 +776,12 @@ const Home = () => {
           )}
         </motion.button>
 
-        <PetTasks />
+        <PetTasks
+          onTriggerPlay={handlePlay}
+          onTriggerFeed={handleFeed}
+          onTriggerPet={handlePet}
+          onTriggerChat={() => setIsChatOpen(true)}
+        />
       </div>
 
       <AnimatePresence>
@@ -765,9 +796,17 @@ const Home = () => {
               <div className="h-full flex flex-col">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-cyber-blue font-medium">{t('home.chat')} {pet.name}</span>
-                  <span className="text-xs text-gray-400">
-                    {t('home.remainingChats')} <span className="text-cyber-yellow font-bold">{remainingChats}</span> {t('home.freeChat')}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-gray-400">
+                      {t('home.remainingChats')} <span className="text-cyber-yellow font-bold">{remainingChats}</span> {t('home.freeChat')}
+                    </span>
+                    <button
+                      onClick={() => setIsChatOpen(false)}
+                      className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-700/50 hover:bg-red-500/50 text-gray-400 hover:text-white transition-all text-sm leading-none"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-3 pr-2">
                   {messages.map((msg, idx) => (

@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from 'react';
 
-const Pet3D = ({ petType, onPet, postCount = 0, isResetting = false, imageUrl = null }) => {
+const Pet3D = ({ petType, onPet, postCount = 0, isResetting = false, imageUrl = null, animation = null }) => {
   const [isPetting, setIsPetting] = useState(false);
   const [showRollAnimation, setShowRollAnimation] = useState(false);
   const [imageLoadError, setImageLoadError] = useState(false);
+  const [activeAnimation, setActiveAnimation] = useState(null);
+
+  // 当 imageUrl 变化时重置加载错误状态
+  useEffect(() => {
+    setImageLoadError(false);
+  }, [imageUrl]);
+
+  // 当外部传入 animation 变化时触发惊喜动画
+  useEffect(() => {
+    if (animation) {
+      setActiveAnimation(animation);
+      const timer = setTimeout(() => setActiveAnimation(null), 2000);
+      return () => clearTimeout(timer);
+    } else {
+      setActiveAnimation(null);
+    }
+  }, [animation]);
 
   useEffect(() => {
     if (isResetting) {
@@ -71,6 +88,19 @@ const Pet3D = ({ petType, onPet, postCount = 0, isResetting = false, imageUrl = 
     }
   };
 
+  const getChatAnimationStyle = () => {
+    if (!activeAnimation) return null;
+    const animMap = {
+      bounce: 'bubble-bounce 0.6s ease-out 3',
+      wiggle: 'bubble-wiggle 0.4s ease-in-out 4',
+      pulse: 'bubble-pulse 0.5s ease-in-out 3',
+      spin: 'bubble-spin 0.6s ease-in-out 1',
+      jump: 'bubble-jump 0.5s ease-out 2',
+      flip: 'bubble-flip 0.7s ease-in-out 1',
+    };
+    return animMap[activeAnimation] || 'bubble-bounce 0.6s ease-out 3';
+  };
+
   const getStageEmoji = () => {
     const stage = getGrowthStage();
     switch (petType) {
@@ -90,7 +120,7 @@ const Pet3D = ({ petType, onPet, postCount = 0, isResetting = false, imageUrl = 
     }
   };
 
-  const isEmptyState = postCount === 0 || isResetting;
+  const isEmptyState = (postCount === 0 && !imageUrl) || isResetting;
   const style = getStageStyle();
 
   const pulseDotStyle = (delay) => ({
@@ -112,7 +142,9 @@ const Pet3D = ({ petType, onPet, postCount = 0, isResetting = false, imageUrl = 
         <div 
           className="relative select-none"
           style={{
-            animation: showRollAnimation ? 'roll 0.5s ease-in-out 6' : 'float 3s ease-in-out infinite',
+            animation: showRollAnimation 
+              ? 'roll 0.5s ease-in-out 6' 
+              : (getChatAnimationStyle() || 'float 3s ease-in-out infinite'),
           }}
         >
           <div
@@ -204,7 +236,9 @@ const Pet3D = ({ petType, onPet, postCount = 0, isResetting = false, imageUrl = 
         <div 
           className="relative select-none"
           style={{
-            animation: showRollAnimation ? 'roll 0.5s ease-in-out 6' : 'float 3s ease-in-out infinite',
+            animation: showRollAnimation 
+              ? 'roll 0.5s ease-in-out 6' 
+              : (getChatAnimationStyle() || 'float 3s ease-in-out infinite'),
           }}
         >
           <div
@@ -356,6 +390,56 @@ const Pet3D = ({ petType, onPet, postCount = 0, isResetting = false, imageUrl = 
         @keyframes pulse-dot-white {
           0%, 100% { opacity: 0.4; }
           50% { opacity: 1; }
+        }
+
+        /* Chat surprise animations */
+        @keyframes bubble-bounce {
+          0%, 100% { transform: translateY(0) scale(1); }
+          30% { transform: translateY(-20px) scale(1.1); }
+          50% { transform: translateY(-5px) scale(1.05); }
+          70% { transform: translateY(-12px) scale(1.08); }
+          85% { transform: translateY(-2px) scale(1.02); }
+        }
+
+        @keyframes bubble-wiggle {
+          0%, 100% { transform: translateX(0) rotate(0deg); }
+          15% { transform: translateX(-8px) rotate(-8deg); }
+          30% { transform: translateX(8px) rotate(8deg); }
+          45% { transform: translateX(-6px) rotate(-5deg); }
+          60% { transform: translateX(6px) rotate(5deg); }
+          75% { transform: translateX(-3px) rotate(-2deg); }
+          90% { transform: translateX(3px) rotate(2deg); }
+        }
+
+        @keyframes bubble-pulse {
+          0%, 100% { transform: scale(1); }
+          25% { transform: scale(1.15); }
+          50% { transform: scale(0.95); }
+          75% { transform: scale(1.1); }
+        }
+
+        @keyframes bubble-spin {
+          0% { transform: rotate(0deg) scale(1); }
+          50% { transform: rotate(180deg) scale(1.15); }
+          100% { transform: rotate(360deg) scale(1); }
+        }
+
+        @keyframes bubble-jump {
+          0% { transform: translateY(0) scale(1, 1); }
+          10% { transform: translateY(0) scale(1.2, 0.8); }
+          30% { transform: translateY(-30px) scale(0.9, 1.1); }
+          50% { transform: translateY(0) scale(1, 1); }
+          60% { transform: translateY(-15px) scale(1.05, 0.95); }
+          80% { transform: translateY(0) scale(1, 1); }
+          100% { transform: translateY(0) scale(1, 1); }
+        }
+
+        @keyframes bubble-flip {
+          0% { transform: rotateY(0deg) scale(1); }
+          40% { transform: rotateY(180deg) scale(1.12); }
+          70% { transform: rotateY(340deg) scale(1.05); }
+          85% { transform: rotateY(350deg) scale(1.01); }
+          100% { transform: rotateY(360deg) scale(1); }
         }
       `}} />
     </div>

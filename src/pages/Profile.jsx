@@ -232,14 +232,14 @@ const Profile = () => {
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-300 to-orange-500 mx-auto flex items-center justify-center text-5xl mb-4">
                 {pet?.type === 'cat' ? '🐱' : pet?.type === 'dog' ? '🐶' : '🐰'}
               </div>
-              <h2 className="text-xl font-bold text-gray-700">{user?.name || '铲屎官'}</h2>
+              <h2 className="text-xl font-bold text-white">{user?.name || '铲屎官'}</h2>
               <p className="text-orange-500">ID: {user?.id || '123456'}</p>
             </div>
 
             <div className="grid grid-cols-3 gap-4 mt-6">
               <div className="text-center relative">
                 <div className="text-2xl font-bold text-orange-500">{user?.points || 0}</div>
-                <div className="text-sm text-gray-500">{t('shop.points')}</div>
+                <div className="text-sm text-gray-300">{t('shop.points')}</div>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -251,11 +251,11 @@ const Profile = () => {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-pink-500">{myPosts.length}</div>
-                <div className="text-sm text-gray-500">{t('profile.posts')}</div>
+                <div className="text-sm text-gray-300">{t('profile.posts')}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-500">12</div>
-                <div className="text-sm text-gray-500">{t('social.friends')}</div>
+                <div className="text-2xl font-bold text-purple-400">12</div>
+                <div className="text-sm text-gray-300">{t('social.friends')}</div>
               </div>
             </div>
           </motion.div>
@@ -267,7 +267,7 @@ const Profile = () => {
               className="glass-effect rounded-3xl p-6 mb-6"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-700">📸 {t('profile.myDaily')}</h3>
+                <h3 className="text-lg font-bold text-white">📸 {t('profile.myDaily')}</h3>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setViewMode('grid')}
@@ -459,7 +459,7 @@ const Profile = () => {
               className="glass-effect rounded-3xl p-6 mb-6 text-center"
             >
               <div className="text-6xl mb-4">📸</div>
-              <p className="text-gray-500">{t('profile.noPosts')}</p>
+              <p className="text-gray-300">{t('profile.noPosts')}</p>
               <p className="text-gray-400 text-sm mt-2">{t('profile.goShare')}</p>
             </motion.div>
           )}
@@ -476,10 +476,10 @@ const Profile = () => {
                 className="flex items-center gap-2 text-left"
               >
                 <span className="text-xl">🎬</span>
-                <h3 className="text-lg font-bold text-gray-700">
+                <h3 className="text-lg font-bold text-white">
                   Media Library / 媒体库
                 </h3>
-                <span className={`text-sm text-gray-400 transition-transform ${mediaViewExpanded ? 'rotate-180' : ''}`}>▼</span>
+                <span className={`text-sm text-gray-300 transition-transform ${mediaViewExpanded ? 'rotate-180' : ''}`}>▼</span>
               </button>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">🎬{videoCount}</span>
@@ -647,8 +647,8 @@ const Profile = () => {
                   className="w-full px-6 py-4 flex items-center gap-3 hover:bg-orange-50 transition-all border-b border-orange-100 last:border-0"
                 >
                   <span className="text-2xl">{item.icon}</span>
-                  <span className="text-gray-700 font-medium">{item.label}</span>
-                  <span className="ml-auto text-gray-400">→</span>
+                  <span className="text-white font-medium">{item.label}</span>
+                  <span className="ml-auto text-gray-300">→</span>
                 </motion.button>
               )
             ))}
@@ -749,7 +749,7 @@ const Profile = () => {
                                 {key === 'discipline' && '📚'}
                               </div>
                               <div className="text-green-400 font-bold">+{value}</div>
-                              <div className="text-gray-500 text-xs">
+                              <div className="text-gray-400 text-xs">
                                 {key === 'energy' && t('home.energy')}
                                 {key === 'affection' && t('home.intimacy')}
                                 {key === 'joy' && t('home.joy')}

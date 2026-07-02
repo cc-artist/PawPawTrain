@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useStore from '../store/useStore';
 import api from '../services/api';
 import { t, zh, en } from '../utils/i18n';
+import { claimTrigger } from '../utils/taskTracker';
 import ArtStyleSelector from '../components/ArtStyleSelector';
 import PointsNotificationModal from '../components/PointsNotificationModal';
 
@@ -125,6 +126,7 @@ const UploadPage = () => {
         setTaskId(response.data.taskId);
         setIsSubmitting(false);
         setStep(3);
+        claimTrigger('post');
       } else {
         throw new Error(response.data.error || '上传失败');
       }

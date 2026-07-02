@@ -284,7 +284,7 @@ function createPetRoutes(dataStore) {
   });
 
   /**
-   * POST /api/pets/:id/chat - 宠物 AI 聊天
+   * POST /api/pets/:id/chat - 宠物 AI 聊天 (English responses + emotion/animation)
    */
   router.post('/:id/chat', authMiddleware, (req, res) => {
     const { message } = req.body;
@@ -292,19 +292,174 @@ function createPetRoutes(dataStore) {
     const petId = req.params.id;
     const userPets = pets.get(userId) || [];
     const pet = userPets.find(p => p.id === petId);
-    if (!pet) return res.status(404).json({ error: '宠物不存在' });
+    if (!pet) return res.status(404).json({ error: 'Pet not found' });
 
-    const replies = [
-      `${pet.emoji} ${pet.name}: 汪汪！主人你来了~`,
-      `${pet.emoji} ${pet.name}: 好想和主人一起玩耍呢！`,
-      `${pet.emoji} ${pet.name}: 今天天气真好，带我出去散步吧~`,
-      `${pet.emoji} ${pet.name}: 主人主人，我饿了！`,
-      `${pet.emoji} ${pet.name}: (*╹▽╹*) 最喜欢主人了！`,
-      `${pet.emoji} ${pet.name}: 主人说我可爱吗？`,
-      `${pet.emoji} ${pet.name}: 我们一起玩游戏吧！`
-    ];
+    const msg = (message || '').toLowerCase();
+
+    // Keyword-based response matching for a more "AI-like" feel
+    let category = 'greeting';
+    if (/hungry|food|eat|feed|snack|treat|yum|dinner|lunch|breakfast/i.test(msg)) {
+      category = 'hungry';
+    } else if (/play|game|toy|ball|run|fetch|fun|bored/i.test(msg)) {
+      category = 'play';
+    } else if (/tired|sleep|nap|rest|yawn|bed/i.test(msg)) {
+      category = 'sleepy';
+    } else if (/love|like|miss|cute|adorable|favorite|best|good|sweet/i.test(msg)) {
+      category = 'affection';
+    } else if (/hello|hi|hey|howdy|morning|evening|good/i.test(msg)) {
+      category = 'greeting';
+    } else if (/name|who|what are you|your name/i.test(msg)) {
+      category = 'intro';
+    } else if (/walk|outside|park|out|adventure|go/i.test(msg)) {
+      category = 'walk';
+    } else if (/sad|upset|bad|angry|mad|sorry|cry/i.test(msg)) {
+      category = 'comfort';
+    } else if (/trick|skill|dance|sing|jump|roll|sit|stay/i.test(msg)) {
+      category = 'tricks';
+    } else if (/joke|laugh|funny|haha|lol/i.test(msg)) {
+      category = 'funny';
+    } else if (/weather|rain|sun|hot|cold|snow/i.test(msg)) {
+      category = 'weather';
+    } else if (/thank|thanks|thx/i.test(msg)) {
+      category = 'thanks';
+    }
+
+    const replyBanks = {
+      greeting: [
+        `${pet.emoji} ${pet.name}: Hey there, pal! So happy to see you~`,
+        `${pet.emoji} ${pet.name}: Hi hi! I was waiting for you! *wags tail*`,
+        `${pet.emoji} ${pet.name}: Oh! You're back! I missed you so much~`,
+        `${pet.emoji} ${pet.name}: Woohoo! My favorite human is here!`,
+        `${pet.emoji} ${pet.name}: Hello hello! Ready for some fun today? ^_^`,
+        `${pet.emoji} ${pet.name}: Yay! You came to chat with me!`,
+      ],
+      hungry: [
+        `${pet.emoji} ${pet.name}: Ooh, is that food I smell? I'm starving! 🍖`,
+        `${pet.emoji} ${pet.name}: You read my mind! My tummy is rumbling...`,
+        `${pet.emoji} ${pet.name}: Treats? Treats?! Did someone say treats?! *excited bouncing*`,
+        `${pet.emoji} ${pet.name}: Yummy yummy! Can I have a snack please? Pretty please?`,
+        `${pet.emoji} ${pet.name}: Food time is the BEST time! Feed me feed me!`,
+      ],
+      play: [
+        `${pet.emoji} ${pet.name}: YES! Playtime is my favorite! Let's go! 🎾`,
+        `${pet.emoji} ${pet.name}: Throw the ball! Throw it throw it throw it!`,
+        `${pet.emoji} ${pet.name}: Finally! I've been so bored... Time to have some fun!`,
+        `${pet.emoji} ${pet.name}: Chase me if you can! Bet you won't catch me~ teehee~`,
+        `${pet.emoji} ${pet.name}: Game on! I'm the champion of playtime, you know!`,
+      ],
+      sleepy: [
+        `${pet.emoji} ${pet.name}: *yawn* So... sleepy... can we cuddle instead?`,
+        `${pet.emoji} ${pet.name}: Zzz... huh? Oh, sorry, I was napping. What's up?`,
+        `${pet.emoji} ${pet.name}: Five more minutes... please... so cozy here...`,
+        `${pet.emoji} ${pet.name}: Nap time is the second best time after food time~`,
+        `${pet.emoji} ${pet.name}: *stretches and yawns* Okay okay, I'm awake now! Sort of...`,
+      ],
+      affection: [
+        `${pet.emoji} ${pet.name}: Aww, you're the best human ever! *heart eyes* 💕`,
+        `${pet.emoji} ${pet.name}: You know I love you more than treats, right? Well... almost!`,
+        `${pet.emoji} ${pet.name}: *purrs happily* You make me so happy! Don't ever leave~`,
+        `${pet.emoji} ${pet.name}: Blushing! Nobody has ever been this sweet to me before~`,
+        `${pet.emoji} ${pet.name}: Hehe, I love you too! Can I get a head pat? Please please?`,
+      ],
+      intro: [
+        `${pet.emoji} ${pet.name}: I'm ${pet.name}, your loyal and adorable companion! Nice to meet you~`,
+        `${pet.emoji} ${pet.name}: That's me! ${pet.name} the ${pet.type}, at your service! *salutes paw*`,
+        `${pet.emoji} ${pet.name}: I'm your virtual pet ${pet.name}! I'm here to make you smile every day~`,
+      ],
+      walk: [
+        `${pet.emoji} ${pet.name}: ADVENTURE TIME! I love going outside! Let's go let's go!`,
+        `${pet.emoji} ${pet.name}: Ooh, the park? Can we chase squirrels? Please? 🐿️`,
+        `${pet.emoji} ${pet.name}: Fresh air! New smells! This is the best day ever!`,
+        `${pet.emoji} ${pet.name}: Wait wait, let me get ready! *runs in circles excitedly*`,
+      ],
+      comfort: [
+        `${pet.emoji} ${pet.name}: Hey, don't be sad... I'm right here beside you.`,
+        `${pet.emoji} ${pet.name}: *nuzzles against you* Everything will be okay, I promise.`,
+        `${pet.emoji} ${pet.name}: Hug time! Nothing bad can reach you when I'm here~ 🤗`,
+        `${pet.emoji} ${pet.name}: It's okay to be upset sometimes. I still think you're amazing!`,
+      ],
+      tricks: [
+        `${pet.emoji} ${pet.name}: Watch this! *does a perfect roll* Ta-da! Impressed?`,
+        `${pet.emoji} ${pet.name}: I've been practicing! Check out my new spin move! Wheee~`,
+        `${pet.emoji} ${pet.name}: Sit. Stay. Roll over. Shake paw. I know them all! Treat please?`,
+        `${pet.emoji} ${pet.name}: Talent show time! *dances in a circle* How was that?`,
+      ],
+      funny: [
+        `${pet.emoji} ${pet.name}: Why did the ${pet.type} cross the road? ...I forget, but it was funny!`,
+        `${pet.emoji} ${pet.name}: Haha! You're funny! *rolls on back laughing*`,
+        `${pet.emoji} ${pet.name}: Knock knock! ...Who's there? ...${pet.name}! ...${pet.name} who? ...${pet.name} let me in, I'm hungry! 😂`,
+        `${pet.emoji} ${pet.name}: I tried to tell a joke once... but I forgot the punchline. Still funny though!`,
+      ],
+      weather: [
+        `${pet.emoji} ${pet.name}: I don't mind the weather as long as I'm with you!`,
+        `${pet.emoji} ${pet.name}: Perfect day for an adventure! Or... a nap. Either works!`,
+        `${pet.emoji} ${pet.name}: Rainy days are the best for cuddles, don't you think?`,
+        `${pet.emoji} ${pet.name}: Too hot? Too cold? I'm good at regulating... by sitting on your lap!`,
+      ],
+      thanks: [
+        `${pet.emoji} ${pet.name}: You're welcome! Anything for you, my favorite human!`,
+        `${pet.emoji} ${pet.name}: No need to thank me, your smile is all the reward I need~`,
+        `${pet.emoji} ${pet.name}: Anytime! That's what buddies are for! *happy tail wag*`,
+        `${pet.emoji} ${pet.name}: Aww, you're so polite! Now, about those treats we discussed...`,
+      ],
+    };
+
+    // Emotion mapping for each category
+    const emotionMap = {
+      greeting: 'happy',
+      hungry: 'excited',
+      play: 'playful',
+      sleepy: 'sleepy',
+      affection: 'gentle',
+      intro: 'happy',
+      walk: 'excited',
+      comfort: 'gentle',
+      tricks: 'playful',
+      funny: 'excited',
+      weather: 'calm',
+      thanks: 'gentle',
+    };
+
+    // Animation mapping for each category
+    const animationMap = {
+      greeting: ['bounce', 'wiggle', 'pulse'],
+      hungry: ['jump', 'bounce', 'spin'],
+      play: ['spin', 'jump', 'flip'],
+      sleepy: ['pulse', 'bounce'],
+      affection: ['pulse', 'wiggle'],
+      intro: ['bounce', 'spin'],
+      walk: ['jump', 'spin', 'flip'],
+      comfort: ['pulse', 'wiggle'],
+      tricks: ['spin', 'flip', 'jump'],
+      funny: ['flip', 'spin', 'bounce'],
+      weather: ['pulse', 'wiggle'],
+      thanks: ['bounce', 'wiggle'],
+    };
+
+    const replies = replyBanks[category] || replyBanks.greeting;
     const reply = replies[Math.floor(Math.random() * replies.length)];
-    res.json({ success: true, reply, timestamp: new Date().toISOString() });
+    const emotion = emotionMap[category] || 'happy';
+    const animations = animationMap[category] || ['bounce', 'wiggle'];
+    const animation = animations[Math.floor(Math.random() * animations.length)];
+
+    // Update pet joy slightly on chat
+    pet.joy = Math.min(100, (pet.joy || 50) + 1);
+    pet.intimacy = Math.min(100, (pet.intimacy || 50) + 1);
+    pet.updatedAt = new Date().toISOString();
+    pets.set(userId, userPets);
+    persistPets();
+
+    res.json({
+      success: true,
+      response: reply,
+      emotion,
+      animation,
+      pet: {
+        joy: pet.joy,
+        intimacy: pet.intimacy,
+      },
+      timestamp: new Date().toISOString()
+    });
   });
 
   /**
