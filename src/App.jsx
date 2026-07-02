@@ -1,7 +1,7 @@
 // Build: v2.0 - Feed UI restore + Training result confirmation
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { BrowserRouter, Routes, Route, useSearchParams, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useSearchParams, useNavigate, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Feed from './pages/Feed'
@@ -179,6 +179,34 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+// 首页入口：未登录重定向到动态页，登录后正常显示首页
+function HomeGate() {
+  const { isLoggedIn } = useStore()
+  
+  // 如果有token但还没加载完，等待ProtectedRoute处理
+  if (localStorage.getItem('token') && !isLoggedIn) {
+    return (
+      <div className="min-h-full flex items-center justify-center gradient-bg">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="text-4xl"
+        >
+          🐾
+        </motion.div>
+      </div>
+    )
+  }
+  
+  if (!isLoggedIn) {
+    return <Navigate to="/feed" replace />
+  }
+  
+  return (
+    <PublicLayout><Home /></PublicLayout>
+  )
+}
+
 function AppContent() {
   const { initializeSession } = useStore()
   
@@ -199,11 +227,7 @@ function AppContent() {
           
           <Route 
             path="/" 
-            element={
-              <ProtectedRoute>
-                <PublicLayout><Home /></PublicLayout>
-              </ProtectedRoute>
-            }
+            element={<HomeGate />}
           />
           <Route 
             path="/shop" 
