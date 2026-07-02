@@ -195,7 +195,7 @@ const Navbar = () => {
   const [showPlusMenu, setShowPlusMenu] = useState(false)
 
   const navItems = [
-    { path: '/', icon: '🏠', label: '首页', locked: true },
+    { path: '/', icon: '🏠', label: '首页', locked: false },
     { path: '/feed', icon: '📖', label: '动态', locked: false },
     { path: '/shop', icon: '🛍️', label: '商城', locked: true },
     { path: '/social', icon: '👥', label: '社交', locked: true },
@@ -203,12 +203,17 @@ const Navbar = () => {
   ]
 
   const handleClick = (path) => {
-    if (path === '/feed') {
-      navigate('/feed')
+    // 公开页面：首页和动态无需登录即可访问
+    if (path === '/' || path === '/feed') {
+      navigate(path)
       return
     }
     
+    // 需要登录的功能：未登录则提示并跳转登录页
     if (!isLoggedIn) {
+      if (window.confirm('此功能需要登录后使用，是否前往注册/登录？')) {
+        navigate('/login')
+      }
       return
     }
     

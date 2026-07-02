@@ -1,7 +1,7 @@
 // Build: v2.0 - Feed UI restore + Training result confirmation
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { BrowserRouter, Routes, Route, useSearchParams } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useSearchParams, useNavigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Feed from './pages/Feed'
@@ -75,6 +75,7 @@ function AppLayout({ children }) {
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn, setUser, setPet } = useStore()
+  const navigate = useNavigate()
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
 
   useEffect(() => {
@@ -162,7 +163,15 @@ function ProtectedRoute({ children }) {
     return (
       <div className="min-h-full flex flex-col items-center justify-center gradient-bg p-4">
         <div className="text-6xl mb-4 opacity-30">🔒</div>
-        <p className="text-white/40 text-center text-sm">此功能需要登录后使用</p>
+        <p className="text-white/40 text-center text-sm mb-6">此功能需要登录后使用</p>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('/login')}
+          className="px-8 py-3 bg-gradient-to-r from-cyber-blue to-cyber-purple text-white font-bold rounded-xl shadow-lg"
+        >
+          前往注册/登录
+        </motion.button>
       </div>
     )
   }
