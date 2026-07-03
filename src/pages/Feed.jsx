@@ -337,7 +337,10 @@ const Feed = () => {
     if (!selectedProduct) return
     const userPoints = user?.points || 0
     if (userPoints < selectedProduct.price) {
-      alert(t('feed.insufficientPoints'))
+      // Insufficient points → prompt to recharge
+      if (window.confirm(`${t('feed.insufficientPoints')}\n\nCurrent Points: ${userPoints} ⭐\nRequired: ${selectedProduct.price} ⭐\n\nGo to recharge?`)) {
+        window.location.href = '/recharge'
+      }
       return
     }
     setIsPurchasing(true)
@@ -799,10 +802,26 @@ const Feed = () => {
                           </svg>
                           {t('feed.buying')}
                         </span>
+                      ) : (user?.points || 0) < selectedProduct.price ? (
+                        'Insufficient Points'
                       ) : (
                         `${t('feed.buyNow')} (${selectedProduct.price}${t('shop.points')})`
                       )}
                     </motion.button>
+
+                    {/* 积分不足时显示充值入口 */}
+                    {(user?.points || 0) < selectedProduct.price && (
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => { setSelectedProduct(null); window.location.href = '/recharge'; }}
+                        className="w-full mt-2 py-3 rounded-2xl font-bold text-base bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/40 text-yellow-400 transition-all"
+                      >
+                        💎 Recharge Now
+                      </motion.button>
+                    )}
                   </div>
                 </>
               ) : (

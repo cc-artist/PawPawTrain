@@ -128,12 +128,12 @@ const UpgradeModal = ({ isOpen, onClose, currentStage, onUpgrade }) => {
                           )}
                           {user.points < req.points && (
                             <span className="text-xs px-2 py-1 bg-red-100 text-red-600 rounded-full">
-                              需{req.points}积分
+                              需{req.points} Points
                             </span>
                           )}
                           {affordable && (
                             <span className="text-xs px-2 py-1 bg-green-100 text-green-600 rounded-full">
-                              可升级
+                              Upgradeable
                             </span>
                           )}
                         </div>
@@ -144,7 +144,7 @@ const UpgradeModal = ({ isOpen, onClose, currentStage, onUpgrade }) => {
                           <div className="text-orange-500 font-bold">¥{req.price}</div>
                         )}
                         <div className="text-gray-400 text-sm">
-                          {req.points}积分
+                          {req.points} Points
                         </div>
                       </div>
                     </div>
@@ -265,7 +265,7 @@ const ProgressToNextStage = ({ currentStage, pet, user }) => {
 
         <div>
           <div className="flex justify-between text-xs text-gray-500 mb-1">
-            <span>积分需求</span>
+            <span>Points Required</span>
             <span>{user.points} / {req.points}</span>
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">

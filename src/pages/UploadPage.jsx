@@ -7,6 +7,7 @@ import { t, zh, en } from '../utils/i18n';
 import { claimTrigger } from '../utils/taskTracker';
 import ArtStyleSelector from '../components/ArtStyleSelector';
 import PointsNotificationModal from '../components/PointsNotificationModal';
+import FloatingRechargeBadge from '../components/FloatingRechargeBadge';
 
 const UploadPage = () => {
   const navigate = useNavigate();
@@ -294,6 +295,7 @@ const UploadPage = () => {
 
   return (
     <div className="min-h-full gradient-bg pb-28 relative">
+      <FloatingRechargeBadge variant="default" />
       <div className="w-full">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6 pt-4">
           <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} className="text-6xl mb-4">🐾</motion.div>
@@ -523,7 +525,7 @@ const UploadPage = () => {
                         }}
                         className="mt-3 w-full py-2 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-lg font-medium"
                       >
-                        🔄 重新生成宠物形象 ({REGENERATE_COST}积分)
+                        🔄 Regenerate Pet Image ({REGENERATE_COST} Points)
                       </motion.button>
                     )}
                   </div>
@@ -563,26 +565,26 @@ const UploadPage = () => {
               >
                 ⚠️
               </motion.div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">确认重新生成？</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Confirm Regeneration?</h3>
               <p className="text-gray-600 mb-4">
-                重新生成虚拟宠物形象需要消耗 <strong className="text-orange-500">{REGENERATE_COST} 积分</strong>
+                Regenerating virtual pet image requires <strong className="text-orange-500">{REGENERATE_COST} Points</strong>
               </p>
               <p className="text-sm text-gray-500 mb-6">
-                当前积分: <span className="font-bold text-purple-600">{userPoints}</span>
+                Current Points: <span className="font-bold text-purple-600">{userPoints}</span>
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowRegenerateConfirm(false)}
                   className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium"
                 >
-                  取消
+                  Cancel
                 </button>
                 <button
                   onClick={handleRegenerate}
                   disabled={userPoints < REGENERATE_COST}
                   className={`flex-1 py-3 rounded-xl font-medium ${userPoints >= REGENERATE_COST ? 'bg-gradient-to-r from-orange-400 to-orange-500 text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                 >
-                  确认消耗积分
+                  Confirm
                 </button>
               </div>
             </div>

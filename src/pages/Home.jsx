@@ -564,6 +564,14 @@ const Home = () => {
           <div className="flex items-center gap-2 bg-cyber-dark/80 px-4 py-2 rounded-full border border-cyber-blue/50">
             <span className="text-cyber-yellow">⭐</span>
             <span className="font-bold text-cyber-yellow">{pet.points || 0}</span>
+            <span className="w-px h-4 bg-cyber-blue/30 mx-1" />
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate('/recharge'); }}
+              className="flex items-center gap-1 text-xs font-bold text-white bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full px-2 py-0.5 hover:scale-105 transition-transform"
+            >
+              <span>💎</span>
+              <span>Recharge</span>
+            </button>
           </div>
         </div>
       </div>

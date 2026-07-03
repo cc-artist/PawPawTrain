@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import ArtStyleSelector from '../components/ArtStyleSelector';
 import SEO from '../components/SEO';
+import FloatingRechargeBadge from '../components/FloatingRechargeBadge';
 
 const mockPets = [
   {
@@ -135,6 +136,7 @@ const PetsPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 p-4">
+      <FloatingRechargeBadge variant="default" />
       <SEO title="My Pets" description="Manage your virtual pets and AI models. View pet stats, create new pets, and customize your digital companions on PawPawTrain." />
       <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between mb-6">

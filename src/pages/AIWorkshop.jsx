@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import SEO from '../components/SEO';
+import FloatingRechargeBadge from '../components/FloatingRechargeBadge';
 
 // ===== 主题化 SVG 图标组件 =====
 const ProductIcon = ({ type, size = 40 }) => {
@@ -762,6 +763,7 @@ function AIWorkshop() {
 
   return (
     <div className="min-h-screen gradient-bg pb-24">
+      <FloatingRechargeBadge variant="default" />
       <SEO title="AI Creation Workshop" description="Transform your pet photos into AI-generated art, stickers, wallpapers, and more. Choose from 16 creative styles on PawPawTrain." keywords="AI pet art, pet portrait, AI stickers, pet wallpaper generator, AI pet creation" />
       {/* Header */}
       <div className="px-4 pt-6 pb-4">

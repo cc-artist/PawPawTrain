@@ -6,6 +6,7 @@ import { tasksAPI } from '../services/api';
 import { t } from '../utils/i18n';
 import { usePosts } from '../context/PostsContext';
 import { checkDuplicate, addMediaRecord, UPLOAD_SOURCE } from '../utils/mediaLibrary';
+import FloatingRechargeBadge from '../components/FloatingRechargeBadge';
 
 const MAX_VIDEOS = 3;
 const MAX_DURATION = 60;
@@ -251,6 +252,7 @@ const DailyUploadPage = () => {
 
   return (
     <div className="min-h-screen gradient-bg p-4 pb-28">
+      <FloatingRechargeBadge variant="default" />
       <div className="max-w-lg mx-auto">
         <div className="text-center mb-6">
           <motion.div className="text-6xl mb-4">📋</motion.div>

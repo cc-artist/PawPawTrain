@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import { trainingAPI } from '../services/api';
 import SEO from '../components/SEO';
+import FloatingRechargeBadge from '../components/FloatingRechargeBadge';
 import { t } from '../utils/i18n';
 import { claimTrigger } from '../utils/taskTracker';
 import { usePosts } from '../context/PostsContext';
@@ -481,6 +482,7 @@ const TrainingPage = () => {
 
   return (
     <div className="min-h-screen gradient-bg p-4 pb-28">
+      <FloatingRechargeBadge variant="default" />
       <SEO title="Pet Training" description="Train your virtual pet with AI-powered action recognition. Upload videos, analyze behaviors, and improve your pet's skills on PawPawTrain." keywords="virtual pet training, AI pet trainer, pet behavior analysis, pet action recognition" />
       <div className="max-w-lg mx-auto">
         {/* 头部 */}

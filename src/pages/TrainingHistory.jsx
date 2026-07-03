@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import api from '../services/api';
 import { t } from '../utils/i18n';
+import FloatingRechargeBadge from '../components/FloatingRechargeBadge';
 
 const TrainingHistory = () => {
   const navigate = useNavigate();
@@ -156,6 +157,7 @@ const TrainingHistory = () => {
 
   return (
     <div className="min-h-full gradient-bg pb-20">
+      <FloatingRechargeBadge variant="default" />
       <div className="p-4">
         <div className="flex items-center gap-3 mb-6">
           <motion.button
@@ -328,10 +330,10 @@ const TrainingHistory = () => {
               <div className="bg-purple-900/30 rounded-xl p-3 mb-4 border border-purple-500/30">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-purple-400">💡</span>
-                  <span className="text-purple-300 text-sm font-medium">温馨提示</span>
+                  <span className="text-purple-300 text-sm font-medium">Tips</span>
                 </div>
                 <p className="text-gray-400 text-xs">
-                  重新生成虚拟宠物形象需要消耗 <span className="text-yellow-400 font-bold">{REGENERATE_COST}</span> 积分。消耗积分后，您可以重新上传新的照片来生成全新的虚拟宠物形象。
+                  Regenerating virtual pet image requires <span className="text-yellow-400 font-bold">{REGENERATE_COST}</span> points. After consuming points, you can upload new photos to generate a brand new virtual pet image.
                 </p>
               </div>
 
@@ -342,7 +344,7 @@ const TrainingHistory = () => {
                   onClick={() => setShowPreview(false)}
                   className="flex-1 py-3 bg-gray-700 text-gray-300 rounded-xl font-medium"
                 >
-                  返回
+                  Back
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -359,17 +361,17 @@ const TrainingHistory = () => {
                       >
                         ⏳
                       </motion.div>
-                      消耗中...
+                      Processing...
                     </span>
                   ) : (
-                    `消耗${REGENERATE_COST}积分重新上传`
+                    `Use ${REGENERATE_COST} Points to Re-upload`
                   )}
                 </motion.button>
               </div>
 
               <div className="mt-3 text-center">
                 <p className="text-gray-500 text-xs">
-                  当前积分: <span className="text-yellow-400">{user?.points || pet?.points || 0}</span>
+                  Current Points: <span className="text-yellow-400">{user?.points || pet?.points || 0}</span>
                 </p>
               </div>
             </motion.div>
@@ -377,7 +379,7 @@ const TrainingHistory = () => {
         )}
       </AnimatePresence>
 
-      {/* 积分不足提示弹窗 */}
+      {/* Points insufficient notification modal */}
       <AnimatePresence>
         {showRegenerateConfirm && (
           <motion.div
@@ -396,12 +398,12 @@ const TrainingHistory = () => {
             >
               <div className="text-center mb-4">
                 <div className="text-4xl mb-3">💎</div>
-                <h3 className="text-lg font-bold text-white mb-2">积分不足</h3>
+                <h3 className="text-lg font-bold text-white mb-2">Insufficient Points</h3>
                 <p className="text-gray-400 text-sm">
-                  重新生成需要 <span className="text-yellow-400 font-bold">{REGENERATE_COST}</span> 积分
+                  Regeneration requires <span className="text-yellow-400 font-bold">{REGENERATE_COST}</span> points
                 </p>
                 <p className="text-gray-500 text-xs mt-2">
-                  您当前有: <span className="text-yellow-400">{user?.points || pet?.points || 0}</span> 积分
+                  You currently have: <span className="text-yellow-400">{user?.points || pet?.points || 0}</span> points
                 </p>
               </div>
               <div className="flex gap-3">
@@ -411,7 +413,7 @@ const TrainingHistory = () => {
                   onClick={() => setShowRegenerateConfirm(false)}
                   className="flex-1 py-3 bg-gray-700 text-gray-300 rounded-xl font-medium"
                 >
-                  返回
+                  Back
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -419,7 +421,7 @@ const TrainingHistory = () => {
                   onClick={() => navigate('/recharge')}
                   className="flex-1 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-medium"
                 >
-                  去充值
+                  Recharge
                 </motion.button>
               </div>
             </motion.div>

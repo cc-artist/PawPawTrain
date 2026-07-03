@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { petAPI } from '../services/api'
 import { t } from '../utils/i18n'
+import FloatingRechargeBadge from '../components/FloatingRechargeBadge'
 
 const petTypes = [
   { id: 'cat', emoji: '🐱', color: 'from-amber-300 to-orange-400', label: 'adopt.cat' },
@@ -68,6 +69,7 @@ const Adopt = () => {
 
   return (
     <div className="min-h-full gradient-bg">
+      <FloatingRechargeBadge variant="default" />
       <div className="w-full">
         <motion.div
           initial={{ opacity: 0, y: -20 }}

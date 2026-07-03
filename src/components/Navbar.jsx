@@ -208,10 +208,14 @@ const plusMenuItems = [
 const Navbar = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { isLoggedIn, logout, user } = useStore()
+  const { isLoggedIn, logout, user, pet } = useStore()
   const [hoveredPath, setHoveredPath] = useState(null)
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 })
   const [showPlusMenu, setShowPlusMenu] = useState(false)
+  const [showRechargeBanner, setShowRechargeBanner] = useState(true)
+
+  // 积分：优先用 user.points，兜底 pet.points
+  const points = user?.points ?? pet?.points ?? 0
   
   // Auto-hide feature state
   const [isNavbarVisible, setIsNavbarVisible] = useState(true)
@@ -544,6 +548,44 @@ const Navbar = () => {
           >
             👆 Tap to restore
           </motion.div>
+          {/* ========== 积分充值条（登录后可见） ========== */}
+          <AnimatePresence>
+            {isLoggedIn && showRechargeBanner && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="flex items-center justify-between px-4 py-2 border-b border-cyber-blue/20 bg-gradient-to-r from-yellow-500/5 to-orange-500/5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">⭐</span>
+                    <span className="text-xs text-cyber-blue/70">
+                      Balance: <span className="font-bold text-cyber-yellow">{points.toLocaleString()}</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => navigate('/recharge')}
+                      className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full text-white text-xs font-bold shadow-md"
+                    >
+                      <span>💎</span>
+                      <span>Recharge</span>
+                    </motion.button>
+                    <button
+                      onClick={() => setShowRechargeBanner(false)}
+                      className="text-white/30 hover:text-white/60 text-xs"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="w-full flex items-center justify-around">
           {/* Left 3 nav items: Home, Feed, Shop */}
           {navItems.slice(0, 3).map((item) => {
