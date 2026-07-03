@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import useStore from '../store/useStore'
 import { useUpload } from '../context/UploadContext'
 import { usePosts } from '../context/PostsContext'
+import SEO from '../components/SEO'
 import { t } from '../utils/i18n'
 
 const systemVideos = [
@@ -401,6 +402,7 @@ const Feed = () => {
 
   return (
     <>
+    <SEO title="Community Posts" description="Browse pet videos, photos, and posts from the PawPawTrain community. Discover adorable pets and trending content." />
     <div 
       ref={containerRef}
       className="fixed inset-0 overflow-hidden select-none bg-black"

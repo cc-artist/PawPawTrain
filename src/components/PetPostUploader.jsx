@@ -109,7 +109,7 @@ const PetPostUploader = React.memo(({ isOpen, onClose, onPost, currentPet }) => 
 
   const generateStylePreview = async () => {
     if (!selectedArtStyle) {
-      alert('请先选择艺术风格')
+      alert('Please select an art style first')
       return
     }
 
@@ -142,16 +142,16 @@ const PetPostUploader = React.memo(({ isOpen, onClose, onPost, currentPet }) => 
       // 检查后端返回的业务错误
       if (response.data.success === false) {
         const errorCode = response.data.code
-        const errorMessage = response.data.error || '生成预览失败'
+        const errorMessage = response.data.error || 'Preview generation failed'
 
         // 根据错误代码提供更具体的提示
         let userMessage = errorMessage
         if (errorCode === 'AI_SERVICE_UNAVAILABLE') {
-          userMessage = `${errorMessage}\n\n可能的原因：\n• Stability API Key 未配置\n• API 服务暂时不可用\n\n请稍后重试，或联系管理员检查 API 配置。`
+          userMessage = `${errorMessage}\n\nPossible causes:\n- Stability API Key not configured\n- API service temporarily unavailable\n\nPlease try again later or contact admin to check API configuration.`
         } else if (errorCode === 'INVALID_IMAGE') {
-          userMessage = `${errorMessage}\n\n请确保上传的图片格式正确（JPG、PNG）。`
+          userMessage = `${errorMessage}\n\nPlease ensure uploaded image format is correct (JPG, PNG).`
         } else if (errorCode === 'RATE_LIMIT_EXCEEDED') {
-          userMessage = `${errorMessage}\n\n请稍后再试。`
+          userMessage = `${errorMessage}\n\nPlease try again later.`
         }
 
         console.error('API business error:', { code: errorCode, message: errorMessage })
@@ -167,7 +167,7 @@ const PetPostUploader = React.memo(({ isOpen, onClose, onPost, currentPet }) => 
         // 检查 previewUrl 是否为字符串
         if (typeof previewUrl !== 'string') {
           console.error('Invalid preview URL type:', typeof previewUrl, previewUrl)
-          alert('生成预览失败：服务器返回了无效的图片格式')
+          alert('Preview generation failed: server returned invalid image format')
           setIsGeneratingPreview(false)
           return
         }
@@ -188,7 +188,7 @@ const PetPostUploader = React.memo(({ isOpen, onClose, onPost, currentPet }) => 
             setIsGeneratingPreview(false)
           } else {
             console.error('Invalid or too small base64 data:', base64Data?.length)
-            alert('生成预览失败：返回的图片数据无效或尺寸过小')
+            alert('Preview generation failed: image data is invalid or too small')
             setIsGeneratingPreview(false)
           }
         } else {
@@ -199,35 +199,35 @@ const PetPostUploader = React.memo(({ isOpen, onClose, onPost, currentPet }) => 
       } else {
         // 未知响应格式
         console.error('Unexpected API response format:', response.data)
-        alert('生成预览失败：服务器返回了意外的响应格式，请重试')
+        alert('Preview generation failed: unexpected server response, please try again')
         setIsGeneratingPreview(false)
       }
     } catch (error) {
       console.error('Failed to generate preview:', error.response || error.message || error)
 
       // 处理网络错误或服务器错误
-      let errorMessage = '生成预览失败'
+      let errorMessage = 'Preview generation failed'
 
       if (error.response) {
-        // 服务器返回了错误响应
+        // Server returned error response
         const status = error.response.status
         const data = error.response.data
 
         if (status === 500) {
-          errorMessage = '服务器内部错误，请稍后重试'
+          errorMessage = 'Internal server error, please try again later'
         } else if (status === 401 || status === 403) {
-          errorMessage = 'API 认证失败，请检查 API Key 配置'
+          errorMessage = 'API authentication failed, please check API Key configuration'
         } else if (data?.error) {
           errorMessage = data.error
         }
       } else if (error.request) {
-        // 请求已发送但没有收到响应
-        errorMessage = '网络连接失败，请检查网络后重试'
+        // Request sent but no response received
+        errorMessage = 'Network connection failed, please check your network and try again'
       } else {
-        errorMessage = error.message || '未知错误'
+        errorMessage = error.message || 'Unknown error'
       }
 
-      alert(`${errorMessage}\n\n请稍后重试，或联系管理员获取帮助。`)
+      alert(`${errorMessage}\n\nPlease try again later or contact admin for help.`)
     } finally {
       setIsGeneratingPreview(false)
     }
@@ -338,8 +338,8 @@ const PetPostUploader = React.memo(({ isOpen, onClose, onPost, currentPet }) => 
         }
       }, 1000)
     } catch (error) {
-      console.error('录音失败:', error)
-      alert('无法访问麦克风，请检查权限设置')
+      console.error('Recording failed:', error)
+      alert('Cannot access microphone, please check permission settings')
     }
   }, [isRecording])
 
@@ -363,7 +363,7 @@ const PetPostUploader = React.memo(({ isOpen, onClose, onPost, currentPet }) => 
     if (file) {
       const fileSizeInMB = file.size / (1024 * 1024)
       if (fileSizeInMB > 10) {
-        alert('音频文件大小不能超过10MB')
+        alert('Audio file size cannot exceed 10MB')
         return
       }
 
@@ -419,10 +419,10 @@ const PetPostUploader = React.memo(({ isOpen, onClose, onPost, currentPet }) => 
         
         if (petRes.data && petRes.data.pet) {
           setPet(petRes.data.pet)
-          console.log('虚拟宠物已生成:', petRes.data.pet)
+          console.log('Virtual pet generated:', petRes.data.pet)
         }
       } catch (err) {
-        console.error('生成虚拟宠物失败:', err)
+        console.error('Failed to generate virtual pet:', err)
       }
     } else {
       updatePetPersonality(personalityBoost, petFeatures)

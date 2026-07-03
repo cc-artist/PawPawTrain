@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { authAPI } from '../services/api'
+import SEO from '../components/SEO'
 import { t } from '../utils/i18n'
 
 // 生成模拟 JWT token（用于无后端场景）
@@ -89,7 +90,7 @@ const Login = () => {
           const res = await authAPI.register({ email, password, name: name.trim(), avatar })
           result = { token: res.data.token, user: res.data.user }
         } catch (apiErr) {
-          console.log('后端API不可用，使用客户端注册')
+          console.log('Backend API unavailable, using client-side registration')
           result = mockRegister(email, password, name.trim(), avatar || '🐾')
         }
         
@@ -159,6 +160,7 @@ const Login = () => {
 
   return (
     <div className="min-h-full flex flex-col items-center justify-center gradient-bg">
+      <SEO title="Sign In" description="Sign in or register to PawPawTrain to start your AI virtual pet journey. Adopt, train, and play with your digital companion." />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

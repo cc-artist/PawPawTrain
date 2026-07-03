@@ -28,14 +28,14 @@ const Publish = () => {
     formData.append('description', description)
     try {
       const res = await contentAPI.upload(formData)
-      alert(`发布成功！获得 ${res.data.energy} 成长能量`)
+      alert(`Published successfully! Earned ${res.data.energy} growth energy`)
       updatePetStats({ exp: res.data.newExp })
       updateUserPoints(res.data.newPoints)
       setSelectedFile(null)
       setPreview(null)
       setDescription('')
     } catch (err) {
-      alert(err.response?.data?.message || '发布失败')
+      alert(err.response?.data?.message || 'Publish failed')
     } finally {
       setLoading(false)
     }
@@ -46,15 +46,15 @@ const Publish = () => {
       <div>
         <div className="w-full">
           <div className="text-center mb-6 pt-4">
-            <h1 className="text-2xl font-bold text-orange-600 mb-2">发布内容</h1>
-            <p className="text-orange-500">分享真实宠物，获得成长能量✨</p>
+            <h1 className="text-2xl font-bold text-orange-600 mb-2">Publish Content</h1>
+            <p className="text-orange-500">Share real pets, earn growth energy✨</p>
           </div>
 
           <div className="glass-effect rounded-2xl p-4 mb-4 text-center">
-            <div className="text-gray-600">今日已发布 <span className="font-bold text-orange-500">{todayCount}</span>/5</div>
+            <div className="text-gray-600">Posted today <span className="font-bold text-orange-500">{todayCount}</span>/5</div>
           </div>
 
-          <div className="text-sm text-orange-400">每日上限5次，防止刷分</div>
+          <div className="text-sm text-orange-400">Daily limit 5 posts, to prevent spam</div>
 
           <form onSubmit={handleSubmit} className="glass-effect rounded-3xl p-6 warm-shadow">
             <div className="mb-6">
@@ -72,19 +72,19 @@ const Publish = () => {
             ) : (
               <label className="block w-full h-64 border-2 border-dashed border-orange-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all">
                 <div className="text-5xl mb-2">📷</div>
-                <div className="text-orange-500">点击或拖拽上传</div>
-                <div className="text-sm text-orange-400 mt-1">支持图片和视频</div>
+                <div className="text-orange-500">Click or drag to upload</div>
+                <div className="text-sm text-orange-400 mt-1">Supports images and videos</div>
                 <input type="file" accept="image/*,video/*" className="hidden" onChange={handleFileSelect} />
               </label>
             )}
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-600 mb-2">描述一下吧</label>
+              <label className="block text-sm font-medium text-gray-600 mb-2">Description</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="分享你和毛孩子的故事..."
+                placeholder="Share your pet's story..."
                 className="w-full h-32 px-4 py-3 rounded-xl border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none resize-none"
               />
             </div>
@@ -96,13 +96,13 @@ const Publish = () => {
               disabled={!selectedFile || loading}
               className="w-full py-4 bg-gradient-to-r from-orange-400 to-orange-500 text-white font-bold rounded-2xl disabled:opacity-50"
             >
-              {loading ? '发布中...' : '🎉 发布'}
+              {loading ? 'Publishing...' : '🎉 Publish'}
             </motion.button>
           </form>
 
           <div className="mt-6">
-            <h2 className="text-lg font-bold text-gray-700 mb-4">我的动态</h2>
-            <div className="text-center text-orange-400 py-8">暂无内容</div>
+            <h2 className="text-lg font-bold text-gray-700 mb-4">My Posts</h2>
+            <div className="text-center text-orange-400 py-8">No content yet</div>
           </div>
         </div>
       </div>

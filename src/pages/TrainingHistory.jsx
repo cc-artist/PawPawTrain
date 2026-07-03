@@ -109,7 +109,7 @@ const TrainingHistory = () => {
     
     const userPoints = user?.points || pet?.points || 0;
     if (userPoints < REGENERATE_COST) {
-      alert(`积分不足！重新生成需要 ${REGENERATE_COST} 积分，您当前有 ${userPoints} 积分`);
+      alert(`Insufficient points! Regeneration requires ${REGENERATE_COST} points, you currently have ${userPoints} points.`);
       return;
     }
 
@@ -123,15 +123,15 @@ const TrainingHistory = () => {
       if (response.data.success) {
         setShowPreview(false);
         setShowRegenerateConfirm(false);
-        alert(`成功消耗 ${REGENERATE_COST} 积分！现在您可以重新上传照片来生成新的虚拟宠物形象。`);
+        alert(`Successfully consumed ${REGENERATE_COST} points! You can now upload new photos to generate a new virtual pet image.`);
         // 跳转到上传页面
         navigate('/upload', { state: { isRegenerating: true, originalRecord: selectedRecord } });
       } else {
-        alert(response.data.error || '积分消耗失败');
+        alert(response.data.error || 'Points deduction failed');
       }
     } catch (error) {
       console.error('Consume points error:', error);
-      alert(error.response?.data?.error || '积分消耗失败');
+      alert(error.response?.data?.error || 'Points deduction failed');
     } finally {
       setIsConsumingPoints(false);
     }

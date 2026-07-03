@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { t } from '../utils/i18n'
+import SEO from '../components/SEO'
 import { getMediaLibrary, removeMediaRecord, getMediaBySource, UPLOAD_SOURCE } from '../utils/mediaLibrary'
 
 const STORAGE_KEY = 'paw_train_all_posts'
@@ -110,7 +111,7 @@ const Profile = () => {
 
   // 删除媒体记录
   const handleDeleteMedia = (recordId) => {
-    if (confirm('确认删除此上传记录？/ Delete this upload record?')) {
+    if (confirm('Delete this upload record?')) {
       removeMediaRecord(recordId)
       refreshMediaLibrary()
     }
@@ -221,6 +222,7 @@ const Profile = () => {
 
   return (
     <div className="h-screen gradient-bg overflow-y-auto">
+      <SEO title="My Profile" description="View your profile, track achievements, manage your pet collection, and check your activity history on PawPawTrain." />
       <div>
         <div className="w-full">
           <motion.div

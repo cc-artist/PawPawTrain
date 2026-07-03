@@ -76,7 +76,7 @@ const PetTypeSelector = ({ selectedPetType, onSelect, selectedBreed, onBreedChan
       setColorsInput('默认毛色')
       setShowCreateForm(false)
     } else {
-      alert('该宠物类型已存在')
+      alert('This pet type already exists')
     }
   }
 

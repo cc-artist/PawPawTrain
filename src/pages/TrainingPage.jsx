@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import useStore from '../store/useStore';
 import { trainingAPI } from '../services/api';
+import SEO from '../components/SEO';
 import { t } from '../utils/i18n';
 import { claimTrigger } from '../utils/taskTracker';
 import { usePosts } from '../context/PostsContext';
@@ -134,7 +135,7 @@ const TrainingPage = () => {
       if (saved.isConfirmed) setIsConfirmed(saved.isConfirmed);
       if (saved.pendingResults) setPendingResults(saved.pendingResults);
       if (saved.beforePetSnapshot) setBeforePetSnapshot(saved.beforePetSnapshot);
-      console.log('📋 训练页面状态已恢复 / Training state restored');
+      console.log('📋 Training page state restored');
     }
     isMountedRef.current = true;
     savedStateRef.current = true;
@@ -480,6 +481,7 @@ const TrainingPage = () => {
 
   return (
     <div className="min-h-screen gradient-bg p-4 pb-28">
+      <SEO title="Pet Training" description="Train your virtual pet with AI-powered action recognition. Upload videos, analyze behaviors, and improve your pet's skills on PawPawTrain." keywords="virtual pet training, AI pet trainer, pet behavior analysis, pet action recognition" />
       <div className="max-w-lg mx-auto">
         {/* 头部 */}
         <div className="text-center mb-6">

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import imageService from '../services/imageService.js';
+import storageService from '../services/storageService.js';
 
 /**
  * AI创作工坊路由
@@ -9,9 +10,14 @@ import imageService from '../services/imageService.js';
 const createWorkshopRoutes = (dataStore) => {
   const router = Router();
 
-  // 初始化 workshop creations 存储
-  if (!dataStore.workshopCreations) {
-    dataStore.workshopCreations = new Map();
+  // 从持久化数据初始化 workshop creations（使用普通对象，非Map）
+  if (!dataStore.workshopCreations || typeof dataStore.workshopCreations !== 'object') {
+    dataStore.workshopCreations = {};
+  }
+
+  // 持久化 workshop creations
+  function persistWorkshopCreations() {
+    storageService.saveWorkshopCreations(dataStore.workshopCreations);
   }
 
   // OPTIONS 预检处理（确保 CORS 预检通过）
@@ -118,12 +124,13 @@ const createWorkshopRoutes = (dataStore) => {
         isPlaceholder: result.isPlaceholder || false,
       };
 
-      // 存储到内存
+      // 存储到内存并持久化
       const userId = req.user?.id || 'anonymous';
-      if (!dataStore.workshopCreations.has(userId)) {
-        dataStore.workshopCreations.set(userId, []);
+      if (!dataStore.workshopCreations[userId]) {
+        dataStore.workshopCreations[userId] = [];
       }
-      dataStore.workshopCreations.get(userId).push(creation);
+      dataStore.workshopCreations[userId].push(creation);
+      persistWorkshopCreations();
 
       res.json({
         success: true,
@@ -146,7 +153,7 @@ const createWorkshopRoutes = (dataStore) => {
    */
   router.get('/creations', (req, res) => {
     const userId = req.user?.id || 'anonymous';
-    const creations = dataStore.workshopCreations.get(userId) || [];
+    const creations = dataStore.workshopCreations[userId] || [];
     res.json({
       success: true,
       creations: creations.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),

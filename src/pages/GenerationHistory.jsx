@@ -145,7 +145,7 @@ const GenerationHistory = () => {
     : history;
 
   const handleRegenerate = (item) => {
-    alert(`正在使用 ${ART_STYLES.find(s => s.id === item.styleId)?.name} 风格重新生成 ${item.petName}...`);
+    alert(`Regenerating ${item.petName} with ${ART_STYLES.find(s => s.id === item.styleId)?.name} style...`);
   };
 
   return (
@@ -153,12 +153,12 @@ const GenerationHistory = () => {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">📸 生成历史</h1>
-            <p className="text-gray-500 text-sm">查看您创作的所有虚拟宠物形象</p>
+            <h1 className="text-2xl font-bold text-gray-800">📸 Generation History</h1>
+            <p className="text-gray-500 text-sm">View all virtual pet images you created</p>
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-purple-600">{history.length}</div>
-            <div className="text-xs text-gray-400">生成作品</div>
+            <div className="text-xs text-gray-400">Works Generated</div>
           </div>
         </div>
 
@@ -171,7 +171,7 @@ const GenerationHistory = () => {
                 : 'bg-white text-gray-600 shadow-sm'
             }`}
           >
-            全部
+            All
           </button>
           {ART_STYLES.map(style => (
             <button
@@ -201,33 +201,33 @@ const GenerationHistory = () => {
         {filteredHistory.length === 0 && (
           <div className="text-center py-16">
             <div className="text-6xl mb-4">📭</div>
-            <h3 className="text-xl font-bold text-gray-800 mb-2">暂无生成记录</h3>
-            <p className="text-gray-500">去创作您的第一个虚拟宠物形象吧！</p>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">No generation records</h3>
+            <p className="text-gray-500">Create your first virtual pet image now!</p>
           </div>
         )}
 
         <div className="mt-8 bg-white rounded-2xl p-6 shadow-sm">
-          <h3 className="font-bold text-gray-800 mb-4">📊 生成统计</h3>
+          <h3 className="font-bold text-gray-800 mb-4">📊 Generation Stats</h3>
           <div className="grid grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-purple-600">{history.length}</div>
-              <div className="text-xs text-gray-500">总作品</div>
+              <div className="text-xs text-gray-500">Total Works</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-pink-600">
                 {history.reduce((sum, h) => sum + h.likes, 0)}
               </div>
-              <div className="text-xs text-gray-500">总点赞</div>
+              <div className="text-xs text-gray-500">Total Likes</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
                 {history.reduce((sum, h) => sum + h.shares, 0)}
               </div>
-              <div className="text-xs text-gray-500">总分享</div>
+              <div className="text-xs text-gray-500">Total Shares</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">{new Set(history.map(h => h.styleId)).size}</div>
-              <div className="text-xs text-gray-500">使用风格</div>
+              <div className="text-xs text-gray-500">Styles Used</div>
             </div>
           </div>
         </div>

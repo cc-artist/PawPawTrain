@@ -218,7 +218,7 @@ const IPGenerator = ({ isOpen, onClose, pet }) => {
   }
 
   const handleGenerateProducts = () => {
-    alert('🎉 已基于您的IP形象生成商品！\n\n商品包括：\n- 专属表情包\n- 定制壁纸\n- 人设卡片\n- 毛绒公仔设计稿')
+    alert('🎉 Products generated based on your IP image!\n\nProducts include:\n- Exclusive stickers\n- Custom wallpapers\n- Character cards\n- Plush toy designs')
   }
 
   if (!isOpen) return null
@@ -343,8 +343,8 @@ const IPGenerator = ({ isOpen, onClose, pet }) => {
                 ) : generatedIP ? (
                   <GeneratedIPDisplay
                     ip={generatedIP}
-                    onDownload={() => alert('图片已保存到相册')}
-                    onUseAsAvatar={() => alert('已设置为宠物头像')}
+              onDownload={() => alert('Image saved to album')}
+              onUseAsAvatar={() => alert('Set as pet avatar')}
                   />
                 ) : null}
               </div>

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { SwapCard, CreateSwapModal, ApplySwapModal, SwapManagement, CoopCard, CreateCoopModal, ApplyCoopModal } from '../components/SwapCareSystem'
 import ChatRooms from '../components/ChatRoom'
 import { t } from '../utils/i18n'
+import SEO from '../components/SEO'
 
 const mockFriends = [
   { id: 1, name: 'Xiao Ming', pet: '🐱', level: 12, isOnline: true },
@@ -177,6 +178,7 @@ const Social = () => {
 
   return (
     <div className="h-screen gradient-bg overflow-y-auto">
+      <SEO title="Social" description="Connect with other pet owners, swap care duties, join co-op raising, and chat with the PawPawTrain community." />
       <div>
         <div className="w-full">
           <div className="text-center mb-6 pt-4">

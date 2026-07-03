@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import SEO from '../components/SEO';
 
 // ===== 主题化 SVG 图标组件 =====
 const ProductIcon = ({ type, size = 40 }) => {
@@ -369,7 +370,7 @@ function AIWorkshop() {
         });
         if (res.data?.success && res.data?.creation) {
           result = res.data.creation;
-          console.log('✅ 后端生成成功');
+          console.log('✅ Backend generation successful');
         }
       } catch (err) {
         const status = err.response?.status;
@@ -761,6 +762,7 @@ function AIWorkshop() {
 
   return (
     <div className="min-h-screen gradient-bg pb-24">
+      <SEO title="AI Creation Workshop" description="Transform your pet photos into AI-generated art, stickers, wallpapers, and more. Choose from 16 creative styles on PawPawTrain." keywords="AI pet art, pet portrait, AI stickers, pet wallpaper generator, AI pet creation" />
       {/* Header */}
       <div className="px-4 pt-6 pb-4">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>

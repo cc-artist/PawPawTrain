@@ -41,7 +41,7 @@ const DailyUploadPage = () => {
       if (saved.selectedTags) setSelectedTags(saved.selectedTags);
       if (saved.generatedTasks) setGeneratedTasks(saved.generatedTasks);
       if (saved.advice) setAdvice(saved.advice);
-      console.log('📋 每日任务页面状态已恢复 / Daily tasks state restored');
+      console.log('📋 Daily tasks page state restored');
     }
     isMountedRef.current = true;
     savedStateRef.current = true;

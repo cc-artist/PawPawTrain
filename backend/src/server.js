@@ -11,6 +11,7 @@ import createTrainingRoutes from './routes/training.js';
 import createTasksRoutes from './routes/tasks.js';
 import createPostsRoutes from './routes/posts.js';
 import createWorkshopRoutes from './routes/workshop.js';
+import createAdminRoutes from './routes/admin.js';
 
 // 加载环境变量
 dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
@@ -38,7 +39,8 @@ const dataStore = {
   adviceHistory: persistedData.adviceHistory,
   posts: persistedData.posts,
   userPreferences: persistedData.userPreferences,
-  workshopCreations: persistedData.workshopCreations,
+  workshopCreations: persistedData.workshopCreations || {},
+  auditLogs: persistedData.auditLogs || [],
 };
 
 // 设置推荐系统的持久化回调（当推荐数据变更时同步到 dataStore）
@@ -66,6 +68,7 @@ app.use('/api/training', createTrainingRoutes(dataStore));
 app.use('/api/tasks', createTasksRoutes(dataStore));
 app.use('/api/posts', createPostsRoutes(dataStore));
 app.use('/api/workshop', createWorkshopRoutes(dataStore));
+app.use('/api/admin', createAdminRoutes(dataStore));
 
 // 健康检查
 app.get('/api/health', (req, res) => {
@@ -97,11 +100,14 @@ setInterval(() => {
   storageService.saveAdviceHistory(dataStore.adviceHistory);
   storageService.savePosts(dataStore.posts);
   storageService.saveUserPreferences(dataStore.userPreferences);
+  storageService.saveWorkshopCreations(dataStore.workshopCreations);
+  storageService.saveAuditLogs(dataStore.auditLogs);
 }, 30000);
 
 app.listen(PORT, () => {
   console.log(`✅ PawPawTrain 后端服务已启动，端口: ${PORT}`);
   console.log(`📡 API 地址: http://localhost:${PORT}/api`);
+  console.log(`🛡️ Admin 管理后台: http://localhost:${PORT}/api/admin`);
   console.log(`☁️ Cloudinary 云存储: 已配置`);
   console.log(`💾 JSON 持久化: 已启用 (每30秒自动保存)`);
 });

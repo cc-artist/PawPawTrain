@@ -25,7 +25,7 @@ export const getMediaLibrary = () => {
     const saved = localStorage.getItem(MEDIA_LIBRARY_KEY);
     return saved ? JSON.parse(saved) : [];
   } catch (e) {
-    console.error('读取媒体库失败:', e);
+    console.error('Failed to read media library:', e);
     return [];
   }
 };
@@ -37,7 +37,7 @@ export const saveMediaLibrary = (library) => {
   try {
     localStorage.setItem(MEDIA_LIBRARY_KEY, JSON.stringify(library));
   } catch (e) {
-    console.error('保存媒体库失败:', e);
+    console.error('Failed to save media library:', e);
   }
 };
 
@@ -138,14 +138,14 @@ const generateVideoThumbnail = (file) => {
     video.onerror = () => {
       URL.revokeObjectURL(url);
       video.remove();
-      reject(new Error('缩略图生成失败'));
+      reject(new Error('Thumbnail generation failed'));
     };
     
     // 超时处理
     setTimeout(() => {
       URL.revokeObjectURL(url);
       video.remove();
-      reject(new Error('缩略图生成超时'));
+      reject(new Error('Thumbnail generation timeout'));
     }, 5000);
   });
 };
@@ -167,10 +167,10 @@ const readFileAsDataURL = (file) => {
  */
 const getSourceLabel = (source) => {
   const labels = {
-    [UPLOAD_SOURCE.TRAINING]: '🎯 动作训练器',
-    [UPLOAD_SOURCE.DAILY_TASKS]: '📋 任务生成器',
-    [UPLOAD_SOURCE.POST]: '📝 直接发帖',
-    [UPLOAD_SOURCE.AVATAR]: '🐾 宠物形象',
+    [UPLOAD_SOURCE.TRAINING]: '🎯 Action Trainer',
+    [UPLOAD_SOURCE.DAILY_TASKS]: '📋 Task Generator',
+    [UPLOAD_SOURCE.POST]: '📝 Direct Post',
+    [UPLOAD_SOURCE.AVATAR]: '🐾 Pet Avatar',
   };
   return labels[source] || source;
 };

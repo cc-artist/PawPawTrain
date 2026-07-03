@@ -28,7 +28,7 @@ const Adopt = () => {
 
   const handleAdopt = async () => {
     if (!selectedPet || !selectedPersonality || !petName.trim()) {
-      alert('请完善信息')
+      alert('Please complete all fields')
       return
     }
     
@@ -36,31 +36,31 @@ const Adopt = () => {
     setError(null)
     
     try {
-      console.log('开始领养...')
+      console.log('Starting adoption...')
       const res = await petAPI.adopt({
         petType: selectedPet.id,
         personality: selectedPersonality.id,
         name: petName.trim()
       })
       
-      console.log('API响应:', res)
+      console.log('API response:', res)
       
       const petData = res.data?.pet || res.data
       
       if (!petData) {
-        throw new Error('宠物数据格式错误')
+        throw new Error('Pet data format error')
       }
       
-      console.log('设置宠物:', petData)
+      console.log('Setting pet:', petData)
       setPet(petData)
       
-      console.log('跳转到首页')
+      console.log('Navigate to home')
       navigate('/', { replace: true })
       
     } catch (err) {
-      console.error('领养错误:', err)
-      setError(err.response?.data?.message || err.message || '领养失败，请重试')
-      alert(err.response?.data?.message || '领养失败')
+      console.error('Adoption error:', err)
+      setError(err.response?.data?.message || err.message || 'Adoption failed, please try again')
+      alert(err.response?.data?.message || 'Adoption failed')
     } finally {
       setLoading(false)
     }

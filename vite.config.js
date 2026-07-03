@@ -13,6 +13,11 @@ export default defineConfig({
         timeout: 120000,
         proxyTimeout: 120000,
         configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            if (req.body && req.url.includes('/admin/login')) {
+              console.log('[Proxy] Admin login body:', req.body);
+            }
+          });
           proxy.on('error', (err, req, res) => {
             console.error('[Vite Proxy Error]', err.message);
             if (res.writeHead) {

@@ -40,8 +40,8 @@ const pagePreviews = {
     )
   },
   '/feed': {
-    title: '📖 Feed',
-    titleEn: 'Feed',
+    title: '📖 Posts',
+    titleEn: 'Posts',
     description: 'Browse pet community',
     descriptionEn: 'Browse pet community',
     preview: (
@@ -228,7 +228,7 @@ const Navbar = () => {
 
   const navItems = [
     { path: '/', icon: '🏠', label: 'Home', labelEn: 'Home', locked: true },
-    { path: '/feed', icon: '📖', label: 'Feed', labelEn: 'Feed', locked: false },
+    { path: '/feed', icon: '📖', label: 'Posts', labelEn: 'Posts', locked: false },
     { path: '/shop', icon: '🛍️', label: 'Shop', labelEn: 'Shop', locked: true },
     { path: '/social', icon: '👥', label: 'Social', labelEn: 'Social', locked: true },
     { path: '/profile', icon: '👤', label: 'Profile', labelEn: 'Profile', locked: true },

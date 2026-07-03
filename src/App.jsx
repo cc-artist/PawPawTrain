@@ -1,7 +1,8 @@
 // Build: v2.0 - Feed UI restore + Training result confirmation
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { BrowserRouter, Routes, Route, useSearchParams, useNavigate, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useSearchParams, useNavigate, Navigate, useLocation } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Feed from './pages/Feed'
@@ -21,6 +22,8 @@ import TrainingHistory from './pages/TrainingHistory'
 import PetsPage from './pages/PetsPage'
 import GenerationHistory from './pages/GenerationHistory'
 import AIWorkshop from './pages/AIWorkshop'
+import AdminDashboard from './pages/AdminDashboard'
+import AdminLogin from './pages/AdminLoginPage'
 import { UploadProvider } from './context/UploadContext'
 import PetPostUploader from './components/PetPostUploader'
 import { useUpload } from './context/UploadContext'
@@ -112,17 +115,17 @@ function ProtectedRoute({ children }) {
             const cachedUser = JSON.parse(savedUser)
             if (cachedUser && cachedUser.id && isMounted) {
               setUser(cachedUser)
-              console.log('从本地缓存恢复用户信息')
+              console.log('Restoring user info from local cache')
             }
           } catch (parseErr) {
-            console.error('本地用户数据损坏，清除认证信息')
+            console.error('Corrupted local user data, clearing auth info')
             localStorage.removeItem('token')
             localStorage.removeItem('paw_train_user_state')
             localStorage.removeItem('paw_train_pet_state')
           }
         } else if (isMounted) {
           // token 无效且无本地缓存 → 清除无效 token，强制重新登录
-          console.warn('Token验证失败且无本地缓存，清除认证信息')
+          console.warn('Token verification failed, no local cache, clearing auth info')
           localStorage.removeItem('token')
           localStorage.removeItem('paw_train_user_state')
         }
@@ -230,12 +233,13 @@ function HomeGate() {
 
 function AppContent() {
   const { initializeSession, initializePageStates, clearAllPageStates } = useStore()
+  const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith('/admin')
   
   useEffect(() => {
     initializeSession()
     initializePageStates()
     
-    // 页面刷新/关闭时清除临时页面状态
     const handleBeforeUnload = () => {
       clearAllPageStates()
     }
@@ -248,9 +252,14 @@ function AppContent() {
   return (
     <PostsProvider>
       <UploadProvider>
-        <div className="min-h-full pb-24">
+        <div className={isAdminRoute ? '' : 'min-h-full pb-24'}>
           <Routes>
             <Route path="/login" element={<Login />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
             
             <Route 
               path="/feed" 
@@ -383,8 +392,8 @@ function AppContent() {
             />
           </Routes>
         </div>
-        <Navbar />
-        <UploadModal />
+        {!isAdminRoute && <Navbar />}
+        {!isAdminRoute && <UploadModal />}
       </UploadProvider>
     </PostsProvider>
   )
@@ -392,9 +401,11 @@ function AppContent() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </HelmetProvider>
   )
 }
 

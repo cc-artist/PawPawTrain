@@ -30,6 +30,8 @@ const DATA_FILES = {
   adviceHistory: 'advice_history.json',
   posts: 'posts.json',
   userPreferences: 'user_preferences.json',
+  workshopCreations: 'workshop_creations.json',
+  auditLogs: 'audit_logs.json',
 };
 
 /**
@@ -88,8 +90,10 @@ const storageService = {
     const rawAdviceHistory = loadData('adviceHistory');
     const rawPosts = loadData('posts');
     const rawUserPreferences = loadData('userPreferences');
+    const rawWorkshopCreations = loadData('workshopCreations');
+    const rawAuditLogs = loadData('auditLogs');
 
-    console.log(`  ✅ 用户: ${Object.keys(rawUsers).length} | 宠物记录: ${Object.keys(rawPets).length} | 帖子: ${rawPosts.length}`);
+    console.log(`  ✅ 用户: ${Object.keys(rawUsers).length} | 宠物记录: ${Object.keys(rawPets).length} | 帖子: ${rawPosts.length} | 创作: ${Object.keys(rawWorkshopCreations).length} | 审计: ${Array.isArray(rawAuditLogs) ? rawAuditLogs.length : 0}`);
 
     return {
       users: rawUsers,
@@ -102,6 +106,8 @@ const storageService = {
       adviceHistory: rawAdviceHistory,
       posts: rawPosts,
       userPreferences: rawUserPreferences,
+      workshopCreations: rawWorkshopCreations,
+      auditLogs: rawAuditLogs,
     };
   },
 
@@ -173,6 +179,20 @@ const storageService = {
    */
   saveUserPreferences(prefsObj) {
     saveData('userPreferences', prefsObj);
+  },
+
+  /**
+   * 保存AI创作工坊作品
+   */
+  saveWorkshopCreations(creationsObj) {
+    saveData('workshopCreations', creationsObj);
+  },
+
+  /**
+   * 保存审计日志
+   */
+  saveAuditLogs(logsArray) {
+    saveData('auditLogs', logsArray);
   },
 
   /**

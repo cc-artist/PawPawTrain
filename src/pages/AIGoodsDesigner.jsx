@@ -149,7 +149,7 @@ const AIGoodsDesigner = () => {
         setPetFeatures(mockData.features);
       }
     } catch (error) {
-      console.error('生成失败:', error);
+      console.error('Generation failed:', error);
       const mockData = generateMockProposals();
       setDesignProposals(mockData.proposals);
       setPetFeatures(mockData.features);
@@ -169,7 +169,7 @@ const AIGoodsDesigner = () => {
         setMyCreations(data.goods.filter(g => g.creator_id === 'user-1'));
       }
     } catch (error) {
-      console.error('获取我的创作失败:', error);
+      console.error('Failed to fetch my creations:', error);
     }
   };
 
@@ -182,14 +182,14 @@ const AIGoodsDesigner = () => {
       });
       const data = await response.json();
       if (data.success) {
-        alert(`预售成功！订单金额：¥${data.order.amount}`);
+        alert(`Pre-order successful! Order amount: ¥${data.order.amount}`);
         loadMyOrders();
       } else {
-        alert('预售失败：' + data.error);
+        alert('Pre-order failed: ' + data.error);
       }
     } catch (error) {
-      console.error('预售失败:', error);
-      alert('预售失败，请稍后重试');
+      console.error('Pre-order failed:', error);
+      alert('Pre-order failed, please try again later');
     }
   };
 
@@ -201,7 +201,7 @@ const AIGoodsDesigner = () => {
         setMyOrders(data.orders);
       }
     } catch (error) {
-      console.error('获取订单失败:', error);
+      console.error('Failed to fetch orders:', error);
     }
   };
 
@@ -213,14 +213,14 @@ const AIGoodsDesigner = () => {
       });
       const data = await response.json();
       if (data.success) {
-        alert('支付成功！');
+        alert('Payment successful!');
         loadMyOrders();
       } else {
-        alert('支付失败：' + data.error);
+        alert('Payment failed: ' + data.error);
       }
     } catch (error) {
-      console.error('支付失败:', error);
-      alert('支付失败，请稍后重试');
+      console.error('Payment failed:', error);
+      alert('Payment failed, please try again later');
     }
   };
 
@@ -232,7 +232,7 @@ const AIGoodsDesigner = () => {
         setMyCreations(data.goods);
       }
     } catch (error) {
-      console.error('获取创作失败:', error);
+      console.error('Failed to fetch creations:', error);
     }
   };
 

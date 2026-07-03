@@ -98,7 +98,7 @@ const useStore = create((set, get) => ({
         }
       }
     } catch (error) {
-      console.log('获取宠物信息失败')
+      console.log('Failed to fetch pet info')
     } finally {
       set({ isLoadingPet: false })
     }

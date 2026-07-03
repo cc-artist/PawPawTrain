@@ -101,7 +101,7 @@ const UploadPage = () => {
     
     try {
       const formData = new FormData();
-      formData.append('petName', !showPhotoUpload ? '优化宠物动态' : '创建虚拟宠物');
+      formData.append('petName', !showPhotoUpload ? 'Optimize Pet Motion' : 'Create Virtual Pet');
       
       if (showPhotoUpload && selectedStyle) {
         formData.append('artStyle', selectedStyle.id);
@@ -128,19 +128,19 @@ const UploadPage = () => {
         setStep(3);
         claimTrigger('post');
       } else {
-        throw new Error(response.data.error || '上传失败');
+        throw new Error(response.data.error || 'Upload failed');
       }
     } catch (error) {
       console.error('Upload error:', error);
       setIsSubmitting(false);
-      const errorMsg = error.response?.data?.error || error.message || '上传失败，请重试';
+      const errorMsg = error.response?.data?.error || error.message || 'Upload failed, please try again';
       alert(errorMsg);
     }
   };
 
   const handleStartTraining = async () => {
     if (!taskId) {
-      alert('任务ID不存在');
+      alert('Task ID does not exist');
       return;
     }
     
@@ -160,7 +160,7 @@ const UploadPage = () => {
 
   const handleRegenerate = async () => {
     if (userPoints < REGENERATE_COST) {
-      alert(`积分不足！重新生成需要 ${REGENERATE_COST} 积分，您当前有 ${userPoints} 积分。`);
+      alert(`Insufficient points! Regeneration requires ${REGENERATE_COST} points, you currently have ${userPoints} points.`);
       return;
     }
 
@@ -171,10 +171,10 @@ const UploadPage = () => {
         setShowRegenerateConfirm(false);
         navigate('/upload', { state: { mode: 'photo', isRegenerating: true } });
       } else {
-        throw new Error(response.data.error || '积分扣除失败');
+        throw new Error(response.data.error || 'Points deduction failed');
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.error || error.message || '操作失败';
+      const errorMsg = error.response?.data?.error || error.message || 'Operation failed';
       alert(errorMsg);
     }
   };

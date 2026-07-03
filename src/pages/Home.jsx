@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { petAPI, chatAPI, aiAPI } from '../services/api'
+import SEO from '../components/SEO'
 import Pet3D from '../components/Pet3D'
 import PetTasks from '../components/PetTasks'
 import { useUpload } from '../context/UploadContext'
@@ -541,6 +542,7 @@ const Home = () => {
 
   return (
     <div className="h-screen gradient-bg overflow-y-auto">
+      <SEO title="Home" description="Train, feed, and play with your AI virtual pet. Track stats, complete daily tasks, and watch your pet grow on PawPawTrain." />
       <audio ref={audioRef} />
       
       <div className="p-4 glass-effect border-b border-cyber-blue/30">

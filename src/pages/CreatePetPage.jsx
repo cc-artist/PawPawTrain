@@ -157,7 +157,7 @@ const CreatePetPage = () => {
 
   const handleCustomPetCreate = useCallback(() => {
     if (!customPetName.trim()) {
-      alert('请输入自定义宠物名称');
+      alert('Please enter a custom pet name');
       return;
     }
 
@@ -182,11 +182,11 @@ const CreatePetPage = () => {
   const handleAddCustomBreed = useCallback(() => {
     const breed = customBreedValue.trim();
     if (!breed) {
-      alert('请输入品种名称');
+      alert('Please enter a breed name');
       return;
     }
     if (customBreeds.includes(breed) || selectedPetType?.breeds.includes(breed)) {
-      alert('该品种已存在');
+      alert('This breed already exists');
       return;
     }
     setCustomBreeds(prev => [...prev, breed]);
@@ -198,11 +198,11 @@ const CreatePetPage = () => {
   const handleAddCustomColor = useCallback(() => {
     const color = customColorValue.trim();
     if (!color) {
-      alert('请输入毛色名称');
+      alert('Please enter a color name');
       return;
     }
     if (customColors.includes(color) || selectedPetType?.colors.includes(color)) {
-      alert('该毛色已存在');
+      alert('This color already exists');
       return;
     }
     setCustomColors(prev => [...prev, color]);
@@ -289,7 +289,7 @@ const CreatePetPage = () => {
       const costPerGeneration = 100;
       
       if (userPoints < costPerGeneration) {
-        alert(`免费生成次数已用完！需要${costPerGeneration}积分才能继续生成，您当前有${userPoints}积分。`);
+        alert(`Free generations exhausted! ${costPerGeneration} points required per generation, you currently have ${userPoints} points.`);
         navigate('/recharge');
         return;
       }
@@ -360,11 +360,11 @@ const CreatePetPage = () => {
           // 如果用完免费次数，提示下一次需要积分
         }
       } else {
-        throw new Error('创建宠物失败');
+        throw new Error('Failed to create pet');
       }
     } catch (error) {
-      console.error('创建宠物失败:', error);
-      alert(error.response?.data?.error || error.message || '创建宠物失败');
+      console.error('Failed to create pet:', error);
+      alert(error.response?.data?.error || error.message || 'Failed to create pet');
     } finally {
       setIsSubmitting(false);
     }
@@ -406,7 +406,7 @@ const CreatePetPage = () => {
     }
     setShowHistoryPanel(false);
     // 显示简短的成功提示
-    alert('Virtual pet image updated! / 虚拟宠物形象已更新！');
+    alert('Virtual pet image updated!');
   }, [pet, setPet]);
 
   // 移除历史记录中的某一条
@@ -1150,7 +1150,7 @@ const CreatePetPage = () => {
                     style={{ minHeight: '280px', maxHeight: '400px' }}
                     onLoad={() => setImageLoadedState({ loading: false, error: false })}
                     onError={(e) => { 
-                      console.warn('⚠️ 图片加载失败，显示占位图');
+                      console.warn('Image load failed, showing placeholder');
                       setImageLoadedState({ loading: false, error: true });
                       e.target.style.display = 'none'; 
                       if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex'; 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { t } from '../utils/i18n'
+import SEO from '../components/SEO'
 
 const useStore = () => {
   const [user, setUser] = React.useState({
@@ -372,6 +373,7 @@ const Shop = () => {
 
   return (
     <div className="h-screen gradient-bg overflow-y-auto">
+      <SEO title="Points Shop" description="Redeem your points for virtual items, pet accessories, and exclusive rewards in the PawPawTrain shop." />
       <div>
         <div className="w-full">
           <motion.div
