@@ -6,11 +6,11 @@ import api from '../services/api'
 import PointsNotificationModal from '../components/PointsNotificationModal'
 
 const RECHARGE_PACKAGES = [
-  { id: 'pkg-1', name: '新手礼包', coins: 100, price: 10, popular: false, icon: '🌟' },
-  { id: 'pkg-2', name: '成长礼包', coins: 500, price: 10, popular: false, icon: '✨' },
-  { id: 'pkg-3', name: '豪华礼包', coins: 1200, price: 10, popular: true, icon: '💎' },
-  { id: 'pkg-4', name: '至尊礼包', coins: 3000, price: 20, popular: false, icon: '👑' },
-  { id: 'pkg-5', name: '无限礼包', coins: 8888, price: 50, popular: false, icon: '🏆' },
+  { id: 'pkg-1', name: 'Starter Pack', coins: 100, price: 10, popular: false, icon: '🌟' },
+  { id: 'pkg-2', name: 'Growth Pack', coins: 500, price: 10, popular: false, icon: '✨' },
+  { id: 'pkg-3', name: 'Premium Pack', coins: 1200, price: 10, popular: true, icon: '💎' },
+  { id: 'pkg-4', name: 'Ultimate Pack', coins: 3000, price: 20, popular: false, icon: '👑' },
+  { id: 'pkg-5', name: 'Unlimited Pack', coins: 8888, price: 50, popular: false, icon: '🏆' },
 ]
 
 const RechargePage = () => {
@@ -46,7 +46,7 @@ const RechargePage = () => {
       }
     } catch (error) {
       console.error('Recharge failed:', error)
-      alert('充值失败，请重试')
+      alert('Recharge failed, please try again')
     } finally {
       setIsRecharging(false)
     }
@@ -66,7 +66,7 @@ const RechargePage = () => {
           >
             
           </button>
-          <h1 className="text-xl font-bold text-gray-800">💰 购买积分</h1>
+          <h1 className="text-xl font-bold text-gray-800">💰 Buy Points</h1>
         </motion.div>
 
         <motion.div
@@ -74,16 +74,16 @@ const RechargePage = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="glass-effect rounded-3xl p-6 mb-6 text-center"
         >
-          <div className="text-sm text-gray-500 mb-2">当前积分余额</div>
+          <div className="text-sm text-gray-500 mb-2">Current Points Balance</div>
           <div className="text-4xl font-bold text-orange-500 flex items-center justify-center gap-2">
             💎 {user?.points || 0}
-            <span className="text-lg text-gray-400">积分</span>
+            <span className="text-lg text-gray-400">Points</span>
           </div>
         </motion.div>
 
         <div className="text-center mb-4">
-          <h2 className="text-lg font-bold text-gray-700">选择充值套餐</h2>
-          <p className="text-sm text-gray-500 mt-1">充值后积分即时到账</p>
+          <h2 className="text-lg font-bold text-gray-700">Select Package</h2>
+          <p className="text-sm text-gray-500 mt-1">Points are credited instantly</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -102,7 +102,7 @@ const RechargePage = () => {
             >
               {pkg.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-xs font-bold rounded-full">
-                  推荐
+                  Popular
                 </div>
               )}
               
@@ -110,7 +110,7 @@ const RechargePage = () => {
                 <div className="text-3xl mb-2">{pkg.icon}</div>
                 <div className="font-bold text-gray-800">{pkg.name}</div>
                 <div className="text-2xl font-bold text-orange-500 mt-2">
-                  {pkg.coins} <span className="text-sm text-gray-500">积分</span>
+                  {pkg.coins} <span className="text-sm text-gray-500">Points</span>
                 </div>
                 <div className="text-green-600 font-bold mt-1">${pkg.price}</div>
               </div>
@@ -145,28 +145,28 @@ const RechargePage = () => {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              充值中...
+              Recharging...
             </span>
           ) : (
-            `立即充值 $${selectedPackage?.price || 0}`
+            `Recharge Now $${selectedPackage?.price || 0}`
           )}
         </motion.button>
 
         <div className="mt-6 space-y-3">
           <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>💳 支持支付方式</span>
+            <span>💳 Supported Payment Methods</span>
             <div className="flex gap-2">
-              <span className="px-2 py-1 bg-green-100 text-green-600 rounded-lg text-xs">微信</span>
-              <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-lg text-xs">支付宝</span>
+              <span className="px-2 py-1 bg-green-100 text-green-600 rounded-lg text-xs">WeChat</span>
+              <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-lg text-xs">Alipay</span>
             </div>
           </div>
           <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>🔒 支付安全</span>
-            <span className="text-green-500">已加密保护</span>
+            <span>🔒 Payment Security</span>
+            <span className="text-green-500">Encrypted Protection</span>
           </div>
           <div className="flex items-center justify-between text-sm text-gray-500">
-            <span>⏱️ 到账时间</span>
-            <span className="text-green-500">即时到账</span>
+            <span>⏱️ Delivery Time</span>
+            <span className="text-green-500">Instant</span>
           </div>
         </div>
       </div>

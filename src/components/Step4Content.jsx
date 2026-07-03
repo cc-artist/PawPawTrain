@@ -26,7 +26,7 @@ function Step4Content({ value: externalValue, onChange }) {
 
   const handleTagClick = useCallback((tag) => {
     setInternalValue(prev => {
-      const newValue = prev ? `${prev} ${tag.zh}` : tag.zh
+      const newValue = prev ? `${prev} ${tag.en}` : tag.en
       onChangeRef.current(newValue)
       return newValue
     })
@@ -48,9 +48,7 @@ function Step4Content({ value: externalValue, onChange }) {
       <textarea
         value={internalValue}
         onChange={handleChange}
-        placeholder="描述您的宠物今天做了什么？有什么有趣的行为？心情如何？
-
-例如：今天带狗狗去公园玩，它非常开心，跑来跑去，还和其他小狗交了朋友..."
+        placeholder={t('upload.describePlaceholder')}
         className="w-full h-40 bg-gray-700 text-white rounded-2xl p-4 resize-none outline-none focus:ring-2 focus:ring-orange-500 placeholder-gray-500"
         autoComplete="off"
         spellCheck="false"
@@ -71,7 +69,7 @@ function Step4Content({ value: externalValue, onChange }) {
             onClick={() => handleTagClick(tag)}
             className="px-3 py-1 bg-gray-700 text-gray-300 rounded-lg text-sm hover:bg-gray-600 transition-colors"
           >
-            <span className="whitespace-pre-line">{`${tag.en}\n${tag.zh}`}</span>
+            {tag.en}
           </button>
         ))}
       </div>

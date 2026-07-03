@@ -62,7 +62,7 @@ const SwapCard = ({ swap, onApply }) => {
             <span className="text-gray-400">{t('shop.points')}/{t('swapCare.days')}</span>
           </div>
           <div className="text-gray-400">
-            {swap.currentParticipants}/{swap.maxParticipants}人
+            {swap.currentParticipants}/{swap.maxParticipants} people
           </div>
         </div>
 
@@ -606,15 +606,15 @@ const CreateCoopModal = ({ isOpen, onClose, onSubmit, userPets }) => {
 
   const handleSubmit = () => {
     if (!formData.petId) {
-      alert('请选择要合养的宠物')
+      alert('Please select a pet for co-caring')
       return
     }
     if (!formData.endDate) {
-      alert('请选择结束日期')
+      alert('Please select end date')
       return
     }
     if (formData.requiredPoints < 10) {
-      alert('积分要求不能少于10')
+      alert('Points requirement cannot be less than 10')
       return
     }
     onSubmit && onSubmit(formData)
@@ -641,7 +641,7 @@ const CreateCoopModal = ({ isOpen, onClose, onSubmit, userPets }) => {
         >
           <div className="bg-gradient-to-r from-pink-400 to-purple-400 p-6 text-white flex-shrink-0">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-2xl font-bold">🤝 创建合养</h2>
+              <h2 className="text-2xl font-bold">🤝 Create Co-Caring</h2>
               <button
                 onClick={onClose}
                 className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-2xl"
@@ -649,13 +649,13 @@ const CreateCoopModal = ({ isOpen, onClose, onSubmit, userPets }) => {
                 ×
               </button>
             </div>
-            <p className="text-white/80">发布你的合养需求，找到合适的伙伴</p>
+            <p className="text-white/80">Post your co-caring needs and find a suitable partner</p>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                选择要合养的宠物
+                Select pet for co-caring
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {userPets.map(pet => (
@@ -696,7 +696,7 @@ const CreateCoopModal = ({ isOpen, onClose, onSubmit, userPets }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                积分要求
+                Points Requirement
               </label>
                 <input
                   type="number"
@@ -712,7 +712,7 @@ const CreateCoopModal = ({ isOpen, onClose, onSubmit, userPets }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  开始日期
+                  Start Date
                 </label>
                 <input
                   type="date"
@@ -724,7 +724,7 @@ const CreateCoopModal = ({ isOpen, onClose, onSubmit, userPets }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  结束日期
+                  End Date
                 </label>
                 <input
                   type="date"
@@ -738,26 +738,26 @@ const CreateCoopModal = ({ isOpen, onClose, onSubmit, userPets }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                合养说明
+                Co-Caring Description
               </label>
               <textarea
                 rows="3"
                 value={formData.description}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
-                placeholder="描述你的宠物习惯、合养安排..."
+                placeholder="Describe your pet's habits and co-caring arrangements..."
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-pink-400 focus:outline-none resize-none"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                对合养伙伴的要求（可选）
+                Partner Requirements (Optional)
               </label>
               <textarea
                 rows="2"
                 value={formData.requirements}
                 onChange={e => setFormData({ ...formData, requirements: e.target.value })}
-                placeholder="希望对方有养宠经验、住在附近等..."
+                placeholder="Hope the other person has pet experience, lives nearby, etc..."
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-pink-400 focus:outline-none resize-none"
               />
             </div>
@@ -770,7 +770,7 @@ const CreateCoopModal = ({ isOpen, onClose, onSubmit, userPets }) => {
               onClick={handleSubmit}
               className="w-full py-4 bg-gradient-to-r from-pink-400 to-purple-400 text-white rounded-2xl font-bold text-lg"
             >
-              发布合养信息
+              {t('swapCare.postCoopInfo')}
             </motion.button>
           </div>
         </motion.div>
@@ -788,7 +788,7 @@ const ApplyCoopModal = ({ isOpen, onClose, coop, onConfirm, userPoints }) => {
 
   const handleApply = () => {
     if (!canAfford) {
-      alert('积分不足！')
+      alert('Insufficient points!')
       return
     }
     onConfirm && onConfirm({ coopId: coop.id, message })
@@ -812,8 +812,8 @@ const ApplyCoopModal = ({ isOpen, onClose, coop, onConfirm, userPoints }) => {
           onClick={e => e.stopPropagation()}
         >
           <div className="bg-gradient-to-r from-pink-400 to-purple-400 p-6 text-white">
-            <h2 className="text-2xl font-bold mb-1">🤝 申请合养</h2>
-            <p className="text-white/80">申请与{coop.petName}合养</p>
+            <h2 className="text-2xl font-bold mb-1">🤝 {t('swapCare.applyCoop')}</h2>
+            <p className="text-white/80">{t('swapCare.applyCoopFor')} {coop.petName}</p>
           </div>
 
           <div className="p-6 space-y-4">
@@ -822,31 +822,31 @@ const ApplyCoopModal = ({ isOpen, onClose, coop, onConfirm, userPoints }) => {
               <div className="flex-1">
                 <div className="font-bold text-gray-800">{coop.petName}</div>
                 <div className="text-sm text-gray-500">
-                  {coop.startDate} 至 {coop.endDate}
+                  {coop.startDate} to {coop.endDate}
                 </div>
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                给对方留言
+                {t('swapCare.messageToOwner')}
               </label>
               <textarea
                 rows="3"
                 value={message}
                 onChange={e => setMessage(e.target.value)}
-                placeholder="介绍一下自己，为什么想合养这只宠物..."
+                placeholder={t('swapCare.introduceYourself')}
                 className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-pink-400 focus:outline-none resize-none"
               />
             </div>
 
             <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">所需积分</span>
+                <span className="text-sm text-gray-600">{t('swapCare.requiredPoints')}</span>
                 <span className="text-2xl font-bold text-pink-500">{coop.requiredPoints}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">我的积分</span>
+                <span className="text-gray-400">My Points</span>
                 <span className={canAfford ? 'text-green-500' : 'text-red-500'}>
                   {userPoints} {canAfford ? '✓' : '✗'}
                 </span>
@@ -866,7 +866,7 @@ const ApplyCoopModal = ({ isOpen, onClose, coop, onConfirm, userPoints }) => {
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >
-              {canAfford ? '申请合养' : '积分不足'}
+              {canAfford ? t('swapCare.applyCoop') : t('swapCare.insufficientPoints')}
             </motion.button>
           </div>
         </motion.div>

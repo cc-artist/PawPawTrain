@@ -36,7 +36,7 @@ const resetPetToDefault = () => {
   const defaultPet = {
     id: 1,
     type: 'cat',
-    name: '小橘猫',
+    name: 'Kitty',
     personality: 'gentle',
     level: 5,
     exp: 150,
@@ -49,8 +49,8 @@ const resetPetToDefault = () => {
     discipline: 50,
     points: 888,
     stage: 'pixel',
-    breed: '橘猫',
-    color: '橙色'
+    breed: 'Orange Tabby',
+    color: 'Orange'
   }
   localStorage.setItem(PET_STORAGE_KEY, JSON.stringify(defaultPet))
   return defaultPet
@@ -196,12 +196,12 @@ const Profile = () => {
   }
 
   const getPetInfo = (post) => {
-    if (!post) return { breed: '未知', color: '未知', expression: '开心' }
+    if (!post) return { breed: 'Unknown', color: 'Unknown', expression: 'Happy' }
     const features = post.features || {}
     return {
-      breed: features.breed || post.breed || '未知',
-      color: features.color || post.color || '未知',
-      expression: features.expression || '开心'
+      breed: features.breed || post.breed || 'Unknown',
+      color: features.color || post.color || 'Unknown',
+      expression: features.expression || 'Happy'
     }
   }
 
@@ -232,7 +232,7 @@ const Profile = () => {
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-300 to-orange-500 mx-auto flex items-center justify-center text-5xl mb-4">
                 {pet?.type === 'cat' ? '🐱' : pet?.type === 'dog' ? '🐶' : '🐰'}
               </div>
-              <h2 className="text-xl font-bold text-white">{user?.name || '铲屎官'}</h2>
+              <h2 className="text-xl font-bold text-white">{user?.name || 'Pet Lover'}</h2>
               <p className="text-orange-500">ID: {user?.id || '123456'}</p>
             </div>
 
@@ -246,7 +246,7 @@ const Profile = () => {
                   onClick={() => navigate('/recharge')}
                   className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-orange-400 to-pink-400 text-white text-xs font-bold rounded-full shadow-md hover:shadow-lg transition-all"
                 >
-                  💰 充值
+                  💰 Recharge
                 </motion.button>
               </div>
               <div className="text-center">
@@ -408,11 +408,11 @@ const Profile = () => {
                             {currentViewPost.user?.avatar || '🐾'}
                           </div>
                           <div>
-                            <div className="text-white font-bold text-sm">{currentViewPost.user?.name || '宠物主人'}</div>
-                            <div className="text-gray-400 text-xs">{currentViewPost.time || '刚刚'}</div>
+                            <div className="text-white font-bold text-sm">{currentViewPost.user?.name || 'Pet Owner'}</div>
+                            <div className="text-gray-400 text-xs">{currentViewPost.time || 'Just now'}</div>
                           </div>
                         </div>
-                        <p className="text-white text-sm leading-relaxed">{currentViewPost.content || '分享我的宠物～'}</p>
+                        <p className="text-white text-sm leading-relaxed">{currentViewPost.content || 'Sharing my pet~'}</p>
                       </div>
 
                       {myPosts.length > 1 && (
@@ -477,7 +477,7 @@ const Profile = () => {
               >
                 <span className="text-xl">🎬</span>
                 <h3 className="text-lg font-bold text-white">
-                  Media Library / 媒体库
+                  {t('profile.mediaLibrary')}
                 </h3>
                 <span className={`text-sm text-gray-300 transition-transform ${mediaViewExpanded ? 'rotate-180' : ''}`}>▼</span>
               </button>
@@ -558,7 +558,7 @@ const Profile = () => {
                         <button
                           onClick={() => handleDeleteMedia(record.id)}
                           className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
-                          title="删除 / Delete"
+                          title={t('profile.delete')}
                         >
                           🗑️
                         </button>
@@ -581,7 +581,7 @@ const Profile = () => {
                   onClick={refreshMediaLibrary}
                   className="mt-3 w-full py-2 text-xs text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  🔄 Refresh / 刷新
+                  🔄 {t('profile.refresh')}
                 </button>
               </motion.div>
             )}
@@ -589,11 +589,11 @@ const Profile = () => {
 
           <div className="glass-effect rounded-2xl overflow-hidden mb-4">
             {[
-              { icon: '🐾', label: '虚拟宠物', path: '/pets', highlight: true },
-              { icon: '💎', label: '购买积分', path: '/recharge', highlight: true },
-              { icon: '📸', label: '生成历史', path: '/history', highlight: false },
-              { icon: '🎨', label: 'AI商品设计', path: '/ai-goods', highlight: false },
-              { icon: '🤖', label: 'AI创作工坊', path: '/ai-workshop', highlight: true },
+              { icon: '🐾', label: 'Virtual Pets', path: '/pets', highlight: true },
+              { icon: '💎', label: 'Buy Points', path: '/recharge', highlight: true },
+              { icon: '📸', label: 'Generation History', path: '/history', highlight: false },
+              { icon: '🎨', label: 'AI Product Design', path: '/ai-goods', highlight: false },
+              { icon: '🤖', label: 'AI Creation Workshop', path: '/ai-workshop', highlight: true },
               { icon: '⚙️', label: t('profile.settings'), path: '/settings', highlight: false },
               { icon: '🔔', label: t('profile.notifications'), path: '/notifications', highlight: false },
               { icon: '💬', label: t('profile.feedback'), path: '/feedback', highlight: false },

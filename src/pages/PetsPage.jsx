@@ -6,11 +6,11 @@ import ArtStyleSelector from '../components/ArtStyleSelector';
 const mockPets = [
   {
     id: 'pet_001',
-    name: '小橘猫',
+    name: 'Kitty',
     avatar: '🐱',
     type: 'cat',
-    breed: '橘猫',
-    color: '橘色',
+    breed: 'Orange Tabby',
+    color: 'Orange',
     loraStatus: 'trained',
     photoCount: 8,
     createdAt: '2024-01-10',
@@ -18,11 +18,11 @@ const mockPets = [
   },
   {
     id: 'pet_002',
-    name: '旺财',
+    name: 'Max',
     avatar: '🐕',
     type: 'dog',
-    breed: '金毛犬',
-    color: '金黄色',
+    breed: 'Golden Retriever',
+    color: 'Golden',
     loraStatus: 'training',
     photoCount: 6,
     createdAt: '2024-01-14',
@@ -31,11 +31,11 @@ const mockPets = [
   },
   {
     id: 'pet_003',
-    name: '球球',
+    name: 'Bunny',
     avatar: '🐰',
     type: 'rabbit',
-    breed: '垂耳兔',
-    color: '白色',
+    breed: 'Lop Eared',
+    color: 'White',
     loraStatus: 'pending',
     photoCount: 0,
     createdAt: '2024-01-15',
@@ -45,9 +45,9 @@ const mockPets = [
 
 const PetCard = ({ pet, onSelect }) => {
   const statusConfig = {
-    trained: { label: '已训练', color: 'bg-green-500', textColor: 'text-green-600', bgBg: 'bg-green-50' },
-    training: { label: '训练中', color: 'bg-purple-500', textColor: 'text-purple-600', bgBg: 'bg-purple-50' },
-    pending: { label: '待上传', color: 'bg-gray-400', textColor: 'text-gray-600', bgBg: 'bg-gray-50' }
+    trained: { label: 'Trained', color: 'bg-green-500', textColor: 'text-green-600', bgBg: 'bg-green-50' },
+    training: { label: 'Training', color: 'bg-purple-500', textColor: 'text-purple-600', bgBg: 'bg-purple-50' },
+    pending: { label: 'Pending Upload', color: 'bg-gray-400', textColor: 'text-gray-600', bgBg: 'bg-gray-50' }
   };
 
   const status = statusConfig[pet.loraStatus];
@@ -75,11 +75,11 @@ const PetCard = ({ pet, onSelect }) => {
           </p>
           <div className="flex items-center gap-4 mt-3">
             <div className="text-xs">
-              <span className="text-gray-400">照片</span>
+              <span className="text-gray-400">Photos</span>
               <span className="ml-1 font-bold text-gray-700">{pet.photoCount}</span>
             </div>
             <div className="text-xs">
-              <span className="text-gray-400">生成</span>
+              <span className="text-gray-400">Generated</span>
               <span className="ml-1 font-bold text-gray-700">{pet.generations}</span>
             </div>
             <div className="text-xs text-gray-400">
@@ -90,7 +90,7 @@ const PetCard = ({ pet, onSelect }) => {
           {pet.loraStatus === 'training' && (
             <div className="mt-3">
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-gray-500">训练进度</span>
+                <span className="text-gray-500">Training Progress</span>
                 <span className="font-medium text-purple-600">{pet.trainingProgress}%</span>
               </div>
               <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -137,8 +137,8 @@ const PetsPage = () => {
       <div className="max-w-lg mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">🐾 我的宠物</h1>
-            <p className="text-gray-500 text-sm">管理您的虚拟宠物和AI模型</p>
+            <h1 className="text-2xl font-bold text-gray-800">🐾 My Pets</h1>
+            <p className="text-gray-500 text-sm">Manage your virtual pets and AI models</p>
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -153,19 +153,19 @@ const PetsPage = () => {
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div className="bg-white rounded-xl p-3 text-center shadow-sm">
             <div className="text-2xl font-bold text-purple-600">{pets.length}</div>
-            <div className="text-xs text-gray-500">宠物总数</div>
+            <div className="text-xs text-gray-500">Total Pets</div>
           </div>
           <div className="bg-white rounded-xl p-3 text-center shadow-sm">
             <div className="text-2xl font-bold text-green-600">
               {pets.filter(p => p.loraStatus === 'trained').length}
             </div>
-            <div className="text-xs text-gray-500">已训练</div>
+            <div className="text-xs text-gray-500">Trained</div>
           </div>
           <div className="bg-white rounded-xl p-3 text-center shadow-sm">
             <div className="text-2xl font-bold text-orange-600">
               {pets.reduce((sum, p) => sum + p.generations, 0)}
             </div>
-            <div className="text-xs text-gray-500">生成作品</div>
+            <div className="text-xs text-gray-500">Generated Works</div>
           </div>
         </div>
 
@@ -195,7 +195,7 @@ const PetsPage = () => {
               </div>
               <div>
                 <h3 className="font-bold text-gray-800">{selectedPet.name}</h3>
-                <p className="text-sm text-gray-500">选择艺术风格生成图片</p>
+                <p className="text-sm text-gray-500">Select art style to generate image</p>
               </div>
             </div>
 
@@ -222,10 +222,10 @@ const PetsPage = () => {
                     transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                     className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
                   />
-                  AI生成中...
+                  AI Generating...
                 </span>
               ) : (
-                '🎨 生成虚拟宠物形象'
+                '🎨 Generate Virtual Pet'
               )}
             </motion.button>
 
@@ -236,7 +236,7 @@ const PetsPage = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   className="mt-6"
                 >
-                  <h4 className="font-medium text-gray-800 mb-3">生成结果</h4>
+                  <h4 className="font-medium text-gray-800 mb-3">Generation Result</h4>
                   <div className="relative rounded-2xl overflow-hidden">
                     <img
                       src={generatedImage}
@@ -257,13 +257,13 @@ const PetsPage = () => {
                       onClick={() => window.open(generatedImage, '_blank')}
                       className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium"
                     >
-                      👁️ 查看大图
+                      👁️ View Full Size
                     </button>
                     <button
                       onClick={() => navigator.clipboard.writeText(generatedImage)}
                       className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium"
                     >
-                      📋 复制链接
+                      📋 Copy Link
                     </button>
                     <button
                       onClick={() => {
@@ -272,7 +272,7 @@ const PetsPage = () => {
                       }}
                       className="flex-1 py-3 gradient-bg text-white rounded-xl font-medium"
                     >
-                      🔄 换风格
+                      🔄 Change Style
                     </button>
                   </div>
                 </motion.div>
@@ -285,9 +285,9 @@ const PetsPage = () => {
           <div className="bg-white rounded-2xl p-6 shadow-lg">
             <div className="text-center">
               <div className="text-5xl mb-4">⏳</div>
-              <h3 className="font-bold text-gray-800 mb-2">模型训练中</h3>
+              <h3 className="font-bold text-gray-800 mb-2">Model Training</h3>
               <p className="text-gray-500 text-sm">
-                {selectedPet.name}的LoRA模型正在训练，完成后即可生成风格化图片
+                {selectedPet.name}'s LoRA model is being trained, you can generate stylized images once complete
               </p>
             </div>
           </div>
@@ -297,9 +297,9 @@ const PetsPage = () => {
           <div className="bg-white rounded-2xl p-6 shadow-lg">
             <div className="text-center">
               <div className="text-5xl mb-4">📷</div>
-              <h3 className="font-bold text-gray-800 mb-2">需要上传照片</h3>
+              <h3 className="font-bold text-gray-800 mb-2">Need to Upload Photos</h3>
               <p className="text-gray-500 text-sm mb-4">
-                请为{selectedPet.name}上传5-10张照片以训练专属AI模型
+                Please upload 5-10 photos of {selectedPet.name} to train exclusive AI model
               </p>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -307,7 +307,7 @@ const PetsPage = () => {
                 onClick={handleAddPet}
                 className="w-full py-4 gradient-bg text-white rounded-xl font-bold"
               >
-                🚀 开始上传
+                🚀 Start Upload
               </motion.button>
             </div>
           </div>

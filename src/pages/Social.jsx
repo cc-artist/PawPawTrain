@@ -5,18 +5,18 @@ import ChatRooms from '../components/ChatRoom'
 import { t } from '../utils/i18n'
 
 const mockFriends = [
-  { id: 1, name: '小明', pet: '🐱', level: 12, isOnline: true },
-  { id: 2, name: '花花', pet: '🐶', level: 8, isOnline: false },
-  { id: 3, name: '阿杰', pet: '🐰', level: 15, isOnline: true },
+  { id: 1, name: 'Xiao Ming', pet: '🐱', level: 12, isOnline: true },
+  { id: 2, name: 'Hua Hua', pet: '🐶', level: 8, isOnline: false },
+  { id: 3, name: 'A Jie', pet: '🐰', level: 15, isOnline: true },
 ]
 
 const mockSwaps = [
   {
     id: 1,
-    petName: '小橘猫',
+    petName: 'Kitty',
     petAvatar: '🐱',
     petLevel: 8,
-    ownerName: '小明',
+    ownerName: 'Xiao Ming',
     type: 'temporary',
     duration: 5,
     price: 50,
@@ -24,7 +24,7 @@ const mockSwaps = [
     maxParticipants: 3,
     startDate: '2026-05-10',
     endDate: '2026-05-15',
-    description: '性格温顺，喜欢晒太阳',
+    description: 'Gentle personality, likes sunbathing',
     status: 'active',
     isOwner: false,
     applied: false,
@@ -32,10 +32,10 @@ const mockSwaps = [
   },
   {
     id: 2,
-    petName: '柯基',
+    petName: 'Corgi',
     petAvatar: '🐶',
     petLevel: 12,
-    ownerName: '阿杰',
+    ownerName: 'A Jie',
     type: 'vacation',
     duration: 7,
     price: 80,
@@ -43,7 +43,7 @@ const mockSwaps = [
     maxParticipants: 2,
     startDate: '2026-05-20',
     endDate: '2026-05-27',
-    description: '活泼好动，需要每天遛弯',
+    description: 'Active and playful, needs daily walks',
     status: 'active',
     isOwner: true,
     applied: true,
@@ -53,10 +53,10 @@ const mockSwaps = [
   },
   {
     id: 3,
-    petName: '小白兔',
+    petName: 'Bunny',
     petAvatar: '🐰',
     petLevel: 5,
-    ownerName: '花花',
+    ownerName: 'Hua Hua',
     type: 'care',
     duration: 3,
     price: 30,
@@ -64,7 +64,7 @@ const mockSwaps = [
     maxParticipants: 1,
     startDate: '2026-05-05',
     endDate: '2026-05-08',
-    description: '需要帮忙喂食和打扫笼子',
+    description: 'Needs help with feeding and cage cleaning',
     status: 'active',
     isOwner: false,
     applied: false,
@@ -73,24 +73,24 @@ const mockSwaps = [
 ]
 
 const mockUserPets = [
-  { id: 1, name: '小橘猫', type: 'cat', level: 5 },
-  { id: 2, name: '小白', type: 'dog', level: 3 }
+  { id: 1, name: 'Kitty', type: 'cat', level: 5 },
+  { id: 2, name: 'Buddy', type: 'dog', level: 3 }
 ]
 
 const mockCoops = [
   {
     id: 1,
-    petName: '金毛犬',
+    petName: 'Golden Retriever',
     petAvatar: '🐕',
     petLevel: 10,
-    ownerName: '阿强',
+    ownerName: 'Xiao Qiang',
     coOwnerName: null,
     type: 'shared',
     shareRatio: 50,
     requiredPoints: 200,
     startDate: '2026-05-28',
     endDate: '2026-08-28',
-    description: '寻找合养伙伴，共同照顾金毛犬，分享日常开支和时间',
+    description: 'Looking for co-caring partners, share daily expenses and time',
     status: 'looking',
     isOwner: false,
     applied: false,
@@ -98,17 +98,17 @@ const mockCoops = [
   },
   {
     id: 2,
-    petName: '布偶猫',
+    petName: 'Ragdoll Cat',
     petAvatar: '🐱',
     petLevel: 6,
-    ownerName: '小美',
-    coOwnerName: '小华',
+    ownerName: 'Xiao Mei',
+    coOwnerName: 'Xiao Hua',
     type: 'shared',
     shareRatio: 60,
     requiredPoints: 150,
     startDate: '2026-05-10',
     endDate: '2026-11-10',
-    description: '已找到合养伙伴，共同照顾可爱的布偶猫',
+    description: 'Found co-caring partner, sharing cute ragdoll cat care',
     status: 'active',
     isOwner: true,
     applied: false,
@@ -116,17 +116,17 @@ const mockCoops = [
   },
   {
     id: 3,
-    petName: '仓鼠',
+    petName: 'Hamster',
     petAvatar: '🐹',
     petLevel: 3,
-    ownerName: '小刚',
+    ownerName: 'Xiao Gang',
     coOwnerName: null,
     type: 'shared',
     shareRatio: 50,
     requiredPoints: 50,
     startDate: '2026-06-01',
     endDate: '2026-07-01',
-    description: '寻找临时合养伙伴，暑假期间一起照顾仓鼠',
+    description: 'Looking for temporary co-care partner, take care of hamster during summer vacation',
     status: 'looking',
     isOwner: false,
     applied: true,
@@ -146,7 +146,7 @@ const Social = () => {
   const userPoints = 888
 
   const handleCreateSwap = (data) => {
-    console.log('创建换养:', data)
+    console.log('Create swap:', data)
     alert(t('social.swapSuccess'))
   }
 
@@ -156,12 +156,12 @@ const Social = () => {
   }
 
   const handleConfirmApply = (application) => {
-    console.log('申请换养:', application)
+    console.log('Apply for swap:', application)
     alert(t('social.applySuccess'))
   }
 
   const handleCreateCoop = (data) => {
-    console.log('创建合养:', data)
+    console.log('Create co-op:', data)
     alert(t('social.coopSuccess'))
   }
 
@@ -171,7 +171,7 @@ const Social = () => {
   }
 
   const handleConfirmApplyCoop = (application) => {
-    console.log('申请合养:', application)
+    console.log('Apply for co-op:', application)
     alert(t('social.coopApplySuccess'))
   }
 
@@ -269,8 +269,8 @@ const Social = () => {
           {activeTab === 'my-swaps' && (
             <SwapManagement
               swaps={mockSwaps}
-              onCancel={(id) => console.log('取消换养:', id)}
-              onComplete={(id) => console.log('完成换养:', id)}
+              onCancel={(id) => console.log('Cancel swap:', id)}
+              onComplete={(id) => console.log('Complete swap:', id)}
             />
           )}
 
@@ -375,7 +375,7 @@ const Social = () => {
                           <span className="text-2xl">{coop.petAvatar}</span>
                           <div className="flex-1">
                             <div className="font-bold text-gray-800">{coop.petName}</div>
-                            <div className="text-xs text-gray-400">申请合养</div>
+                            <div className="text-xs text-gray-400">Co-op Application</div>
                           </div>
                           <div className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-600">
                           {t('social.pending')}

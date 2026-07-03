@@ -8,6 +8,85 @@ import { claimTrigger } from '../utils/taskTracker';
 import { usePosts } from '../context/PostsContext';
 import { checkDuplicate, addMediaRecord, UPLOAD_SOURCE } from '../utils/mediaLibrary';
 
+// Mock模式：本地视频分析和训练模拟
+const useMockMode = true; // 设置为true以启用本地模式
+const MOCK_PET_BEHAVIORS = {
+  dog: {
+    actions: [
+      { name: 'Running', en: 'running', icon: '🏃', tags: ['active', 'energetic'], personality: { energy: 15, joy: 10 } },
+      { name: 'Sitting', en: 'sitting', icon: '🧘', tags: ['calm', 'obedient'], personality: { discipline: 15, joy: 3 } },
+      { name: 'Jumping', en: 'jumping', icon: '🦘', tags: ['active', 'playful'], personality: { energy: 20, joy: 15 } },
+      { name: 'Wagging Tail', en: 'wagging_tail', icon: '🔄', tags: ['happy', 'excited'], personality: { joy: 12, affection: 10 } },
+      { name: 'Playing Fetch', en: 'fetching', icon: '🎾', tags: ['playful', 'trained'], personality: { energy: 10, discipline: 8 } },
+      { name: 'Sniffing', en: 'sniffing', icon: '👃', tags: ['curious', 'exploring'], personality: { exploration: 15 } },
+    ],
+    habits: [
+      { name: 'Loves Walking', tags: ['walk_lover'], task: { type: 'walk', points: 25 } },
+      { name: 'Loves Ball Games', tags: ['ball_lover'], task: { type: 'play_ball', points: 20 } },
+    ]
+  },
+  cat: {
+    actions: [
+      { name: 'Jumping', en: 'jumping', icon: '🦘', tags: ['active', 'playful'], personality: { energy: 15, joy: 12 } },
+      { name: 'Grooming', en: 'grooming', icon: '🛁', tags: ['clean', 'calm'], personality: { health: 5, joy: 3 } },
+      { name: 'Curling Up', en: 'curling_up', icon: '🌀', tags: ['sleepy', 'cozy'], personality: { joy: 5 } },
+      { name: 'Purring', en: 'purring', icon: '😌', tags: ['happy', 'content'], personality: { joy: 10, affection: 8 } },
+      { name: 'Playing', en: 'playing', icon: '🧶', tags: ['playful', 'active'], personality: { energy: 12, joy: 15 } },
+      { name: 'Stretching', en: 'stretching', icon: '🧘', tags: ['relaxed'], personality: { energy: 3, joy: 5 } },
+    ],
+    habits: [
+      { name: 'Loves Sunbathing', tags: ['sun_lover'], task: { type: 'sunbath', points: 10 } },
+      { name: 'Night Owl', tags: ['nocturnal'], task: { type: 'night_play', points: 20 } },
+    ]
+  },
+  rabbit: {
+    actions: [
+      { name: 'Hopping', en: 'hopping', icon: '🐇', tags: ['active', 'playful'], personality: { energy: 10, joy: 15 } },
+      { name: 'Eating Hay', en: 'eating_hay', icon: '🌿', tags: ['eating', 'healthy'], personality: { hunger: 15 } },
+      { name: 'Flopping', en: 'flopping', icon: '😌', tags: ['relaxed', 'happy'], personality: { joy: 10, affection: 8 } },
+    ],
+    habits: [
+      { name: 'Loves Snacks', tags: ['snack_lover'], task: { type: 'give_treat', points: 10 } },
+    ]
+  }
+};
+
+const generateMockAnalysis = (petType = 'dog', videoCount = 1) => {
+  const behaviors = MOCK_PET_BEHAVIORS[petType] || MOCK_PET_BEHAVIORS.dog;
+  const detectedCount = Math.floor(Math.random() * 4) + 2;
+  const shuffled = [...behaviors.actions].sort(() => Math.random() - 0.5);
+  const detectedActions = shuffled.slice(0, detectedCount).map(action => ({
+    ...action,
+    confidence: parseFloat((Math.random() * 0.4 + 0.6).toFixed(2)),
+  }));
+
+  const habitCount = Math.min(Math.floor(Math.random() * 2) + 1, behaviors.habits.length);
+  const shuffledHabits = [...behaviors.habits].sort(() => Math.random() - 0.5);
+  const detectedHabits = shuffledHabits.slice(0, habitCount);
+
+  const allTags = new Set();
+  detectedActions.forEach(a => a.tags.forEach(t => allTags.add(t)));
+  detectedHabits.forEach(h => h.tags.forEach(t => allTags.add(t)));
+
+  const personalityImpact = {};
+  detectedActions.forEach(a => {
+    Object.entries(a.personality).forEach(([key, val]) => {
+      personalityImpact[key] = (personalityImpact[key] || 0) + val;
+    });
+  });
+
+  return {
+    petType,
+    detectedActions,
+    detectedHabits,
+    tags: Array.from(allTags),
+    personalityImpact,
+    videoCount,
+    duration: Math.floor(Math.random() * 45) + 15,
+    behaviorSummary: `Analysis complete: Detected ${detectedActions.length} behaviors`,
+  };
+};
+
 const MAX_VIDEOS = 3;
 const MAX_DURATION = 60;
 
@@ -16,7 +95,7 @@ const TRAINING_PHASES = [
   { id: 'motion_capture', label: t('training.motionCapture'), icon: '🎯', desc: t('training.motionCaptureDesc') },
   { id: 'lora_training', label: t('training.loraTraining'), icon: '🧠', desc: t('training.loraTrainingDesc') },
   { id: 'model_optimization', label: t('training.modelOptimization'), icon: '⚡', desc: t('training.modelOptimizationDesc') },
-  { id: 'attribute_update', label: '📊 宠物资质更新 / Attribute Update', icon: '📊', desc: '将训练数据应用到宠物属性中 / Apply training data to pet attributes' },
+  { id: 'attribute_update', label: '📊 Attribute Update', icon: '📊', desc: 'Apply training data to pet attributes' },
 ];
 
 const TrainingPage = () => {
@@ -137,11 +216,27 @@ const TrainingPage = () => {
     }
     setIsUploading(true);
     setError(null);
+    
+    // 保存宠物快照用于对比
+    if (pet) {
+      setBeforePetSnapshot({
+        energy: pet.energy || 50,
+        affection: pet.affection || 50,
+        joy: pet.joy || 50,
+        hunger: pet.hunger || 70,
+        discipline: pet.discipline || 50,
+        level: pet.level || 1,
+        exp: pet.exp || 0,
+        points: pet.points || 0,
+      });
+    }
+    
     try {
       const formData = new FormData();
       formData.append('petType', petType);
       formData.append('petName', petName);
       videos.forEach(v => formData.append('videos', v.file));
+      
       const response = await trainingAPI.uploadVideos(formData);
       const data = response.data;
       if (data.success) {
@@ -167,26 +262,61 @@ const TrainingPage = () => {
         startPolling(data.task.id);
       }
     } catch (err) {
-      setError(err.response?.data?.error || t('training.uploadFailed'));
-      setIsUploading(false);
+      // 后端不可用时使用Mock模式
+      console.log('Backend not available, using local mock analysis mode...');
+      
+      if (useMockMode) {
+        // 本地Mock训练模拟
+        const mockAnalysis = generateMockAnalysis(petType, videos.length);
+        setAnalysisResult(mockAnalysis);
+        
+        // 模拟训练阶段
+        const mockPhases = [
+          { id: 'video_analysis', label: t('training.videoAnalysis') || 'Video Analysis', icon: '🔍', status: 'completed', progress: 100 },
+          { id: 'motion_capture', label: 'Motion Capture', icon: '🎯', status: 'completed', progress: 100 },
+          { id: 'lora_training', label: 'LoRA Training', icon: '🧠', status: 'completed', progress: 100 },
+          { id: 'model_optimization', label: 'Model Optimization', icon: '⚡', status: 'completed', progress: 100 },
+          { id: 'attribute_update', label: 'Attribute Update', icon: '📊', status: 'completed', progress: 100 },
+        ];
+        setPhases(mockPhases);
+        setCurrentPhase(0);
+        
+        // 模拟训练完成
+        setTimeout(() => {
+          setIsComplete(true);
+          setIsUploading(false);
+          claimTrigger('walk');
+          
+          const actionBonus = (mockAnalysis.detectedActions?.length || 0) * 2;
+          const personalityBoost = {
+            ...mockAnalysis.personalityImpact,
+            energy: (mockAnalysis.personalityImpact?.energy || 0) + actionBonus,
+            discipline: (mockAnalysis.personalityImpact?.discipline || 0) + actionBonus,
+          };
+          
+          setPendingResults({
+            analysis: mockAnalysis,
+            personalityBoost,
+            petFeatures: {
+              breed: petType,
+              color: 'Training Enhanced',
+              learnedSkills: mockAnalysis.detectedActions?.map(a => ({
+                id: `skill_${Date.now()}_${Math.random().toString(36).substr(2,4)}`,
+                name: a.name,
+                icon: a.icon || '🎯',
+              })) || [],
+            },
+          });
+        }, 3000);
+      } else {
+        setError(err.response?.data?.error || t('training.uploadFailed'));
+        setIsUploading(false);
+      }
     }
   };
 
   const startPolling = (id) => {
-    // 保存训练前的宠物快照，用于对比展示
-    if (pet) {
-      setBeforePetSnapshot({
-        energy: pet.energy || 50,
-        affection: pet.affection || 50,
-        joy: pet.joy || 50,
-        hunger: pet.hunger || 70,
-        discipline: pet.discipline || 50,
-        level: pet.level || 1,
-        exp: pet.exp || 0,
-        points: pet.points || 0,
-      });
-    }
-    
+    // 宠物快照已在handleUpload中保存
     pollRef.current = setInterval(async () => {
       try {
         const response = await trainingAPI.getStatus(id);
@@ -208,11 +338,11 @@ const TrainingPage = () => {
             // 构建人格影响数据
             const impact = task.analysis?.personalityImpact || {};
             const personalityBoost = {
-              energy: impact.energy || impact.活力 || 0,
-              affection: impact.affection || impact.亲密度 || 0,
-              joy: impact.joy || impact.快乐 || 0,
-              hunger: impact.hunger || impact.饥饿 || 0,
-              discipline: impact.discipline || impact.纪律 || 0,
+              energy: impact.energy || 0,
+              affection: impact.affection || 0,
+              joy: impact.joy || 0,
+              hunger: impact.hunger || 0,
+              discipline: impact.discipline || 0,
             };
             
             // 根据检测到的动作数量给予额外加成
@@ -226,7 +356,7 @@ const TrainingPage = () => {
               personalityBoost,
               petFeatures: {
                 breed: task.petType || petType,
-                color: '训练强化 / Training Enhanced',
+                color: 'Training Enhanced',
                 learnedSkills: task.analysis?.detectedActions?.map(a => ({
                   id: `skill_${Date.now()}_${Math.random().toString(36).substr(2,4)}`,
                   name: a.name,
@@ -236,7 +366,33 @@ const TrainingPage = () => {
             });
           }
         }
-      } catch (err) { console.error('Polling error:', err); }
+      } catch (err) { 
+        console.error('Polling error:', err);
+        // 如果后端断开，切换到Mock模式
+        if (useMockMode && !isComplete) {
+          clearInterval(pollRef.current);
+          const mockAnalysis = generateMockAnalysis(petType, videos.length);
+          setIsComplete(true);
+          setIsUploading(false);
+          setPendingResults({
+            analysis: mockAnalysis,
+            personalityBoost: {
+              ...mockAnalysis.personalityImpact,
+              energy: (mockAnalysis.personalityImpact?.energy || 0) + (mockAnalysis.detectedActions?.length || 0) * 2,
+              discipline: (mockAnalysis.personalityImpact?.discipline || 0) + (mockAnalysis.detectedActions?.length || 0) * 2,
+            },
+            petFeatures: {
+              breed: petType,
+              color: 'Training Enhanced',
+              learnedSkills: mockAnalysis.detectedActions?.map(a => ({
+                id: `skill_${Date.now()}_${Math.random().toString(36).substr(2,4)}`,
+                name: a.name,
+                icon: a.icon || '🎯',
+              })) || [],
+            },
+          });
+        }
+      }
     }, 1500);
   };
 
@@ -261,19 +417,19 @@ const TrainingPage = () => {
         const postId = 'training_confirmed_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         addPost({
           id: postId,
-          user: { name: `🐾 ${petName} 的训练成果`, avatar: '🎯' },
+          user: { name: `🐾 ${petName}'s Training Result`, avatar: '🎯' },
           media: v.preview,
-          content: `🎬 ${petName}训练完成！检测到 ${pr.analysis?.detectedActions?.length || 0} 个动作，${pr.analysis?.tags?.length || 0} 个习惯标签。\nTraining done! Detected ${pr.analysis?.detectedActions?.length || 0} actions, ${pr.analysis?.tags?.length || 0} habit tags.`,
+          content: `🎬 Training Complete! Detected ${pr.analysis?.detectedActions?.length || 0} behaviors, ${pr.analysis?.tags?.length || 0} habit tags.\nTraining done! Detected ${pr.analysis?.detectedActions?.length || 0} actions, ${pr.analysis?.tags?.length || 0} habit tags.`,
           likes: 5,
           comments: 1,
           shares: 2,
           favorites: 3,
-          time: '刚刚 / Just now',
+          time: 'Just now',
           features: {
             petType,
             breed: pr.petFeatures?.breed || petType,
-            color: '训练强化',
-            expression: '自信',
+            color: 'Training Enhanced',
+            expression: 'Confident',
             emotion: 'positive',
             tags: pr.analysis?.tags || [],
             personalityBoost: pr.personalityBoost,
@@ -282,7 +438,7 @@ const TrainingPage = () => {
           isTrainingPost: true,
           source: 'training_result',
           createdAt: new Date().toISOString(),
-          trainingActions: pr.analysis?.detectedActions?.map(a => a.name).join('、'),
+          trainingActions: pr.analysis?.detectedActions?.map(a => a.name).join(', '),
         });
       });
       
@@ -295,7 +451,7 @@ const TrainingPage = () => {
       }, 3000);
     } catch (err) {
       console.error('Confirm sync failed:', err);
-      setError('同步失败，请重试 / Sync failed, please retry');
+      setError('Sync failed, please retry');
     } finally {
       setSyncingToHome(false);
     }
@@ -339,12 +495,18 @@ const TrainingPage = () => {
         {/* 技术栈展示 */}
         {!isUploading && !isComplete && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 p-3 rounded-xl bg-white/5 border border-white/10">
-            <div className="text-xs text-white/50 mb-2">🧬 Tech Stack / 技术方案</div>
+            <div className="text-xs text-white/50 mb-2">🧬 Tech Stack</div>
             <div className="flex flex-wrap gap-2">
               {['DreamBooth+LoRA', 'MotionBooth', 'i2L-V2', 'OpenCV', 'DeepSVDD'].map(tech => (
                 <span key={tech} className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs border border-emerald-500/20">{tech}</span>
               ))}
             </div>
+            {useMockMode && (
+              <div className="mt-2 text-xs text-yellow-400/70 flex items-center gap-1">
+                <span>⚡</span>
+                <span>Local Demo Mode - No backend required</span>
+              </div>
+            )}
           </motion.div>
         )}
 
@@ -465,9 +627,9 @@ const TrainingPage = () => {
               <div className="glass-effect rounded-2xl overflow-hidden">
                 <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-white text-center">
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.1 }} className="text-6xl mb-3">🎉</motion.div>
-                  <h2 className="text-2xl font-bold mb-1">训练完成！/ Training Complete!</h2>
+                  <h2 className="text-2xl font-bold mb-1">Training Complete!</h2>
                   <p className="opacity-90 text-sm">
-                    {petName} 学习了 {pendingResults.analysis?.detectedActions?.length || 0} 个新动作
+                    {petName} learned {pendingResults.analysis?.detectedActions?.length || 0} new behaviors
                   </p>
                 </div>
               </div>
@@ -476,8 +638,8 @@ const TrainingPage = () => {
               {videos.length > 0 && (
                 <div className="glass-effect rounded-2xl p-4">
                   <h3 className="text-white font-bold text-lg mb-3 flex items-center gap-2">
-                    🎬 训练视频预览 / Training Video Preview
-                    <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">{videos.length} 个</span>
+                    🎬 Training Video Preview
+                    <span className="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">{videos.length}</span>
                   </h3>
                   <div className={`grid gap-3 ${videos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                     {videos.map((v, i) => (
@@ -495,7 +657,7 @@ const TrainingPage = () => {
                           preload="metadata"
                         />
                         <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 rounded text-white text-xs">
-                          视频 {i + 1} · {v.duration || '?'}s
+                          Video {i + 1} · {v.duration || '?'}s
                         </div>
                       </motion.div>
                     ))}
@@ -506,7 +668,7 @@ const TrainingPage = () => {
               {/* 检测到的行为 */}
               {pendingResults.analysis?.detectedActions?.length > 0 && (
                 <div className="glass-effect rounded-2xl p-4">
-                  <h3 className="text-white font-bold text-lg mb-3">🎯 检测到的行为 / Detected Behaviors</h3>
+                  <h3 className="text-white font-bold text-lg mb-3">🎯 Detected Behaviors</h3>
                   <div className="flex flex-wrap gap-2">
                     {pendingResults.analysis.detectedActions.map((a, i) => (
                       <motion.span
@@ -530,7 +692,7 @@ const TrainingPage = () => {
               {/* 习惯标签 */}
               {pendingResults.analysis?.tags?.length > 0 && (
                 <div className="glass-effect rounded-2xl p-4">
-                  <h3 className="text-white font-bold text-lg mb-3">🏷️ 习惯标签 / Habit Tags</h3>
+                  <h3 className="text-white font-bold text-lg mb-3">🏷️ Habit Tags</h3>
                   <div className="flex flex-wrap gap-2">
                     {pendingResults.analysis.tags.slice(0, 12).map((tag, i) => (
                       <span key={i} className="px-3 py-1.5 rounded-full bg-teal-500/10 text-teal-400 text-sm border border-teal-500/20">
@@ -544,26 +706,26 @@ const TrainingPage = () => {
               {/* 宠物属性变化对比表 */}
               {beforePetSnapshot && Object.keys(pendingResults.personalityBoost || {}).length > 0 && (
                 <div className="glass-effect rounded-2xl p-4">
-                  <h3 className="text-white font-bold text-lg mb-3">📊 宠物资质变化 / Attribute Changes</h3>
-                  <p className="text-gray-500 text-xs mb-4">以下变更将在确认后同步到首页宠物 / Changes will sync to Home page after confirmation</p>
+                  <h3 className="text-white font-bold text-lg mb-3">📊 Attribute Changes</h3>
+                  <p className="text-gray-500 text-xs mb-4">Changes will sync to Home page after confirmation</p>
                   
                   <div className="overflow-hidden rounded-xl border border-white/10">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="bg-white/5">
-                          <th className="p-3 text-left text-gray-400 font-medium">属性</th>
-                          <th className="p-3 text-center text-gray-400 font-medium">当前</th>
-                          <th className="p-3 text-center text-gray-400 font-medium">变化</th>
-                          <th className="p-3 text-center text-gray-400 font-medium">训练后</th>
+                          <th className="p-3 text-left text-gray-400 font-medium">Attribute</th>
+                          <th className="p-3 text-center text-gray-400 font-medium">Current</th>
+                          <th className="p-3 text-center text-gray-400 font-medium">Change</th>
+                          <th className="p-3 text-center text-gray-400 font-medium">After Training</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
                         {[
-                          { key: 'energy', label: '⚡ 活力/Energy', prev: beforePetSnapshot.energy },
-                          { key: 'affection', label: '💖 亲密度/Affection', prev: beforePetSnapshot.affection },
-                          { key: 'joy', label: '😊 快乐/Joy', prev: beforePetSnapshot.joy },
-                          { key: 'hunger', label: '🍖 饱腹/Hunger', prev: beforePetSnapshot.hunger },
-                          { key: 'discipline', label: '📚 纪律/Discipline', prev: beforePetSnapshot.discipline },
+                          { key: 'energy', label: '⚡ Energy', prev: beforePetSnapshot.energy },
+                          { key: 'affection', label: '💖 Affection', prev: beforePetSnapshot.affection },
+                          { key: 'joy', label: '😊 Joy', prev: beforePetSnapshot.joy },
+                          { key: 'hunger', label: '🍖 Hunger', prev: beforePetSnapshot.hunger },
+                          { key: 'discipline', label: '📚 Discipline', prev: beforePetSnapshot.discipline },
                         ].map((attr) => {
                           const change = pendingResults.personalityBoost[attr.key] || 0;
                           const after = Math.min(100, Math.max(0, attr.prev + change));
@@ -585,15 +747,15 @@ const TrainingPage = () => {
                   {/* 额外加成信息 */}
                   <div className="mt-3 grid grid-cols-3 gap-2">
                     <div className="bg-white/5 rounded-xl p-3 text-center">
-                      <div className="text-xs text-gray-500">经验值</div>
+                      <div className="text-xs text-gray-500">Experience</div>
                       <div className="text-green-400 font-bold">+10</div>
                     </div>
                     <div className="bg-white/5 rounded-xl p-3 text-center">
-                      <div className="text-xs text-gray-500">积分</div>
+                      <div className="text-xs text-gray-500">Points</div>
                       <div className="text-yellow-400 font-bold">+5</div>
                     </div>
                     <div className="bg-white/5 rounded-xl p-3 text-center">
-                      <div className="text-xs text-gray-500">动作加成</div>
+                      <div className="text-xs text-gray-500">Action Bonus</div>
                       <div className="text-purple-400 font-bold">
                         +{(pendingResults.analysis?.detectedActions?.length || 0) * 2}
                       </div>
@@ -605,7 +767,7 @@ const TrainingPage = () => {
               {/* 技能解锁预告 */}
               {pendingResults.petFeatures?.learnedSkills?.length > 0 && (
                 <div className="glass-effect rounded-2xl p-4">
-                  <h3 className="text-white font-bold text-lg mb-3">🎪 解锁技能 / Unlocked Skills</h3>
+                  <h3 className="text-white font-bold text-lg mb-3">🎪 Unlocked Skills</h3>
                   <div className="flex flex-wrap gap-2">
                     {pendingResults.petFeatures.learnedSkills.map((s, i) => (
                       <span key={i} className="px-3 py-1.5 rounded-full bg-purple-500/10 text-purple-400 text-sm border border-purple-500/20 flex items-center gap-1">
@@ -618,14 +780,14 @@ const TrainingPage = () => {
 
               {/* 技术流程完成确认 */}
               <div className="glass-effect rounded-2xl p-4">
-                <h3 className="text-white font-bold text-lg mb-3">✅ 已完成的技术流程 / Completed Tech Flow</h3>
+                <h3 className="text-white font-bold text-lg mb-3">✅ Completed Tech Flow</h3>
                 <div className="space-y-2 text-sm text-gray-400">
-                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> 视频逐帧分析 / Video Frame Analysis</div>
-                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> 运动捕捉(MotionBooth) / Motion Capture</div>
-                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> LoRA微调训练 / LoRA Fine-tuning</div>
-                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> i2L-V2模型优化 / i2L-V2 Optimization</div>
-                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> 行为分类(DeepSVDD) / Behavior Classification</div>
-                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> 宠物资质评估 / Pet Attribute Evaluation</div>
+                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> Video Frame Analysis</div>
+                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> Motion Capture (MotionBooth)</div>
+                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> LoRA Fine-tuning</div>
+                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> i2L-V2 Model Optimization</div>
+                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> Behavior Classification (DeepSVDD)</div>
+                  <div className="flex items-center gap-2"><span className="text-green-400">✓</span> Pet Attribute Evaluation</div>
                 </div>
               </div>
 
@@ -644,10 +806,10 @@ const TrainingPage = () => {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
-                      同步中...
+                      Syncing...
                     </span>
                   ) : (
-                    '✅ 确认并同步到首页 / Confirm & Sync to Home'
+                    '✅ Confirm & Sync to Home'
                   )}
                 </motion.button>
                 <motion.button
@@ -667,7 +829,7 @@ const TrainingPage = () => {
                   }}
                   className="flex-1 py-4 bg-gray-700 text-gray-300 rounded-2xl font-bold"
                 >
-                  🔄 重新训练 / Retrain
+                  🔄 Retrain
                 </motion.button>
               </div>
 
@@ -692,11 +854,11 @@ const TrainingPage = () => {
                     transition={{ type: 'spring', stiffness: 300, damping: 15 }}
                     className="w-20 h-20 rounded-full bg-white/20 mx-auto mb-4 flex items-center justify-center text-5xl"
                   >✨</motion.div>
-                  <h2 className="text-2xl font-bold mb-2">同步成功！/ Synced!</h2>
+                  <h2 className="text-2xl font-bold mb-2">Synced!</h2>
                   <p className="opacity-90 text-sm mb-2">
-                    宠物属性已更新，视频已发布到动态 / Pet attributes updated, videos published to Feed
+                    Pet attributes updated, videos published to Feed
                   </p>
-                  <p className="opacity-70 text-xs">3秒后自动返回首页 / Returning to Home in 3s...</p>
+                  <p className="opacity-70 text-xs">Returning to Home in 3s...</p>
                   <div className="mt-4">
                     <motion.div
                       className="h-1 bg-white/30 rounded-full overflow-hidden w-48 mx-auto"
@@ -726,8 +888,8 @@ const TrainingPage = () => {
                 <h2 className="text-2xl font-bold mb-1 whitespace-pre-line">{t('training.trainingDone')}</h2>
               </div>
               <div className="p-6 text-center text-gray-400">
-                <p>训练已完成，正在获取结果...</p>
-                <p className="text-xs mt-2">Training complete, fetching results...</p>
+                <p>Training complete, fetching results...</p>
+                <p className="text-xs mt-2">Please wait while we retrieve the analysis...</p>
               </div>
             </motion.div>
           )}

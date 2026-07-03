@@ -20,7 +20,7 @@ const translations = {
     health: { zh: '健康', en: 'Health' },
     exploration: { zh: '探索度', en: 'Exploration' },
     pet: { zh: '抚摸', en: 'Pet' },
-    feed: { zh: '喂食', en: 'Feed' },
+    feed: { zh: '喂食', en: 'Posts' },
     play: { zh: '玩耍', en: 'Play' },
     voice: { zh: '叫声', en: 'Voice' },
     skills: { zh: '已学技能', en: 'Learned Skills' },
@@ -220,6 +220,14 @@ const translations = {
     justNow: { zh: '刚刚', en: 'Just Now' },
     shareMyPet: { zh: '分享我的宠物～', en: 'Share my pet~' },
     posts: { zh: '动态', en: 'Posts' },
+    mediaLibrary: { zh: '媒体库', en: 'Media Library' },
+    all: { zh: '全部', en: 'All' },
+    video: { zh: '视频', en: 'Video' },
+    image: { zh: '图片', en: 'Image' },
+    noUploadRecords: { zh: '还没有上传记录', en: 'No upload records yet' },
+    noVideoRecords: { zh: '还没有视频记录', en: 'No video records yet' },
+    noImageRecords: { zh: '还没有图片记录', en: 'No image records yet' },
+    refresh: { zh: '刷新', en: 'Refresh' },
   },
   aiDesigner: {
     title: { zh: 'AI创作工坊', en: 'AI Creation Workshop' },
@@ -452,6 +460,9 @@ const translations = {
     payPointsApply: { zh: '支付积分申请', en: 'Pay Points to Apply' },
     coopPartnerReq: { zh: '对合养伙伴的要求', en: 'Requirements for Co-owner' },
     swapPartnerReq: { zh: '对铲屎官的要求', en: 'Requirements for Caretaker' },
+    applyCoop: { zh: '申请合养', en: 'Apply for Coop' },
+    applyCoopFor: { zh: '申请与', en: 'Apply for coop with' },
+    introduceYourself: { zh: '介绍一下自己，为什么想合养这只宠物...', en: 'Introduce yourself, why do you want to coop this pet...' },
   },
   chat: {
     chatRooms: { zh: '聊天室', en: 'Chat Rooms' },
@@ -713,8 +724,8 @@ export const t = (key) => {
     }
   }
   
-  if (result && typeof result === 'object' && 'zh' in result && 'en' in result) {
-    return `${result.en}\n${result.zh}`
+  if (result && typeof result === 'object' && 'en' in result) {
+    return result.en
   }
   
   return String(result)

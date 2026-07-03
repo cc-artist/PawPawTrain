@@ -1,19 +1,21 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import useStore from '../store/useStore'
 
 const pagePreviews = {
   '/': {
-    title: '🐾 我的宠物',
-    description: '与你的虚拟宠物互动',
+    title: '🐾 My Pet',
+    titleEn: 'My Pet',
+    description: 'Interact with your virtual pet',
+    descriptionEn: 'Interact with your virtual pet',
     preview: (
       <div className="p-3">
         <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl p-4 mb-2">
           <div className="text-center">
             <span className="text-4xl">🐱</span>
-            <div className="text-white text-sm font-medium mt-1">小猫咪</div>
-            <div className="text-white/70 text-xs">Lv.10 成长中</div>
+            <div className="text-white text-sm font-medium mt-1">Kitty</div>
+            <div className="text-white/70 text-xs">Lv.10 Growing</div>
           </div>
         </div>
         <div className="grid grid-cols-4 gap-1">
@@ -38,16 +40,18 @@ const pagePreviews = {
     )
   },
   '/feed': {
-    title: '📖 动态',
-    description: '浏览宠物社区',
+    title: '📖 Feed',
+    titleEn: 'Feed',
+    description: 'Browse pet community',
+    descriptionEn: 'Browse pet community',
     preview: (
       <div className="p-3">
         <div className="bg-white rounded-xl shadow-sm p-3 mb-2">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xl">👤</span>
             <div>
-              <div className="text-xs font-medium text-gray-800">宠物爱好者</div>
-              <div className="text-xs text-gray-400">2小时前</div>
+              <div className="text-xs font-medium text-gray-800">Pet Lover</div>
+              <div className="text-xs text-gray-400">2 hours ago</div>
             </div>
           </div>
           <div className="bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg aspect-square flex items-center justify-center">
@@ -63,29 +67,31 @@ const pagePreviews = {
     )
   },
   '/shop': {
-    title: '🛍️ 商城',
-    description: '购买宠物用品',
+    title: '🛍️ Shop',
+    titleEn: 'Shop',
+    description: 'Buy pet supplies',
+    descriptionEn: 'Buy pet supplies',
     preview: (
       <div className="p-3">
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl p-2 text-center text-white">
             <span className="text-2xl">🍖</span>
-            <div className="text-xs">高级猫粮</div>
+            <div className="text-xs">Cat Food</div>
             <div className="text-xs font-bold">¥29.9</div>
           </div>
           <div className="bg-gradient-to-br from-pink-400 to-red-500 rounded-xl p-2 text-center text-white">
             <span className="text-2xl">🎾</span>
-            <div className="text-xs">玩具球</div>
+            <div className="text-xs">Toy Ball</div>
             <div className="text-xs font-bold">¥15.9</div>
           </div>
           <div className="bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl p-2 text-center text-white">
             <span className="text-2xl">💊</span>
-            <div className="text-xs">健康零食</div>
+            <div className="text-xs">Healthy Treats</div>
             <div className="text-xs font-bold">¥19.9</div>
           </div>
           <div className="bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl p-2 text-center text-white">
             <span className="text-2xl">🛏️</span>
-            <div className="text-xs">舒适窝</div>
+            <div className="text-xs">Pet Bed</div>
             <div className="text-xs font-bold">¥49.9</div>
           </div>
         </div>
@@ -93,61 +99,65 @@ const pagePreviews = {
     )
   },
   '/social': {
-    title: '👥 社交',
-    description: '结识宠物爱好者',
+    title: '👥 Social',
+    titleEn: 'Social',
+    description: 'Meet pet lovers',
+    descriptionEn: 'Meet pet lovers',
     preview: (
       <div className="p-3">
         <div className="space-y-2">
           <div className="bg-white rounded-xl shadow-sm p-2 flex items-center gap-2">
             <span className="text-2xl">🐕</span>
             <div className="flex-1">
-              <div className="text-xs font-medium text-gray-800">铲屎官日记</div>
-              <div className="text-xs text-gray-400">有一只金毛犬</div>
+              <div className="text-xs font-medium text-gray-800">Dog Lover</div>
+              <div className="text-xs text-gray-400">Has a Golden Retriever</div>
             </div>
-            <button className="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">关注</button>
+            <button className="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">Follow</button>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-2 flex items-center gap-2">
             <span className="text-2xl">🐱</span>
             <div className="flex-1">
-              <div className="text-xs font-medium text-gray-800">猫咪乐园</div>
-              <div className="text-xs text-gray-400">有三只可爱猫咪</div>
+              <div className="text-xs font-medium text-gray-800">Cat Paradise</div>
+              <div className="text-xs text-gray-400">Has 3 cute cats</div>
             </div>
-            <button className="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">关注</button>
+            <button className="text-xs bg-purple-500 text-white px-2 py-1 rounded-full">Follow</button>
           </div>
           <div className="bg-white rounded-xl shadow-sm p-2 flex items-center gap-2">
             <span className="text-2xl">🐰</span>
             <div className="flex-1">
-              <div className="text-xs font-medium text-gray-800">兔宝宝之家</div>
-              <div className="text-xs text-gray-400">垂耳兔爱好者</div>
+              <div className="text-xs font-medium text-gray-800">Bunny Home</div>
+              <div className="text-xs text-gray-400">Lop-eared rabbit lover</div>
             </div>
-            <button className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">已关注</button>
+            <button className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Following</button>
           </div>
         </div>
       </div>
     )
   },
   '/profile': {
-    title: '👤 我的',
-    description: '个人中心',
+    title: '👤 Profile',
+    titleEn: 'Profile',
+    description: 'Personal center',
+    descriptionEn: 'Personal center',
     preview: (
       <div className="p-3">
         <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl p-4 mb-2 text-center text-white">
           <span className="text-4xl">👤</span>
-          <div className="font-medium mt-1">宠物爱好者</div>
-          <div className="text-xs opacity-70">Lv.25 · 1280积分</div>
+          <div className="font-medium mt-1">Pet Lover</div>
+          <div className="text-xs opacity-70">Lv.25 · 1280 Points</div>
         </div>
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-gray-50 rounded-xl p-2 text-center">
             <div className="text-lg font-bold text-gray-800">12</div>
-            <div className="text-xs text-gray-500">动态</div>
+            <div className="text-xs text-gray-500">Posts</div>
           </div>
           <div className="bg-gray-50 rounded-xl p-2 text-center">
             <div className="text-lg font-bold text-gray-800">256</div>
-            <div className="text-xs text-gray-500">粉丝</div>
+            <div className="text-xs text-gray-500">Followers</div>
           </div>
           <div className="bg-gray-50 rounded-xl p-2 text-center">
             <div className="text-lg font-bold text-gray-800">189</div>
-            <div className="text-xs text-gray-500">关注</div>
+            <div className="text-xs text-gray-500">Following</div>
           </div>
         </div>
       </div>
@@ -155,13 +165,13 @@ const pagePreviews = {
   }
 }
 
-// "+"按钮弹出的功能菜单项
+// "+" Button menu items
 const plusMenuItems = [
   {
     id: 'pet-creator',
     icon: '🐾',
-    label: 'Virtual Pet Image Generator\n虚拟宠物形象生成器',
-    description: 'AI generates exclusive virtual pet images\nAI生成专属虚拟宠物形象',
+    label: 'Virtual Pet Image Generator',
+    description: 'AI generates exclusive virtual pet images',
     path: '/create-pet',
     gradient: 'from-amber-500 to-orange-500',
     bgLight: 'bg-amber-50',
@@ -169,8 +179,8 @@ const plusMenuItems = [
   {
     id: 'pet-trainer',
     icon: '🎯',
-    label: 'Virtual Pet Action Trainer\n虚拟宠物动作训练器',
-    description: 'Train pet actions and skills\n训练宠物动作与技能',
+    label: 'Virtual Pet Action Trainer',
+    description: 'Train pet actions and skills',
     path: '/training',
     gradient: 'from-emerald-500 to-teal-500',
     bgLight: 'bg-emerald-50',
@@ -178,8 +188,8 @@ const plusMenuItems = [
   {
     id: 'task-generator',
     icon: '📋',
-    label: 'Pet Task Generator\n养宠任务生成器',
-    description: 'Daily pet tasks and interactions\n每日养宠任务与互动',
+    label: 'Pet Task Generator',
+    description: 'Daily pet tasks and interactions',
     path: '/daily',
     gradient: 'from-violet-500 to-purple-500',
     bgLight: 'bg-violet-50',
@@ -187,8 +197,8 @@ const plusMenuItems = [
   {
     id: 'ai-workshop',
     icon: '🤖',
-    label: 'AI Creation Workshop\nAI创作工坊',
-    description: 'Create products from pet photos\n用宠物照片制作各种商品',
+    label: 'AI Creation Workshop',
+    description: 'Create products from pet photos',
     path: '/ai-workshop',
     gradient: 'from-cyan-500 to-blue-500',
     bgLight: 'bg-cyan-50',
@@ -202,32 +212,45 @@ const Navbar = () => {
   const [hoveredPath, setHoveredPath] = useState(null)
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 })
   const [showPlusMenu, setShowPlusMenu] = useState(false)
+  
+  // Auto-hide feature state
+  const [isNavbarVisible, setIsNavbarVisible] = useState(true)
+  const [isScrolling, setIsScrolling] = useState(false)
+  const hideTimeoutRef = useRef(null)
+  const lastScrollTop = useRef(0)
+  const scrollThreshold = 10 // Scroll threshold, only triggers if exceeded
+  
+  // Use ref to track latest showPlusMenu value, avoid closure issues
+  const showPlusMenuRef = useRef(showPlusMenu)
+  useEffect(() => {
+    showPlusMenuRef.current = showPlusMenu
+  }, [showPlusMenu])
 
   const navItems = [
-    { path: '/', icon: '🏠', label: '首页', locked: true },
-    { path: '/feed', icon: '📖', label: '动态', locked: false },
-    { path: '/shop', icon: '🛍️', label: '商城', locked: true },
-    { path: '/social', icon: '👥', label: '社交', locked: true },
-    { path: '/profile', icon: '👤', label: '我的', locked: true },
+    { path: '/', icon: '🏠', label: 'Home', labelEn: 'Home', locked: true },
+    { path: '/feed', icon: '📖', label: 'Feed', labelEn: 'Feed', locked: false },
+    { path: '/shop', icon: '🛍️', label: 'Shop', labelEn: 'Shop', locked: true },
+    { path: '/social', icon: '👥', label: 'Social', labelEn: 'Social', locked: true },
+    { path: '/profile', icon: '👤', label: 'Profile', labelEn: 'Profile', locked: true },
   ]
 
   const handleClick = (path) => {
-    // 公开页面：仅动态无需登录即可访问
+    // Public page: Only Feed is accessible without login
     if (path === '/feed') {
       navigate(path)
       return
     }
     
-    // 需要登录的功能：未登录则提示并跳转登录页
+    // Features requiring login
     if (!isLoggedIn) {
-      if (window.confirm('此功能需要登录后使用，是否前往注册/登录？')) {
+      if (window.confirm('This feature requires login. Go to sign in page?')) {
         navigate('/login')
       }
       return
     }
     
     if (path === '/upload') {
-      // 点击"+"弹出功能选择面板
+      // Click "+" to open feature selection panel
       setShowPlusMenu(true)
       return
     } else {
@@ -259,9 +282,127 @@ const Navbar = () => {
     setHoveredPath(path)
   }
 
+  // Auto-hide feature: listen to scroll and click events
+  useEffect(() => {
+    // Function to show navbar
+    const showNavbar = () => {
+      setIsNavbarVisible(true)
+      setIsScrolling(false)
+      
+      // Clear previous hide timer
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current)
+      }
+      
+      // Auto-hide after 3 seconds of inactivity
+      hideTimeoutRef.current = setTimeout(() => {
+        // If no menu is open, hide navbar
+        if (!showPlusMenuRef.current) {
+          setIsNavbarVisible(false)
+        }
+      }, 3000)
+    }
+
+    // Function to hide navbar
+    const hideNavbar = () => {
+      // If menu is open, don't hide navbar
+      if (showPlusMenuRef.current) return
+      
+      setIsNavbarVisible(false)
+      setIsScrolling(false)
+    }
+
+    // Scroll event handler
+    const handleScroll = () => {
+      const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop
+      const scrollDiff = Math.abs(currentScrollTop - lastScrollTop.current)
+      
+      // Only trigger if scroll distance exceeds threshold
+      if (scrollDiff > scrollThreshold) {
+        // Hide navbar when scrolling down
+        if (currentScrollTop > lastScrollTop.current && currentScrollTop > 100) {
+          hideNavbar()
+        } 
+        // Show navbar when scrolling up
+        else if (currentScrollTop < lastScrollTop.current) {
+          showNavbar()
+        }
+        
+        setIsScrolling(true)
+      }
+      
+      lastScrollTop.current = currentScrollTop
+    }
+
+    // Click event handler - show navbar when user clicks screen
+    const handleClick = (e) => {
+      // If clicking on navbar itself, don't handle
+      if (e.target.closest('.fixed.bottom-0')) return
+      
+      showNavbar()
+    }
+
+    // Touch event handler - mobile swipe
+    const handleTouchStart = () => {
+      setIsScrolling(true)
+    }
+
+    const handleTouchMove = () => {
+      // Hide navbar on touch swipe
+      hideNavbar()
+    }
+
+    const handleTouchEnd = () => {
+      // Show navbar after touch ends
+      setTimeout(() => {
+        showNavbar()
+      }, 500)
+    }
+
+    // Keyboard event handler - show navbar when user presses any key
+    const handleKeyDown = () => {
+      showNavbar()
+    }
+
+    // Mouse move handler - show navbar when mouse moves to bottom area
+    const handleMouseMove = (e) => {
+      // If mouse moves to bottom area, show navbar
+      if (e.clientY > window.innerHeight - 100) {
+        showNavbar()
+      }
+    }
+
+    // Add event listeners
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    document.addEventListener('click', handleClick)
+    document.addEventListener('touchstart', handleTouchStart, { passive: true })
+    document.addEventListener('touchmove', handleTouchMove, { passive: true })
+    document.addEventListener('touchend', handleTouchEnd, { passive: true })
+    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('mousemove', handleMouseMove)
+
+    // Initially show navbar
+    showNavbar()
+
+    // Cleanup function
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      document.removeEventListener('click', handleClick)
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('mousemove', handleMouseMove)
+      
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current)
+      }
+    }
+  }, []) // Empty dependency array because we use ref to track state
+
   return (
     <>
-      {/* 页面预览悬浮提示 */}
+      {/* Page preview tooltip */}
       <AnimatePresence>
         {hoveredPath && pagePreviews[hoveredPath] && (
           <motion.div
@@ -279,9 +420,13 @@ const Navbar = () => {
               <div className="bg-gradient-to-r from-cyber-blue to-cyber-purple p-2 text-center">
                 <div className="text-white text-xs font-medium">
                   {pagePreviews[hoveredPath].title}
+                  <span className="block text-white/70">{pagePreviews[hoveredPath].titleEn}</span>
                 </div>
                 <div className="text-white/70 text-xs">
                   {pagePreviews[hoveredPath].description}
+                </div>
+                <div className="text-white/50 text-[10px]">
+                  {pagePreviews[hoveredPath].descriptionEn}
                 </div>
               </div>
               {pagePreviews[hoveredPath].preview}
@@ -298,11 +443,11 @@ const Navbar = () => {
         )}
       </AnimatePresence>
 
-      {/* "+"按钮功能选择面板 */}
+      {/* "+" Button feature selection panel */}
       <AnimatePresence>
         {showPlusMenu && (
           <>
-            {/* 半透明遮罩 */}
+            {/* Semi-transparent overlay */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -310,7 +455,7 @@ const Navbar = () => {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999]"
               onClick={() => setShowPlusMenu(false)}
             />
-            {/* 底部弹出面板 */}
+            {/* Bottom popup panel */}
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
@@ -318,18 +463,18 @@ const Navbar = () => {
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="fixed bottom-0 left-0 right-0 z-[10001] bg-gradient-to-t from-[#0a0a2e] to-[#1a1a4e] rounded-t-3xl border-t border-cyber-blue/30 shadow-2xl"
             >
-              {/* 拖拽指示条 */}
+              {/* Drag indicator */}
               <div className="flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1 bg-white/20 rounded-full" />
               </div>
 
-              {/* 标题 */}
+              {/* Title */}
               <div className="px-6 pb-1">
-                <h3 className="text-lg font-bold text-white text-center">✨ Select Feature / 选择功能</h3>
-                <p className="text-xs text-white/50 text-center mt-0.5">Click to select a tool / 点击选择要使用的工具</p>
+                <h3 className="text-lg font-bold text-white text-center">✨ Select Feature</h3>
+                <p className="text-xs text-white/50 text-center mt-0.5">Click to select a tool</p>
               </div>
 
-              {/* 菜单项 */}
+              {/* Menu items */}
               <div className="px-4 pb-6 pt-3 space-y-3">
                 {plusMenuItems.map((item, index) => (
                   <motion.button
@@ -342,22 +487,22 @@ const Navbar = () => {
                     onClick={() => handlePlusMenuItem(item.path)}
                     className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-cyber-blue/50 hover:bg-white/10 transition-all duration-200 text-left group"
                   >
-                    {/* 图标 */}
+                    {/* Icon */}
                     <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg flex-shrink-0 group-hover:scale-110 transition-transform duration-200`}>
                       <span className="text-2xl">{item.icon}</span>
                     </div>
-                    {/* 文字 */}
+                    {/* Text */}
                     <div className="flex-1 min-w-0">
                       <div className="text-white font-semibold text-sm whitespace-pre-line">{item.label}</div>
                       <div className="text-white/40 text-xs mt-0.5 whitespace-pre-line">{item.description}</div>
                     </div>
-                    {/* 箭头 */}
+                    {/* Arrow */}
                     <span className="text-white/30 text-lg flex-shrink-0 group-hover:text-cyber-blue group-hover:translate-x-1 transition-all duration-200">→</span>
                   </motion.button>
                 ))}
               </div>
 
-              {/* 关闭按钮 */}
+              {/* Close button */}
               <div className="px-4 pb-8">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -365,7 +510,7 @@ const Navbar = () => {
                   onClick={() => setShowPlusMenu(false)}
                   className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white/60 text-sm font-medium hover:text-white hover:border-white/20 transition-all duration-200"
                 >
-                  Cancel / 取消
+                  Cancel
                 </motion.button>
               </div>
             </motion.div>
@@ -373,9 +518,34 @@ const Navbar = () => {
         )}
       </AnimatePresence>
 
-      <div className="fixed bottom-0 left-0 right-0 glass-effect border-t border-cyber-blue/50 z-[10000]">
-        <div className="w-full flex items-center justify-around">
-          {/* 左侧3个导航项：首页、动态、商城 */}
+      {/* Bottom navigation bar - supports auto-hide */}
+      <AnimatePresence>
+        <motion.div 
+          initial={{ y: 0 }}
+          animate={{ y: isNavbarVisible ? 0 : 100 }}
+          exit={{ y: 100 }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 300, 
+            damping: 30,
+            duration: 0.3 
+          }}
+          className="fixed bottom-0 left-0 right-0 glass-effect border-t border-cyber-blue/50 z-[10000]"
+        >
+          {/* Hidden state indicator - shows a small hint to user */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ 
+              opacity: !isNavbarVisible ? 1 : 0, 
+              y: !isNavbarVisible ? 0 : 10 
+            }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full px-3 py-1 bg-cyber-dark/80 backdrop-blur-sm rounded-t-lg text-xs text-cyber-blue/70 pointer-events-none"
+          >
+            👆 Tap to restore
+          </motion.div>
+          <div className="w-full flex items-center justify-around">
+          {/* Left 3 nav items: Home, Feed, Shop */}
           {navItems.slice(0, 3).map((item) => {
             const isActive = location.pathname === item.path
             const isLocked = item.locked && !isLoggedIn
@@ -405,6 +575,7 @@ const Navbar = () => {
                   <>
                     <span className="text-2xl">{item.icon}</span>
                     <span className="text-xs font-medium opacity-70">{item.label}</span>
+                    <span className="text-[10px] opacity-40">{item.labelEn}</span>
                   </>
                 )}
                 {isActive && !isLocked && (
@@ -417,7 +588,7 @@ const Navbar = () => {
             )
           })}
 
-          {/* 中央 + 按钮 - 点击弹出功能选择面板 */}
+          {/* Center "+" button - opens feature selection panel */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -435,7 +606,7 @@ const Navbar = () => {
             </motion.div>
           </motion.button>
 
-          {/* 右侧3个导航项：社交、我的 + 登录/注册 */}
+          {/* Right 3 nav items: Social, Profile + Login/Logout */}
           {navItems.slice(3, 5).map((item) => {
             const isActive = location.pathname === item.path
             const isLocked = item.locked && !isLoggedIn
@@ -465,6 +636,7 @@ const Navbar = () => {
                   <>
                     <span className="text-2xl">{item.icon}</span>
                     <span className="text-xs font-medium opacity-70">{item.label}</span>
+                    <span className="text-[10px] opacity-40">{item.labelEn}</span>
                   </>
                 )}
                 {isActive && !isLocked && (
@@ -486,11 +658,13 @@ const Navbar = () => {
               ${isLoggedIn ? 'text-red-500 hover:text-red-400' : 'text-orange-500 hover:text-orange-400'}
             `}
           >
-            <span className="text-2xl">{isLoggedIn ? '🚪' : ''}</span>
-            <span className="text-xs font-medium opacity-70">{isLoggedIn ? '登出' : '注册/登录'}</span>
+            <span className="text-2xl">{isLoggedIn ? '🚪' : '👤'}</span>
+            <span className="text-xs font-medium opacity-70">{isLoggedIn ? 'Logout' : 'Sign In'}</span>
+            <span className="text-[10px] opacity-40">{isLoggedIn ? 'Logout' : 'Sign In'}</span>
           </motion.button>
         </div>
-      </div>
+        </motion.div>
+      </AnimatePresence>
     </>
   )
 }

@@ -105,7 +105,7 @@ class ImageService {
    * 构建高质量宠物图像 prompt
    */
   buildPrompt(petData) {
-    const { type = 'cat', name = '宠物', color = '花色', artStyle = '3d_cartoon' } = petData;
+    const { type = 'cat', name = 'Pet', color = 'variegated', artStyle = '3d_cartoon' } = petData;
 
     const petNames = {
       dog: 'dog', cat: 'cat', rabbit: 'rabbit', hamster: 'hamster',
@@ -117,7 +117,7 @@ class ImageService {
     };
 
     const petType = petNames[type] || type;
-    const petColor = color === '花色' ? 'multicolored with beautiful patterns' : color;
+    const petColor = color === 'variegated' || color === '花色' ? 'multicolored with beautiful patterns' : color;
 
     const stylePrompts = {
       '3d_cartoon': '3D cartoon render, Pixar-Disney style, cute large expressive eyes, soft ambient lighting, smooth textures, adorable chibi proportions, rendered with Blender quality, highly detailed soft fur, centered portrait on clean gradient background',
@@ -341,7 +341,7 @@ class ImageService {
    * @param {string} imageBase64 - 用户上传的图片（可选）
    */
   generateEnhancedSVG(petData, imageBase64 = null) {
-    const { type = 'cat', name = '宠物', color = '花色', artStyle = '3d_cartoon' } = petData;
+    const { type = 'cat', name = 'Pet', color = 'variegated', artStyle = '3d_cartoon' } = petData;
 
     const petEmojis = {
       dog: '🐶', cat: '🐱', rabbit: '🐰', hamster: '🐹',
@@ -411,7 +411,7 @@ class ImageService {
 
   <!-- 标签信息 -->
   <rect x="350" y="720" rx="20" ry="20" width="324" height="50" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-  <text x="512" y="753" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="24" fill="rgba(255,255,255,0.85)">🐾 虚拟宠物 · ${color} · ${this.getStyleName(artStyle)}</text>
+  <text x="512" y="753" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="24" fill="rgba(255,255,255,0.85)">🐾 Virtual Pet · ${color} · ${this.getStyleName(artStyle)}</text>
 
   <!-- 底部水印 -->
   <text x="512" y="860" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.3)">PawPaw Train · AI Generated</text>
@@ -452,11 +452,11 @@ class ImageService {
 
   getStyleName(style) {
     const names = {
-      '3d_cartoon': '3D卡通', 'anime_cel': '日系赛璐璐', 'makoto_shinkai': '新海诚',
-      'flat_design': '扁平设计', 'cyberpunk': '赛博朋克', 'healing': '治愈系',
-      'ghibli': '吉卜力', 'american': '美式', 'chinese': '国风', 'dark_fantasy': '暗黑奇幻'
+      '3d_cartoon': '3D Cartoon', 'anime_cel': 'Anime Cel', 'makoto_shinkai': 'Makoto Shinkai',
+      'flat_design': 'Flat Design', 'cyberpunk': 'Cyberpunk', 'healing': 'Healing',
+      'ghibli': 'Ghibli', 'american': 'American', 'chinese': 'Chinese Ink', 'dark_fantasy': 'Dark Fantasy'
     };
-    return names[style] || '3D卡通';
+    return names[style] || '3D Cartoon';
   }
 }
 

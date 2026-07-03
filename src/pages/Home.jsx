@@ -71,9 +71,9 @@ const Home = () => {
   const chatEndRef = useRef(null)
   const audioRef = useRef(null)
 
-  // 尝试从localStorage加载宠物数据（不依赖store）
+  // Try to load pet data from localStorage (independent of store)
   useEffect(() => {
-    // 优先从localStorage直接读取
+    // Prioritize reading directly from localStorage
     const savedPet = localStorage.getItem('paw_train_pet_state')
     if (savedPet) {
       try {
@@ -87,21 +87,21 @@ const Home = () => {
         console.error('Failed to parse saved pet from localStorage')
       }
     }
-    // 延迟一点再取消loading，确保pet有机会被加载
+    // Delay to cancel loading, ensure pet has chance to load
     const timer = setTimeout(() => {
       setIsCheckingPet(false)
     }, 500)
     return () => clearTimeout(timer)
   }, [])
 
-  // 当store中pet变化时，取消loading状态
+  // When pet changes in store, cancel loading state
   useEffect(() => {
     if (pet && pet.type) {
       setIsCheckingPet(false)
     }
   }, [pet])
 
-  // 如果正在检查宠物数据，显示加载动画
+  // If checking pet data, show loading animation
   if (isCheckingPet && (!pet || !pet.type)) {
     return (
       <div className="min-h-full flex flex-col items-center justify-center gradient-bg p-4">
@@ -117,7 +117,7 @@ const Home = () => {
     )
   }
 
-  // 如果宠物仍未加载，重定向到动态页
+  // If pet still not loaded, redirect to feed page
   useEffect(() => {
     if (!pet || !pet.type) {
       navigate('/feed', { replace: true })
@@ -142,7 +142,7 @@ const Home = () => {
 
   const performSkill = (skill) => {
     setActiveSkill(skill)
-    showInteraction(`${pet.name}在表演${skill.name}！`, getPetSound(pet.type), skill.animation)
+    showInteraction(`${pet.name} is performing ${skill.name}!`, getPetSound(pet.type), skill.animation)
     setTimeout(() => setActiveSkill(null), 3000)
   }
 
@@ -242,27 +242,27 @@ const Home = () => {
   }
 
   const sounds = {
-    cat: ['喵~', '喵喵~', '喵呜~', '咕噜咕噜~', '嘶~', '喵嗷~', '咪~'],
-    dog: ['汪汪汪！', '汪！', '汪汪！', '呜~', '嗷呜~', '汪汪汪！', '旺~'],
-    rabbit: ['吱吱~', '咕噜~', '噗噗~', '蹦~'],
-    bird: ['啾啾~', '叽叽喳喳~', '咕咕~', '唱歌~'],
-    fish: ['咕嘟~', '泡泡~', '啵啵~'],
-    hamster: ['吱吱~', '啾啾~', '噗噗~'],
-    turtle: ['爬爬~', '慢慢~', '扑通~'],
-    lizard: ['嘶~', '爬爬~', '眨眨~'],
-    snake: ['嘶~', '沙沙~', '滑滑~'],
-    guinea_pig: ['吱吱~', '咕噜~', '哼哼~'],
-    ferret: ['叽叽~', '嘶嘶~', '啾啾~'],
-    hedgehog: ['噗噗~', '哼哼~', '缩成球~'],
-    chinchilla: ['吱吱~', '啾啾~', '噗噗~'],
-    frog: ['呱呱~', '咕呱~', '扑通~'],
-    crab: ['咔哒~', '爬爬~', '钳子~'],
-    tarantula: ['爬~', '静静~', '织网~'],
-    scorpion: ['咔哒~', '爬~', '尾巴~'],
-    parrot: ['你好~', '模仿~', '喳喳~'],
-    goldfish: ['泡泡~', '游游~', '闪闪~'],
-    axolotl: ['游游~', '萌萌~', '摇摇~'],
-    gecko: ['爬爬~', '舔舔~', '眨眨~']
+    cat: ['Meow~', 'Meow meow~', 'Meowww~', 'Purrrr~', 'Hiss~', 'Meeooow~', 'Mee~'],
+    dog: ['Woof woof woof!', 'Woof!', 'Bark!', 'Whimper~', 'Awooo~', 'Woof woof!', 'Arf~'],
+    rabbit: ['Squeak~', 'Gurgle~', 'Pop~', 'Boing~'],
+    bird: ['Chirp~', 'Tweet tweet~', 'Coo~', 'Singing~'],
+    fish: ['Glub~', 'Bubbles~', 'Splash~'],
+    hamster: ['Squeak~', 'Chirp~', 'Pop~'],
+    turtle: ['Crawl~', 'Slowly~', 'Splash~'],
+    lizard: ['Hiss~', 'Crawl~', 'Blink~'],
+    snake: ['Hiss~', 'Rustle~', 'Slither~'],
+    guinea_pig: ['Squeak~', 'Wheek~', 'Chatter~'],
+    ferret: ['Dook~', 'Hiss~', 'Chirp~'],
+    hedgehog: ['Pop~', 'Snuffle~', 'Curl up~'],
+    chinchilla: ['Squeak~', 'Chirp~', 'Pop~'],
+    frog: ['Ribbit~', 'Croak~', 'Splash~'],
+    crab: ['Click~', 'Scuttle~', 'Claw~'],
+    tarantula: ['Crawl~', 'Still~', 'Web~'],
+    scorpion: ['Click~', 'Crawl~', 'Sting~'],
+    parrot: ['Hello~', 'Mimic~', 'Squawk~'],
+    goldfish: ['Bubbles~', 'Swim~', 'Glitter~'],
+    axolotl: ['Swim~', 'Cute~', 'Wiggle~'],
+    gecko: ['Crawl~', 'Lick~', 'Blink~']
   }
 
   const getPetSound = (petType) => {
@@ -409,7 +409,7 @@ const Home = () => {
     }
     audio.onerror = () => {
       setIsPlayingVoice(false)
-      showInteraction('音频播放失败', getPetSound(pet.type), null)
+      showInteraction('Audio playback failed', getPetSound(pet.type), null)
     }
     audio.play()
   }
@@ -530,11 +530,11 @@ const Home = () => {
   }
 
   const formatCooldown = (seconds) => {
-    if (seconds < 60) return `${seconds}秒`
+    if (seconds < 60) return `${seconds}s`
     const minutes = Math.floor(seconds / 60)
-    if (minutes < 60) return `${minutes}分钟`
+    if (minutes < 60) return `${minutes}m`
     const hours = Math.floor(minutes / 60)
-    return `${hours}小时`
+    return `${hours}h`
   }
 
   const stageInfo = getStageName(pet.level || 1)
@@ -714,7 +714,7 @@ const Home = () => {
               <span className="text-xs text-cyber-yellow">{formatCooldown(cooldowns.play)}</span>
             )}
             {!cooldowns.play && (pet.energy || 50) < 5 && (
-              <span className="text-xs text-red-400">累了</span>
+              <span className="text-xs text-red-400">Tired</span>
             )}
           </motion.button>
           <motion.button
@@ -731,10 +731,10 @@ const Home = () => {
             <span className="text-3xl">🔊</span>
             <span className="text-sm">{t('home.voice')}</span>
             {isPlayingVoice && (
-              <span className="text-xs text-cyber-yellow">播放中...</span>
+              <span className="text-xs text-cyber-yellow">Playing...</span>
             )}
             {!pet.voice && (
-              <span className="text-xs text-gray-400">上传后可用</span>
+              <span className="text-xs text-gray-400">Available after upload</span>
             )}
           </motion.button>
         </div>

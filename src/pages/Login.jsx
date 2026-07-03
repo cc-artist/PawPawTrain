@@ -22,10 +22,10 @@ const mockLogin = (email, password) => {
   const savedUsers = JSON.parse(localStorage.getItem('paw_train_users') || '{}')
   const user = savedUsers[email]
   if (!user) {
-    throw new Error('账号不存在，请先注册')
+    throw new Error('Account does not exist, please register first')
   }
   if (user.password !== password) {
-    throw new Error('密码错误')
+    throw new Error('Incorrect password')
   }
   const token = generateMockToken(user.id, email)
   return { token, user: { id: user.id, name: user.name, email, avatar: user.avatar, points: user.points || 0 } }
@@ -35,7 +35,7 @@ const mockLogin = (email, password) => {
 const mockRegister = (email, password, name, avatar) => {
   const savedUsers = JSON.parse(localStorage.getItem('paw_train_users') || '{}')
   if (savedUsers[email]) {
-    throw new Error('该邮箱已注册')
+    throw new Error('This email is already registered')
   }
   const userId = 'user_' + Date.now()
   const newUser = { id: userId, name, email, password, avatar, points: 500 }
@@ -73,12 +73,12 @@ const Login = () => {
     try {
       if (mode === 'register') {
         if (!name.trim()) {
-          alert('请输入用户名')
+          alert('Please enter username')
           setLoading(false)
           return
         }
         if (!email || !password) {
-          alert('请填写邮箱和密码')
+          alert('Please fill in email and password')
           setLoading(false)
           return
         }
@@ -98,18 +98,18 @@ const Login = () => {
         setTimeout(() => { window.location.href = '/' }, 300)
       } else {
         if (!email || !password) {
-          alert('请填写邮箱和密码')
+          alert('Please fill in email and password')
           setLoading(false)
           return
         }
         
         let result
-        // 先尝试后端API，失败则用客户端模拟
+        // Try backend API first, fall back to client simulation on failure
         try {
           const res = await authAPI.login({ email, password })
           result = { token: res.data.token, user: res.data.user, pet: res.data.pet }
         } catch (apiErr) {
-          console.log('后端API不可用，使用客户端登录')
+          console.log('Backend API unavailable, using client login')
           result = mockLogin(email, password)
         }
         
@@ -120,7 +120,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Auth error:', err)
-      alert(err.message || '操作失败，请重试')
+      alert(err.message || 'Operation failed, please try again')
     } finally {
       setLoading(false)
     }
@@ -134,11 +134,11 @@ const Login = () => {
         const res = await authAPI.login({ email: 'demo@example.com', password: 'demo123' })
         result = { token: res.data.token, user: res.data.user, pet: res.data.pet }
       } catch (apiErr) {
-        console.log('后端API不可用，使用客户端演示登录')
-        // 确保demo账号存在
+        console.log('Backend API unavailable, using client demo login')
+        // Ensure demo account exists
         const savedUsers = JSON.parse(localStorage.getItem('paw_train_users') || '{}')
         if (!savedUsers['demo@example.com']) {
-          savedUsers['demo@example.com'] = { id: 'demo-user', name: '演示用户', email: 'demo@example.com', password: 'demo123', avatar: '🐾', points: 1000 }
+          savedUsers['demo@example.com'] = { id: 'demo-user', name: 'Demo User', email: 'demo@example.com', password: 'demo123', avatar: '🐾', points: 1000 }
           localStorage.setItem('paw_train_users', JSON.stringify(savedUsers))
         }
         result = mockLogin('demo@example.com', 'demo123')
@@ -151,7 +151,7 @@ const Login = () => {
       setTimeout(() => { window.location.href = '/' }, 300)
     } catch (err) {
       console.error('Demo login error:', err)
-      alert('演示登录失败: ' + (err.message || '未知错误'))
+      alert('Demo login failed: ' + (err.message || 'Unknown error'))
     } finally {
       setLoading(false)
     }
@@ -193,13 +193,13 @@ const Login = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">{mode === 'login' ? '用户名/邮箱' : '邮箱'}</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">{mode === 'login' ? 'Username / Email' : 'Email'}</label>
               <input
                 type={mode === 'login' ? 'text' : 'email'}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none transition-all"
-                placeholder={mode === 'login' ? '输入用户名或邮箱' : t('login.enterEmail')}
+                placeholder={mode === 'login' ? 'Enter username or email' : t('login.enterEmail')}
                 required
               />
             </div>
@@ -219,20 +219,20 @@ const Login = () => {
             {mode === 'register' && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">用户名</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Username</label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full px-4 py-3 rounded-xl border border-orange-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none transition-all"
-                    placeholder="设置您的用户名"
+                    placeholder="Set your username"
                     required
                     maxLength={20}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">选择头像</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-2">Select Avatar</label>
                   <div className="grid grid-cols-6 gap-2">
                     {avatarOptions.map((emoji) => (
                       <button
@@ -251,7 +251,7 @@ const Login = () => {
                   </div>
                   {previewAvatar && (
                     <div className="mt-2 text-center text-sm text-gray-500">
-                      已选择: <span className="text-2xl">{previewAvatar}</span>
+                      Selected: <span className="text-2xl">{previewAvatar}</span>
                     </div>
                   )}
                 </div>
@@ -269,7 +269,7 @@ const Login = () => {
 
           <div className="my-6 flex items-center gap-4">
             <div className="flex-1 h-px bg-orange-200" />
-            <span className="text-orange-400 text-sm">或</span>
+            <span className="text-orange-400 text-sm">or</span>
             <div className="flex-1 h-px bg-orange-200" />
           </div>
 
@@ -280,31 +280,31 @@ const Login = () => {
               className="w-full py-3 bg-gradient-to-r from-cyber-blue to-cyber-purple text-white font-bold rounded-xl hover:from-cyber-blue/80 hover:to-cyber-purple/80 transition-all flex items-center justify-center gap-2 neon-text disabled:opacity-50"
             >
               <span className="text-xl">🐾</span>
-              快速登录演示账号
+              Quick Demo Login
             </button>
 
             <button
-              onClick={() => alert('Facebook登录功能正在开发中，敬请期待！')}
+              onClick={() => alert('Facebook login is under development, stay tuned!')}
               className="w-full py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
             >
               <span className="text-xl">📘</span>
-              用Facebook登录
+              Sign in with Facebook
             </button>
 
             <button
-              onClick={() => alert('WhatsApp登录功能正在开发中，敬请期待！')}
+              onClick={() => alert('WhatsApp login is under development, stay tuned!')}
               className="w-full py-3 bg-green-600 text-white font-medium rounded-xl hover:bg-green-700 transition-all flex items-center justify-center gap-2"
             >
               <span className="text-xl">💬</span>
-              用WhatsApp登录
+              Sign in with WhatsApp
             </button>
 
             <button
-              onClick={() => alert('Google登录功能正在开发中，敬请期待！')}
+              onClick={() => alert('Google login is under development, stay tuned!')}
               className="w-full py-3 bg-white text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-2 border border-gray-200"
             >
               <span className="text-xl">🔍</span>
-              用Google登录
+              Sign in with Google
             </button>
           </div>
         </div>
@@ -314,7 +314,7 @@ const Login = () => {
             onClick={() => navigate('/feed')}
             className="text-orange-400 hover:text-orange-300 font-medium transition-colors underline"
           >
-            📖 先浏览POSTS看看
+            📖 Browse POSTS First
           </button>
         </div>
       </motion.div>

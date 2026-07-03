@@ -184,14 +184,14 @@ function ProtectedRoute({ children }) {
     return (
       <div className="min-h-full flex flex-col items-center justify-center gradient-bg p-4">
         <div className="text-6xl mb-4 opacity-30">🔒</div>
-        <p className="text-white/40 text-center text-sm mb-6">此功能需要登录后使用</p>
+        <p className="text-white/40 text-center text-sm mb-6">This feature requires login</p>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/login')}
           className="px-8 py-3 bg-gradient-to-r from-cyber-blue to-cyber-purple text-white font-bold rounded-xl shadow-lg"
         >
-          前往注册/登录
+          Sign In / Register
         </motion.button>
       </div>
     )

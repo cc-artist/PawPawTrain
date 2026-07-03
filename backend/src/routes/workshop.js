@@ -68,22 +68,22 @@ const createWorkshopRoutes = (dataStore) => {
       // 兼容：body 可能未被 express.json() 正常解析的情况
       let body = req.body;
       if (!body || (typeof body === 'object' && Object.keys(body).length === 0)) {
-        return res.status(400).json({ success: false, error: '请求体为空，请确认以 JSON 格式发送数据' });
+        return res.status(400).json({ success: false, error: 'Request body is empty, please send data in JSON format' });
       }
 
-      const { imageBase64, productType = 'portrait', petName = '宠物', petType = 'cat', petColor = '花色' } = body;
+      const { imageBase64, productType = 'portrait', petName = 'Pet', petType = 'cat', petColor = 'variegated' } = body;
 
       if (!imageBase64) {
-        return res.status(400).json({ success: false, error: '请上传宠物图片' });
+        return res.status(400).json({ success: false, error: 'Please upload a pet image' });
       }
 
       if (typeof imageBase64 !== 'string' || imageBase64.length < 50) {
-        return res.status(400).json({ success: false, error: '图片数据无效，请重新上传' });
+        return res.status(400).json({ success: false, error: 'Invalid image data, please re-upload' });
       }
 
       const validTypes = Object.keys(PRODUCT_PROMPTS);
       if (!validTypes.includes(productType)) {
-        return res.status(400).json({ success: false, error: `不支持的产品类型，可选: ${validTypes.join(', ')}` });
+        return res.status(400).json({ success: false, error: `Unsupported product type, options: ${validTypes.join(', ')}` });
       }
 
       console.log(`🎨 AI创作工坊: 生成 ${productType} for ${petName}`);
@@ -128,13 +128,13 @@ const createWorkshopRoutes = (dataStore) => {
       res.json({
         success: true,
         creation,
-        message: `${creation.productName} 生成成功！`,
+        message: `${creation.productName} generated successfully!`,
       });
     } catch (error) {
-      console.error('AI Workshop 生成失败:', error.message);
+      console.error('AI Workshop generation failed:', error.message);
       res.status(500).json({
         success: false,
-        error: 'AI 生成失败，请稍后重试',
+        error: 'AI generation failed, please try again later',
         detail: error.message,
       });
     }
@@ -161,14 +161,14 @@ const createWorkshopRoutes = (dataStore) => {
     res.json({
       success: true,
       types: [
-        { id: 'portrait', name: '艺术写真', nameEn: 'Art Portrait', icon: '🎨', desc: '专业级宠物写真照', price: 50 },
-        { id: 'sticker', name: '专属表情包', nameEn: 'Sticker Pack', icon: '📱', desc: '16款萌宠表情包', price: 80 },
-        { id: 'wallpaper', name: '定制壁纸', nameEn: 'Wallpaper', icon: '🖼️', desc: '专属手机/电脑壁纸', price: 60 },
-        { id: 'merch', name: '实体周边', nameEn: 'Merch Design', icon: '🧸', desc: 'T恤/杯子/手机壳设计', price: 120 },
-        { id: 'story', name: '故事绘本', nameEn: 'Story Book', icon: '📖', desc: '宠物主题插画故事', price: 150 },
-        { id: 'avatar', name: '个性头像', nameEn: 'Avatar', icon: '🎭', desc: '社交媒体专属头像', price: 40 },
-        { id: 'badge', name: '荣誉勋章', nameEn: 'Badge', icon: '🏅', desc: '创作里程碑徽章', price: 30 },
-        { id: 'video', name: '趣味视频', nameEn: 'Fun Clip', icon: '🎬', desc: 'AI生成宠物短视频', price: 200 },
+        { id: 'portrait', name: 'Art Portrait', nameEn: 'Art Portrait', icon: '🎨', desc: 'Professional pet portrait', price: 50 },
+        { id: 'sticker', name: 'Sticker Pack', nameEn: 'Sticker Pack', icon: '📱', desc: '16 cute pet stickers', price: 80 },
+        { id: 'wallpaper', name: 'Wallpaper', nameEn: 'Wallpaper', icon: '🖼️', desc: 'Custom phone/desktop wallpaper', price: 60 },
+        { id: 'merch', name: 'Merch Design', nameEn: 'Merch Design', icon: '🧸', desc: 'T-shirt/mug/phone case design', price: 120 },
+        { id: 'story', name: 'Story Book', nameEn: 'Story Book', icon: '📖', desc: 'Pet-themed illustrated story', price: 150 },
+        { id: 'avatar', name: 'Avatar', nameEn: 'Avatar', icon: '🎭', desc: 'Social media custom avatar', price: 40 },
+        { id: 'badge', name: 'Badge', nameEn: 'Badge', icon: '🏅', desc: 'Achievement milestone badge', price: 30 },
+        { id: 'video', name: 'Fun Clip', nameEn: 'Fun Clip', icon: '🎬', desc: 'AI-generated pet short video', price: 200 },
       ],
     });
   });
@@ -177,18 +177,18 @@ const createWorkshopRoutes = (dataStore) => {
 };
 
 const PRODUCT_NAMES = {
-  portrait: '艺术写真',
-  sticker: '专属表情包',
-  wallpaper: '定制壁纸',
-  merch: '实体周边设计',
-  story: '故事绘本',
-  avatar: '个性头像',
-  badge: '荣誉勋章',
-  video: '趣味视频',
+  portrait: 'Art Portrait',
+  sticker: 'Sticker Pack',
+  wallpaper: 'Wallpaper',
+  merch: 'Merch Design',
+  story: 'Story Book',
+  avatar: 'Avatar',
+  badge: 'Badge',
+  video: 'Fun Clip',
 };
 
 function getProductName(type) {
-  return PRODUCT_NAMES[type] || 'AI创作';
+  return PRODUCT_NAMES[type] || 'AI Creation';
 }
 
 export default createWorkshopRoutes;
