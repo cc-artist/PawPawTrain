@@ -6,14 +6,6 @@ import { usePosts } from '../context/PostsContext'
 import SEO from '../components/SEO'
 import { t } from '../utils/i18n'
 
-// 优化 Cloudinary 视频 URL：平衡画质与加载速度
-const optimizeCloudinaryUrl = (url) => {
-  if (!url || !url.includes('cloudinary.com')) return url
-  if (url.includes('f_auto') || url.includes('q_')) return url
-  // w_640=640p, q_auto=智能质量, f_auto=自动选最优编码(H.265/VP9)
-  return url.replace(/\/video\/upload\/(?:vc_h264\/)?/, '/video/upload/f_auto,q_auto,w_640/')
-}
-
 const systemVideos = [
   { id: 'sys-video-1', user: { name: '🐾 Highlights', avatar: '🎬' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608864/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191827_879_dlcj5h.mp4', content: 'Pet wonderful performance! 🐕 / 宠物精彩表演时刻！🐕', likes: 1256, comments: 89, shares: 45, favorites: 321, time: '1h ago / 1小时前', features: { breed: 'dog / 狗狗', color: 'pattern / 花色', expression: 'happy / 开心', emotion: 'positive', personalityBoost: { energy: 10, affection: 8, joy: 12, hunger: -3, discipline: 5 }, petType: 'dog' }, isMine: false },
   { id: 'sys-video-2', user: { name: '🐾 Cute Daily / 萌宠日常', avatar: '🐱' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608857/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191833_927_lgjwn5.mp4', content: 'Cute cat daily play 🐱 / 可爱猫咪的日常玩耍 🐱', likes: 890, comments: 67, shares: 32, favorites: 234, time: '2h ago / 2小时前', features: { breed: 'cat / 猫咪', color: 'orange / 橙色', expression: 'curious / 好奇', emotion: 'positive', personalityBoost: { energy: 8, affection: 10, joy: 10, hunger: -2, discipline: 3 }, petType: 'cat' }, isMine: false },
@@ -52,6 +44,23 @@ const getPetAvatar = (petType) => {
   return avatars[petType] || '🐾'
 }
 
+// 将外部媒体 URL（Cloudinary/Unsplash）转为后端代理 URL，解决浏览器代理拦截问题
+const PROXY_HOSTS = ['res.cloudinary.com', 'images.unsplash.com', 'plus.unsplash.com']
+const proxyMediaUrl = (url) => {
+  if (!url || typeof url !== 'string') return url
+  // blob: 和 data: 不需要代理
+  if (url.startsWith('blob:') || url.startsWith('data:')) return url
+  // 已经是代理 URL 不需要重复处理
+  if (url.startsWith('/api/media-proxy')) return url
+  try {
+    const u = new URL(url)
+    if (PROXY_HOSTS.some(h => u.hostname === h || u.hostname.endsWith('.' + h))) {
+      return `/api/media-proxy?url=${encodeURIComponent(url)}`
+    }
+  } catch {}
+  return url
+}
+
 const Feed = () => {
   const { posts: userPosts } = usePosts()
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -62,16 +71,15 @@ const Feed = () => {
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [videoPlaying, setVideoPlaying] = useState(false)
   const [videoError, setVideoError] = useState(false)
-  const [videoLoading, setVideoLoading] = useState(false)
   const [showPlayIndicator, setShowPlayIndicator] = useState(false)
   // UI 始终可见
   const [showUI, setShowUI] = useState(true)
+  const [showPlayPauseBtn, setShowPlayPauseBtn] = useState(false)
   const hideUITimer = useRef(null)
   const playIndicatorTimer = useRef(null)
+  const playPauseBtnTimer = useRef(null)
   const containerRef = useRef(null)
   const videoRef = useRef(null)
-  const preloadRefs = useRef({}) // 存储预加载的相邻视频元素
-  const [preloadedIndices, setPreloadedIndices] = useState(new Set())
   const touchStartY = useRef(0)
   const touchEndY = useRef(0)
   const touchStartTime = useRef(0)
@@ -90,7 +98,20 @@ const Feed = () => {
     if (!media) return false
     if (media.startsWith('data:video')) return true
     if (media.startsWith('blob:')) return true
-    if (media.match(/\.(mp4|mov|webm|ogg|m4v)$/i)) return true
+    // 代理 URL → 解码真实 URL 后判断
+    if (media.includes('/api/media-proxy')) {
+      try {
+        const idx = media.indexOf('?url=')
+        if (idx !== -1) {
+          const encoded = media.slice(idx + 5)
+          const realUrl = decodeURIComponent(encoded)
+          if (realUrl.match(/\.(mp4|mov|webm|ogg|m4v)(\?|$)/i)) return true
+          if (realUrl.includes('/video/upload/')) return true
+        }
+      } catch {}
+      return false
+    }
+    if (media.match(/\.(mp4|mov|webm|ogg|m4v)($|\?)/i)) return true
     if (media.includes('/video/upload/')) return true
     return false
   }
@@ -98,7 +119,19 @@ const Feed = () => {
   const isImage = (media) => {
     if (!media) return false
     if (media.startsWith('blob:')) return false // blob URL 视为视频
-    return media.match(/\.(jpg|jpeg|png|gif|webp)$/i) || media.startsWith('data:image')
+    // 代理 URL → 解码真实 URL 后判断
+    if (media.includes('/api/media-proxy')) {
+      try {
+        const idx = media.indexOf('?url=')
+        if (idx !== -1) {
+          const encoded = media.slice(idx + 5)
+          const realUrl = decodeURIComponent(encoded)
+          return realUrl.match(/\.(jpg|jpeg|png|gif|webp)(\?|$)/i)
+        }
+      } catch {}
+      return false
+    }
+    return media.match(/\.(jpg|jpeg|png|gif|webp)($|\?)/i) || media.startsWith('data:image')
   }
 
   const sharePlatforms = [
@@ -111,7 +144,10 @@ const Feed = () => {
   ]
 
   const allPosts = useMemo(() => {
-    const combined = [...systemVideos, ...userPosts, ...mockPosts].filter(post => {
+    const combined = [...systemVideos, ...userPosts, ...mockPosts].map(post => ({
+      ...post,
+      media: proxyMediaUrl(post.media)
+    })).filter(post => {
       if (mediaFilter === 'all') return true
       if (mediaFilter === 'image') return isImage(post.media)
       if (mediaFilter === 'video') return isVideo(post.media)
@@ -208,36 +244,6 @@ const Feed = () => {
 
   const isCurrentVideo = isVideo(allPosts[currentIndex]?.media)
 
-  // 预加载下一个视频（仅下一个，避免带宽竞争导致当前视频卡顿）
-  useEffect(() => {
-    if (!isCurrentVideo) return
-    const nextIndex = (currentIndex + 1) % allPosts.length
-    if (preloadedIndices.has(nextIndex)) return
-    const post = allPosts[nextIndex]
-    if (!post || !isVideo(post.media)) return
-    
-    const link = document.createElement('link')
-    link.rel = 'preload'
-    link.as = 'fetch'
-    link.href = optimizeCloudinaryUrl(post.media)
-    link.crossOrigin = 'anonymous'
-    document.head.appendChild(link)
-    
-    setPreloadedIndices(prev => new Set([...prev, nextIndex]))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, allPosts])
-
-  // 清理预加载的 link 标签（限制数量）
-  useEffect(() => {
-    return () => {
-      document.querySelectorAll('link[rel="preload"][as="fetch"]').forEach(el => {
-        if (el.href && el.href.includes('cloudinary.com/video/upload')) {
-          el.remove()
-        }
-      })
-    }
-  }, [])
-
   const handlePrev = useCallback(() => {
     // 暂停当前视频
     const video = videoRef.current
@@ -269,7 +275,8 @@ const Feed = () => {
     showUIWithTimeout()
 
     if (video.paused || video.ended) {
-      video.muted = true
+      video.muted = false
+      video.volume = 0.8
       video.play().then(() => {
         setVideoPlaying(true)
       }).catch(() => {})
@@ -281,6 +288,11 @@ const Feed = () => {
     setShowPlayIndicator(true)
     if (playIndicatorTimer.current) clearTimeout(playIndicatorTimer.current)
     playIndicatorTimer.current = setTimeout(() => setShowPlayIndicator(false), 800)
+
+    // 显示播放/暂停按钮，1.5s 后自动隐藏
+    setShowPlayPauseBtn(true)
+    if (playPauseBtnTimer.current) clearTimeout(playPauseBtnTimer.current)
+    playPauseBtnTimer.current = setTimeout(() => setShowPlayPauseBtn(false), 1500)
   }, [currentIndex, allPosts, showUIWithTimeout])
 
   const handleKeyDown = useCallback((e) => {
@@ -342,40 +354,39 @@ const Feed = () => {
     return () => window.removeEventListener('wheel', handleWheel)
   }, [handleWheel])
 
-  // 切换帖子时确保视频播放
+  // 切换帖子时自动播放视频（延迟 2s 等待 AnimatePresence 完成过渡）
   useEffect(() => {
-    const video = videoRef.current
-    const currentMedia = allPosts[currentIndex]?.media
-    if (!video || !currentMedia || !isVideo(currentMedia)) {
-      setVideoPlaying(false)
-      setVideoLoading(false)
-      return
-    }
-
-    setVideoLoading(true)
-    setVideoError(false)
-
-    // 使用小延迟确保 DOM 已挂载（处理 AnimatePresence 动画时序）
-    const playTimer = setTimeout(() => {
-      const v = videoRef.current
-      if (!v) return
-      v.currentTime = 0
-      v.muted = true
-      v.play().catch(err => {
-        console.error('[VIDEO] play rejected:', err.name)
+    const timer = setTimeout(() => {
+      const video = videoRef.current
+      const currentMedia = allPosts[currentIndex]?.media
+      if (!video || !currentMedia || !isVideo(currentMedia)) {
+        setVideoPlaying(false)
+        return
+      }
+      video.currentTime = 0
+      video.muted = true
+      video.volume = 0
+      video.play().then(() => {
+        setVideoPlaying(true)
+        setVideoError(false)
+        // 播放成功后尝试恢复有声
+        try { video.muted = false; video.volume = 0.8 } catch(e) {}
+        // 切换视频时短暂显示播放按钮
+        setShowPlayPauseBtn(true)
+        if (playPauseBtnTimer.current) clearTimeout(playPauseBtnTimer.current)
+        playPauseBtnTimer.current = setTimeout(() => setShowPlayPauseBtn(false), 2000)
+      }).catch(err => {
+        console.error('[VIDEO] play() rejected:', err.name, err.message)
         setVideoError(true)
-        setVideoLoading(false)
       })
-    }, 50)
-
-    return () => clearTimeout(playTimer)
+    }, 2000)
+    return () => clearTimeout(timer)
   }, [currentIndex])
 
   const handlePurchase = async () => {
     if (!selectedProduct) return
     const userPoints = user?.points || 0
     if (userPoints < selectedProduct.price) {
-      // Insufficient points → prompt to recharge
       if (window.confirm(`${t('feed.insufficientPoints')}\n\nCurrent Points: ${userPoints} ⭐\nRequired: ${selectedProduct.price} ⭐\n\nGo to recharge?`)) {
         window.location.href = '/recharge'
       }
@@ -390,6 +401,25 @@ const Feed = () => {
       setPurchaseSuccess(false)
     }, 2000)
   }
+
+  // 初始自动播放（muted 起播 → 成功后恢复有声）
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const video = videoRef.current
+      if (video && isVideo(allPosts[0]?.media)) {
+        video.muted = true
+        video.play().then(() => {
+          setVideoPlaying(true)
+          try { video.muted = false; video.volume = 0.8 } catch(e) {}
+          // 初次显示播放/暂停按钮
+          setShowPlayPauseBtn(true)
+          if (playPauseBtnTimer.current) clearTimeout(playPauseBtnTimer.current)
+          playPauseBtnTimer.current = setTimeout(() => setShowPlayPauseBtn(false), 2000)
+        }).catch(err => console.log('[VIDEO] initial play failed:', err))
+      }
+    }, 200)
+    return () => clearTimeout(timer)
+  }, [])
 
   const currentPost = allPosts[currentIndex]
   const petEmoji = currentPost?.features?.petType ? getPetAvatar(currentPost.features.petType) : currentPost?.user?.avatar || '🐾'
@@ -408,7 +438,6 @@ const Feed = () => {
       } else if (video && !document.hidden) {
         const currentMedia = allPosts[currentIndex]?.media
         if (isVideo(currentMedia)) {
-          video.muted = true
           video.play().catch(() => {})
         }
       }
@@ -427,6 +456,14 @@ const Feed = () => {
       setShowUI(true)
     }
   }, [videoPlaying, isCurrentVideo])
+
+  if (!currentPost) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
+        <p className="text-white text-xl">Loading posts...</p>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -453,43 +490,49 @@ const Feed = () => {
             className="absolute inset-0"
           >
             <div className="absolute inset-0">
-              {typeof currentPost.media === 'string' && (currentPost.media.startsWith('http') || currentPost.media.startsWith('data:image') || currentPost.media.startsWith('data:video') || currentPost.media.startsWith('blob:')) ? (
+              {currentPost && typeof currentPost.media === 'string' && (currentPost.media.startsWith('http') || currentPost.media.startsWith('/') || currentPost.media.startsWith('data:image') || currentPost.media.startsWith('data:video') || currentPost.media.startsWith('blob:')) ? (
                 isCurrentVideo ? (
                   <div className="absolute inset-0 flex items-center justify-center bg-black" style={{ zIndex: 10 }} onClick={(e) => { e.stopPropagation(); handleVideoClick(); }}>
                     <video
                       ref={videoRef}
-                      src={optimizeCloudinaryUrl(currentPost.media)}
-                      crossOrigin="anonymous"
+                      src={currentPost.media}
                       autoPlay
                       muted
                       loop
                       playsInline
-                      preload="metadata"
-                      style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block' }}
-                      onPlay={() => { setVideoPlaying(true); setVideoError(false); setVideoLoading(false); }}
+                      preload="auto"
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      onPlay={() => { setVideoPlaying(true); setVideoError(false); }}
                       onPause={() => setVideoPlaying(false)}
-                      onWaiting={() => setVideoLoading(true)}
-                      onCanPlay={() => setVideoLoading(false)}
-                      onLoadedData={() => setVideoLoading(false)}
-                      onLoadStart={() => setVideoLoading(true)}
                       onEnded={() => { videoRef.current?.play().catch(() => {}); }}
                       onError={(e) => {
                         console.error('[VIDEO] error:', e.currentTarget.error?.code, e.currentTarget.error?.message)
                         setVideoError(true)
-                        setVideoLoading(false)
                       }}
                     />
-                    {/* 视频加载中指示器 */}
-                    {videoLoading && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 15 }}>
-                        <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                          <svg className="animate-spin h-8 w-8 text-white" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                          </svg>
-                        </div>
-                      </div>
-                    )}
+                    {/* 播放/暂停控制按钮（自动隐藏） */}
+                    <AnimatePresence>
+                      {showPlayPauseBtn && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute inset-0 flex items-center justify-center"
+                          style={{ zIndex: 20, pointerEvents: 'none' }}
+                        >
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleVideoClick(); }}
+                            className="w-16 h-16 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center hover:bg-black/60 transition-all hover:scale-110 active:scale-90"
+                            style={{ pointerEvents: 'auto' }}
+                            title={videoPlaying ? 'Pause / 暂停' : 'Play / 播放'}
+                          >
+                            <span className="text-3xl">{videoPlaying ? '⏸' : '▶'}</span>
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                     {/* 播放/暂停指示器 */}
                     <AnimatePresence>
                       {showPlayIndicator && (
@@ -522,7 +565,6 @@ const Feed = () => {
                             onClick={(e) => {
                               e.stopPropagation()
                               setVideoError(false)
-                              setVideoLoading(true)
                               const v = videoRef.current
                               if (v) {
                                 v.load()

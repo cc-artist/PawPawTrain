@@ -7,6 +7,11 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3001,
     proxy: {
+      '/api/media-proxy': {
+        target: 'http://localhost:8082',
+        changeOrigin: true,
+        // 视频流不设超时限制
+      },
       '/api': {
         target: 'http://localhost:8082',
         changeOrigin: true,

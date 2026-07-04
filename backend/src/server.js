@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import axios from 'axios';
 import { fileURLToPath } from 'url';
 import storageService from './services/storageService.js';
 import { initPreferences, setPersistCallback } from './services/recommendationService.js';
@@ -69,6 +70,72 @@ app.use('/api/tasks', createTasksRoutes(dataStore));
 app.use('/api/posts', createPostsRoutes(dataStore));
 app.use('/api/workshop', createWorkshopRoutes(dataStore));
 app.use('/api/admin', createAdminRoutes(dataStore));
+
+// ========== 媒体代理：绕过浏览器代理限制，由后端直接拉取 Cloudinary/Unsplash 等外部资源 ==========
+app.get('/api/media-proxy', async (req, res) => {
+  try {
+    const targetUrl = req.query.url;
+    if (!targetUrl) {
+      return res.status(400).json({ error: 'Missing url parameter' });
+    }
+
+    // 安全校验：只允许白名单域名
+    const allowedHosts = [
+      'res.cloudinary.com',
+      'images.unsplash.com',
+      'plus.unsplash.com',
+    ];
+    let urlObj;
+    try {
+      urlObj = new URL(targetUrl);
+    } catch {
+      return res.status(400).json({ error: 'Invalid URL' });
+    }
+    if (!allowedHosts.some(h => urlObj.hostname === h || urlObj.hostname.endsWith('.' + h))) {
+      return res.status(403).json({ error: 'Host not allowed' });
+    }
+
+    const range = req.headers.range;
+    const response = await axios.get(targetUrl, {
+      responseType: 'stream',
+      timeout: 30000,
+      headers: range ? { Range: range } : {},
+      validateStatus: () => true,
+    });
+
+    if (response.status >= 400) {
+      response.data.destroy();
+      return res.status(response.status).json({ error: 'Upstream error' });
+    }
+
+    const contentType = response.headers['content-type'];
+    const contentLength = response.headers['content-length'];
+
+    if (range && response.status === 206) {
+      res.status(206);
+      res.set('Content-Range', response.headers['content-range']);
+    } else {
+      res.status(200);
+    }
+
+    if (contentType) res.set('Content-Type', contentType);
+    if (contentLength) res.set('Content-Length', contentLength);
+    res.set('Accept-Ranges', 'bytes');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.set('Access-Control-Allow-Origin', '*');
+
+    response.data.pipe(res);
+
+    req.on('close', () => {
+      response.data.destroy();
+    });
+  } catch (err) {
+    console.error('[MediaProxy] Error:', err.message);
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'Media proxy error' });
+    }
+  }
+});
 
 // 健康检查
 app.get('/api/health', (req, res) => {
