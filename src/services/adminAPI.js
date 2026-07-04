@@ -236,3 +236,53 @@ export async function createBackup() {
   const res = await authFetch(`${API_BASE}/data/backup`, { method: 'POST' });
   return res.json();
 }
+
+// ========== Dataset ==========
+export async function getDatasetOverview() {
+  const res = await authFetch(`${API_BASE}/dataset/overview`);
+  return res.json();
+}
+
+export async function getDatasetPets(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  const res = await authFetch(`${API_BASE}/dataset/pets?${query}`);
+  return res.json();
+}
+
+export async function getDatasetTraining(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  const res = await authFetch(`${API_BASE}/dataset/training?${query}`);
+  return res.json();
+}
+
+export async function getDatasetTags() {
+  const res = await authFetch(`${API_BASE}/dataset/tags`);
+  return res.json();
+}
+
+export async function getDatasetTypes() {
+  const res = await authFetch(`${API_BASE}/dataset/types`);
+  return res.json();
+}
+
+export async function exportDataset(format = 'json', category = 'all') {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/dataset/export?format=${format}&category=${category}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error('Export failed');
+  
+  const blob = await res.blob();
+  const disposition = res.headers.get('Content-Disposition') || '';
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const filename = match ? match[1] : `pawpawtrain_dataset.${format === 'csv' ? 'csv' : 'json'}`;
+  
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  window.URL.revokeObjectURL(url);
+  
+  return { success: true, filename };
+}

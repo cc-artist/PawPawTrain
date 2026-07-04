@@ -13,6 +13,7 @@ import createTasksRoutes from './routes/tasks.js';
 import createPostsRoutes from './routes/posts.js';
 import createWorkshopRoutes from './routes/workshop.js';
 import createAdminRoutes from './routes/admin.js';
+import createDatasetRoutes from './routes/dataset.js';
 
 // 加载环境变量（兼容 Vercel 和本地环境）
 try {
@@ -78,6 +79,7 @@ app.use('/api/tasks', createTasksRoutes(dataStore));
 app.use('/api/posts', createPostsRoutes(dataStore));
 app.use('/api/workshop', createWorkshopRoutes(dataStore));
 app.use('/api/admin', createAdminRoutes(dataStore));
+app.use('/api/admin/dataset', createDatasetRoutes(dataStore));
 
 // ========== 媒体代理：绕过浏览器代理限制，由后端直接拉取 Cloudinary/Unsplash 等外部资源 ==========
 app.get('/api/media-proxy', async (req, res) => {

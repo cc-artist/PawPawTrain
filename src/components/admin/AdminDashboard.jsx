@@ -9,6 +9,7 @@ import PostsPanel from './PostsPanel';
 import TrainingPanel from './TrainingPanel';
 import WorkshopPanel from './WorkshopPanel';
 import ConfigPanel from './ConfigPanel';
+import DatasetPanel from './DatasetPanel';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -29,7 +30,8 @@ export default function AdminDashboard() {
     { id: 'posts', name: 'Content', icon: '📝' },
     { id: 'training', name: 'Training', icon: '🏋️' },
     { id: 'workshop', name: 'Workshop', icon: '🎨' },
-    { id: 'config', name: 'System', icon: '⚙️' }
+    { id: 'config', name: 'System', icon: '⚙️' },
+    { id: 'dataset', name: 'Dataset', icon: '📊' }
   ];
 
   return (
@@ -62,6 +64,7 @@ export default function AdminDashboard() {
           {activeTab === 'training' && <TrainingPanel />}
           {activeTab === 'workshop' && <WorkshopPanel />}
           {activeTab === 'config' && <ConfigPanel />}
+          {activeTab === 'dataset' && <DatasetPanel />}
         </main>
       </div>
     </div>
