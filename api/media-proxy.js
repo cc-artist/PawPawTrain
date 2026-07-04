@@ -1,0 +1,107 @@
+/**
+ * Vercel Serverless Function — 媒体代理
+ * 
+ * 绕过浏览器代理/网络限制，由 Vercel 后端直接拉取 Cloudinary/Unsplash 等外部视频和图片。
+ * 调用方式: GET /api/media-proxy?url=<encoded_external_url>
+ */
+
+import axios from 'axios';
+
+// 白名单域名
+const ALLOWED_HOSTS = [
+  'res.cloudinary.com',
+  'images.unsplash.com',
+  'plus.unsplash.com',
+];
+
+export default async function handler(req, res) {
+  // 只允许 GET
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    // Vercel serverless 使用标准 Node.js req，没有 req.query，需手动解析
+    const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const targetUrl = parsedUrl.searchParams.get('url');
+    if (!targetUrl) {
+      res.status(400).json({ error: 'Missing url parameter' });
+      return;
+    }
+
+    // 安全校验：URL 解析
+    let urlObj;
+    try {
+      urlObj = new URL(targetUrl);
+    } catch {
+      res.status(400).json({ error: 'Invalid URL' });
+      return;
+    }
+
+    // 安全校验：只允许白名单域名
+    if (!ALLOWED_HOSTS.some(h => urlObj.hostname === h || urlObj.hostname.endsWith('.' + h))) {
+      res.status(403).json({ error: 'Host not allowed' });
+      return;
+    }
+
+    console.log('[MediaProxy] Proxying:', targetUrl.substring(0, 120));
+
+    const upstream = await axios({
+      method: 'GET',
+      url: targetUrl,
+      responseType: 'stream',
+      timeout: 30000,
+      headers: req.headers.range ? { Range: req.headers.range } : {},
+      validateStatus: () => true,
+    });
+
+    if (upstream.status >= 400) {
+      if (upstream.data && typeof upstream.data.destroy === 'function') {
+        upstream.data.destroy();
+      }
+      res.status(upstream.status).json({ error: 'Upstream error' });
+      return;
+    }
+
+    // 设置响应头
+    const contentType = upstream.headers['content-type'] || 'application/octet-stream';
+    const contentLength = upstream.headers['content-length'];
+
+    if (req.headers.range && upstream.status === 206) {
+      res.status(206);
+      if (upstream.headers['content-range']) {
+        res.setHeader('Content-Range', upstream.headers['content-range']);
+      }
+    } else {
+      res.status(200);
+    }
+
+    res.setHeader('Content-Type', contentType);
+    if (contentLength) res.setHeader('Content-Length', contentLength);
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+
+    // 流式传输，并等待完成（防止 Vercel 提前终止函数）
+    await new Promise((resolve, reject) => {
+      upstream.data.pipe(res);
+      upstream.data.on('end', () => resolve());
+      upstream.data.on('error', (err) => {
+        if (!res.headersSent) {
+          res.status(502).json({ error: 'Stream error' });
+        }
+        reject(err);
+      });
+      req.on('close', () => {
+        upstream.data.destroy();
+        resolve();
+      });
+    });
+
+  } catch (err) {
+    console.error('[MediaProxy] Error:', err.message);
+    if (!res.headersSent) {
+      res.status(502).json({ error: 'Media proxy error' });
+    }
+  }
+}

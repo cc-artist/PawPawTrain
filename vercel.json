@@ -3,11 +3,10 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.js" },
     { "source": "/((?!api).*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/index.js": {
+    "api/media-proxy.js": {
       "memory": 512,
       "maxDuration": 60
     }
