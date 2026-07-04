@@ -14,8 +14,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 
 // 确保 data 目录存在
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+} catch (e) {
+  // Vercel serverless 环境文件系统只读，忽略此错误
+  console.warn('[Storage] 无法创建 data 目录:', e.message);
 }
 
 // 数据文件映射

@@ -14,8 +14,13 @@ import createPostsRoutes from './routes/posts.js';
 import createWorkshopRoutes from './routes/workshop.js';
 import createAdminRoutes from './routes/admin.js';
 
-// 加载环境变量
-dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
+// 加载环境变量（兼容 Vercel 和本地环境）
+try {
+  const envPath = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env');
+  dotenv.config({ path: envPath });
+} catch {
+  dotenv.config();
+}
 
 const app = express();
 const PORT = process.env.PORT || 8082;
@@ -51,7 +56,10 @@ setPersistCallback((prefsObj) => {
 
 // 中间件
 app.use(cors({
-  origin: ['http://localhost:3001', 'http://localhost:5173', 'http://127.0.0.1:3001'],
+  origin: [
+    'http://localhost:3001', 'http://localhost:5173', 'http://127.0.0.1:3001',
+    'https://pawpawtrain.vercel.app', 'https://paw-paw-train.vercel.app',
+  ],
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -156,25 +164,33 @@ app.use((err, req, res, next) => {
 });
 
 // ========== 定期持久化：每30秒自动保存所有数据 ==========
-setInterval(() => {
-  storageService.saveUsers(dataStore.users);
-  storageService.savePets(dataStore.pets);
-  storageService.saveTrainingTasks(dataStore.trainingTasks);
-  storageService.saveTrainingPosts(dataStore.trainingPosts);
-  storageService.saveTaskAnalysis(dataStore.taskAnalysis);
-  storageService.saveUserTasks(dataStore.userTasks);
-  storageService.saveTaskCompletions(dataStore.taskCompletions);
-  storageService.saveAdviceHistory(dataStore.adviceHistory);
-  storageService.savePosts(dataStore.posts);
-  storageService.saveUserPreferences(dataStore.userPreferences);
-  storageService.saveWorkshopCreations(dataStore.workshopCreations);
-  storageService.saveAuditLogs(dataStore.auditLogs);
-}, 30000);
+// Vercel serverless 环境不运行持久化定时器
+if (!process.env.VERCEL) {
+  setInterval(() => {
+    storageService.saveUsers(dataStore.users);
+    storageService.savePets(dataStore.pets);
+    storageService.saveTrainingTasks(dataStore.trainingTasks);
+    storageService.saveTrainingPosts(dataStore.trainingPosts);
+    storageService.saveTaskAnalysis(dataStore.taskAnalysis);
+    storageService.saveUserTasks(dataStore.userTasks);
+    storageService.saveTaskCompletions(dataStore.taskCompletions);
+    storageService.saveAdviceHistory(dataStore.adviceHistory);
+    storageService.savePosts(dataStore.posts);
+    storageService.saveUserPreferences(dataStore.userPreferences);
+    storageService.saveWorkshopCreations(dataStore.workshopCreations);
+    storageService.saveAuditLogs(dataStore.auditLogs);
+  }, 30000);
+}
 
-app.listen(PORT, () => {
-  console.log(`✅ PawPawTrain 后端服务已启动，端口: ${PORT}`);
-  console.log(`📡 API 地址: http://localhost:${PORT}/api`);
-  console.log(`🛡️ Admin 管理后台: http://localhost:${PORT}/api/admin`);
-  console.log(`☁️ Cloudinary 云存储: 已配置`);
-  console.log(`💾 JSON 持久化: 已启用 (每30秒自动保存)`);
-});
+// 非 Vercel 环境下监听端口（本地开发）
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`✅ PawPawTrain 后端服务已启动，端口: ${PORT}`);
+    console.log(`📡 API 地址: http://localhost:${PORT}/api`);
+    console.log(`🛡️ Admin 管理后台: http://localhost:${PORT}/api/admin`);
+    console.log(`☁️ Cloudinary 云存储: 已配置`);
+    console.log(`💾 JSON 持久化: 已启用 (每30秒自动保存)`);
+  });
+}
+
+export default app;
