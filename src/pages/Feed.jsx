@@ -6,8 +6,16 @@ import { usePosts } from '../context/PostsContext'
 import SEO from '../components/SEO'
 import { t } from '../utils/i18n'
 
+// 优化 Cloudinary 视频 URL：平衡画质与加载速度
+const optimizeCloudinaryUrl = (url) => {
+  if (!url || !url.includes('cloudinary.com')) return url
+  if (url.includes('f_auto') || url.includes('q_')) return url
+  // w_640=640p, q_auto=智能质量, f_auto=自动选最优编码(H.265/VP9)
+  return url.replace(/\/video\/upload\/(?:vc_h264\/)?/, '/video/upload/f_auto,q_auto,w_640/')
+}
+
 const systemVideos = [
-  { id: 'sys-video-1', user: { name: '🐾 精彩瞬间 / Highlights', avatar: '🎬' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608864/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191827_879_dlcj5h.mp4', content: 'Pet wonderful performance! 🐕 / 宠物精彩表演时刻！🐕', likes: 1256, comments: 89, shares: 45, favorites: 321, time: '1h ago / 1小时前', features: { breed: 'dog / 狗狗', color: 'pattern / 花色', expression: 'happy / 开心', emotion: 'positive', personalityBoost: { energy: 10, affection: 8, joy: 12, hunger: -3, discipline: 5 }, petType: 'dog' }, isMine: false },
+  { id: 'sys-video-1', user: { name: '🐾 Highlights', avatar: '🎬' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608864/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191827_879_dlcj5h.mp4', content: 'Pet wonderful performance! 🐕 / 宠物精彩表演时刻！🐕', likes: 1256, comments: 89, shares: 45, favorites: 321, time: '1h ago / 1小时前', features: { breed: 'dog / 狗狗', color: 'pattern / 花色', expression: 'happy / 开心', emotion: 'positive', personalityBoost: { energy: 10, affection: 8, joy: 12, hunger: -3, discipline: 5 }, petType: 'dog' }, isMine: false },
   { id: 'sys-video-2', user: { name: '🐾 Cute Daily / 萌宠日常', avatar: '🐱' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608857/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191833_927_lgjwn5.mp4', content: 'Cute cat daily play 🐱 / 可爱猫咪的日常玩耍 🐱', likes: 890, comments: 67, shares: 32, favorites: 234, time: '2h ago / 2小时前', features: { breed: 'cat / 猫咪', color: 'orange / 橙色', expression: 'curious / 好奇', emotion: 'positive', personalityBoost: { energy: 8, affection: 10, joy: 10, hunger: -2, discipline: 3 }, petType: 'cat' }, isMine: false },
   { id: 'sys-video-3', user: { name: '🐾 Happy Time / 快乐时光', avatar: '🐕' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608845/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191852_670_bdvfrd.mp4', content: 'Beautiful pet interaction 💕 / 宠物互动的美好时刻 💕', likes: 1567, comments: 145, shares: 78, favorites: 456, time: '3h ago / 3小时前', features: { breed: 'dog / 狗狗', color: 'black / 黑色', expression: 'excited / 兴奋', emotion: 'positive', personalityBoost: { energy: 12, affection: 6, joy: 15, hunger: -5, discipline: 4 }, petType: 'dog' }, isMine: false },
   { id: 'sys-video-4', user: { name: '🐾 Little Cutie / 小可爱', avatar: '🐰' }, media: 'https://res.cloudinary.com/dsa4t0soq/video/upload/vc_h264/v1781608837/%E5%BE%AE%E4%BF%A1%E8%A7%86%E9%A2%912026-06-16_191857_392_xnsyf6.mp4', content: 'Happy bunny life 🐰 / 小兔子的幸福生活 🐰', likes: 789, comments: 56, shares: 23, favorites: 189, time: '4h ago / 4小时前', features: { breed: 'rabbit / 兔子', color: 'white / 白色', expression: 'content / 满足', emotion: 'positive', personalityBoost: { energy: 5, affection: 12, joy: 8, hunger: 8, discipline: 2 }, petType: 'rabbit' }, isMine: false },
@@ -54,6 +62,7 @@ const Feed = () => {
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [videoPlaying, setVideoPlaying] = useState(false)
   const [videoError, setVideoError] = useState(false)
+  const [videoLoading, setVideoLoading] = useState(false)
   const [showPlayIndicator, setShowPlayIndicator] = useState(false)
   // UI 始终可见
   const [showUI, setShowUI] = useState(true)
@@ -61,6 +70,8 @@ const Feed = () => {
   const playIndicatorTimer = useRef(null)
   const containerRef = useRef(null)
   const videoRef = useRef(null)
+  const preloadRefs = useRef({}) // 存储预加载的相邻视频元素
+  const [preloadedIndices, setPreloadedIndices] = useState(new Set())
   const touchStartY = useRef(0)
   const touchEndY = useRef(0)
   const touchStartTime = useRef(0)
@@ -195,6 +206,38 @@ const Feed = () => {
     showUIWithTimeout()
   }
 
+  const isCurrentVideo = isVideo(allPosts[currentIndex]?.media)
+
+  // 预加载下一个视频（仅下一个，避免带宽竞争导致当前视频卡顿）
+  useEffect(() => {
+    if (!isCurrentVideo) return
+    const nextIndex = (currentIndex + 1) % allPosts.length
+    if (preloadedIndices.has(nextIndex)) return
+    const post = allPosts[nextIndex]
+    if (!post || !isVideo(post.media)) return
+    
+    const link = document.createElement('link')
+    link.rel = 'preload'
+    link.as = 'fetch'
+    link.href = optimizeCloudinaryUrl(post.media)
+    link.crossOrigin = 'anonymous'
+    document.head.appendChild(link)
+    
+    setPreloadedIndices(prev => new Set([...prev, nextIndex]))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, allPosts])
+
+  // 清理预加载的 link 标签（限制数量）
+  useEffect(() => {
+    return () => {
+      document.querySelectorAll('link[rel="preload"][as="fetch"]').forEach(el => {
+        if (el.href && el.href.includes('cloudinary.com/video/upload')) {
+          el.remove()
+        }
+      })
+    }
+  }, [])
+
   const handlePrev = useCallback(() => {
     // 暂停当前视频
     const video = videoRef.current
@@ -217,17 +260,16 @@ const Feed = () => {
     setCurrentIndex(prev => (prev + 1) % allPosts.length)
   }, [allPosts.length])
 
-  // 播放/暂停功能（必须在 handleKeyDown 之前定义）
+  // 播放/暂停功能
   const handleVideoClick = useCallback(() => {
     const video = videoRef.current
     const currentMedia = allPosts[currentIndex]?.media
     if (!video || !isVideo(currentMedia)) return
 
-    // 用户交互时显示 UI
     showUIWithTimeout()
 
-    const isPaused = video.paused || video.ended
-    if (isPaused) {
+    if (video.paused || video.ended) {
+      video.muted = true
       video.play().then(() => {
         setVideoPlaying(true)
       }).catch(() => {})
@@ -236,7 +278,6 @@ const Feed = () => {
       setVideoPlaying(false)
     }
 
-    // 立即显示播放状态指示器
     setShowPlayIndicator(true)
     if (playIndicatorTimer.current) clearTimeout(playIndicatorTimer.current)
     playIndicatorTimer.current = setTimeout(() => setShowPlayIndicator(false), 800)
@@ -301,37 +342,34 @@ const Feed = () => {
     return () => window.removeEventListener('wheel', handleWheel)
   }, [handleWheel])
 
-  // 切换帖子时自动播放视频
+  // 切换帖子时确保视频播放
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const video = videoRef.current
-      const currentMedia = allPosts[currentIndex]?.media
-      if (!video || !currentMedia || !isVideo(currentMedia)) {
-        setVideoPlaying(false)
-        return
-      }
-      // 重置视频到开头
-      video.currentTime = 0
-      video.muted = false
-      video.volume = 0.8
-      video.play().then(() => {
-        setVideoPlaying(true)
-        setVideoError(false)
-      }).catch(err => {
-        console.error('[VIDEO] play() rejected:', err.name, err.message)
-        // 如果自动播放被阻止，尝试静音播放
-        video.muted = true
-        video.play().then(() => {
-          setVideoPlaying(true)
-          setVideoError(false)
-        }).catch(err2 => {
-          console.error('[VIDEO] muted play also rejected:', err2.name)
-          setVideoError(true)
-        })
+    const video = videoRef.current
+    const currentMedia = allPosts[currentIndex]?.media
+    if (!video || !currentMedia || !isVideo(currentMedia)) {
+      setVideoPlaying(false)
+      setVideoLoading(false)
+      return
+    }
+
+    setVideoLoading(true)
+    setVideoError(false)
+
+    // 使用小延迟确保 DOM 已挂载（处理 AnimatePresence 动画时序）
+    const playTimer = setTimeout(() => {
+      const v = videoRef.current
+      if (!v) return
+      v.currentTime = 0
+      v.muted = true
+      v.play().catch(err => {
+        console.error('[VIDEO] play rejected:', err.name)
+        setVideoError(true)
+        setVideoLoading(false)
       })
-    }, 150)
-    return () => clearTimeout(timer)
-  }, [currentIndex, allPosts])
+    }, 50)
+
+    return () => clearTimeout(playTimer)
+  }, [currentIndex])
 
   const handlePurchase = async () => {
     if (!selectedProduct) return
@@ -355,23 +393,11 @@ const Feed = () => {
 
   const currentPost = allPosts[currentIndex]
   const petEmoji = currentPost?.features?.petType ? getPetAvatar(currentPost.features.petType) : currentPost?.user?.avatar || '🐾'
-  const isCurrentVideo = isVideo(currentPost?.media)
   const postId = currentPost?.id || ''
   const displayLikes = postLikes[postId] || currentPost?.likes || 0
   const displayFavorites = postFavorites[postId] || currentPost?.favorites || 0
 
-  // 初始自动播放
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const video = videoRef.current
-      if (video && isVideo(allPosts[0]?.media)) {
-        video.muted = false
-        video.volume = 0.8
-        video.play().catch(err => console.log('[VIDEO] initial play failed:', err))
-      }
-    }, 200)
-    return () => clearTimeout(timer)
-  }, [])
+
 
   // 页面可见性处理
   useEffect(() => {
@@ -382,9 +408,8 @@ const Feed = () => {
       } else if (video && !document.hidden) {
         const currentMedia = allPosts[currentIndex]?.media
         if (isVideo(currentMedia)) {
-          video.muted = false
-          video.volume = 0.8
-          video.play().catch(err => console.log('Play on visibility change:', err))
+          video.muted = true
+          video.play().catch(() => {})
         }
       }
     }
@@ -418,13 +443,13 @@ const Feed = () => {
         }
       }}
     >
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           <motion.div
             key={currentPost.id}
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -100 }}
-            transition={{ duration: 0.4 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
             className="absolute inset-0"
           >
             <div className="absolute inset-0">
@@ -433,21 +458,38 @@ const Feed = () => {
                   <div className="absolute inset-0 flex items-center justify-center bg-black" style={{ zIndex: 10 }} onClick={(e) => { e.stopPropagation(); handleVideoClick(); }}>
                     <video
                       ref={videoRef}
-                      src={currentPost.media}
+                      src={optimizeCloudinaryUrl(currentPost.media)}
                       crossOrigin="anonymous"
                       autoPlay
+                      muted
                       loop
                       playsInline
-                      preload="auto"
+                      preload="metadata"
                       style={{ maxWidth: '100%', maxHeight: '100%', width: 'auto', height: 'auto', objectFit: 'contain', display: 'block' }}
-                      onPlay={() => { setVideoPlaying(true); setVideoError(false); }}
+                      onPlay={() => { setVideoPlaying(true); setVideoError(false); setVideoLoading(false); }}
                       onPause={() => setVideoPlaying(false)}
+                      onWaiting={() => setVideoLoading(true)}
+                      onCanPlay={() => setVideoLoading(false)}
+                      onLoadedData={() => setVideoLoading(false)}
+                      onLoadStart={() => setVideoLoading(true)}
                       onEnded={() => { videoRef.current?.play().catch(() => {}); }}
                       onError={(e) => {
                         console.error('[VIDEO] error:', e.currentTarget.error?.code, e.currentTarget.error?.message)
                         setVideoError(true)
+                        setVideoLoading(false)
                       }}
                     />
+                    {/* 视频加载中指示器 */}
+                    {videoLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 15 }}>
+                        <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                          <svg className="animate-spin h-8 w-8 text-white" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
                     {/* 播放/暂停指示器 */}
                     <AnimatePresence>
                       {showPlayIndicator && (
@@ -465,17 +507,33 @@ const Feed = () => {
                         </motion.div>
                       )}
                     </AnimatePresence>
-                    {/* 视频错误提示 */}
+                    {/* 视频错误提示 + 重试 */}
                     <AnimatePresence>
                       {videoError && (
                         <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="absolute bottom-4 left-4 right-4 p-3 bg-red-500/80 text-white text-sm rounded-xl text-center"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 20 }}
+                          className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black/60"
                           style={{ zIndex: 25 }}
                         >
-                          {t('feed.videoError')}
+                          <p className="text-white/80 text-sm">{t('feed.videoError')}</p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setVideoError(false)
+                              setVideoLoading(true)
+                              const v = videoRef.current
+                              if (v) {
+                                v.load()
+                                v.muted = true
+                                v.play().catch(() => setVideoError(true))
+                              }
+                            }}
+                            className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-full text-sm transition-all"
+                          >
+                            Retry / 重试
+                          </button>
                         </motion.div>
                       )}
                     </AnimatePresence>
