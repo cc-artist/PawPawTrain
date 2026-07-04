@@ -44,17 +44,25 @@ const getPetAvatar = (petType) => {
   return avatars[petType] || '🐾'
 }
 
-// 将外部媒体 URL（Cloudinary/Unsplash）转为后端代理 URL，解决浏览器代理拦截问题
-const PROXY_HOSTS = ['res.cloudinary.com', 'images.unsplash.com', 'plus.unsplash.com']
+// 图片类外部URL（Unsplash等）走代理以绕过部分网络环境拦截
+// Cloudinary 视频直连！Vercel Serverless 有 4.5MB 响应体限制，视频代理会失败。
+// Cloudinary CDN 原生支持 CORS + Range 请求，浏览器可直连播放。
+const IMG_PROXY_HOSTS = ['images.unsplash.com', 'plus.unsplash.com']
 const proxyMediaUrl = (url) => {
   if (!url || typeof url !== 'string') return url
-  // blob: 和 data: 不需要代理
   if (url.startsWith('blob:') || url.startsWith('data:')) return url
-  // 已经是代理 URL 不需要重复处理
   if (url.startsWith('/api/media-proxy')) return url
   try {
     const u = new URL(url)
-    if (PROXY_HOSTS.some(h => u.hostname === h || u.hostname.endsWith('.' + h))) {
+    // Cloudinary 图片 → 走代理（可绕过部分网络环境限制）
+    if ((u.hostname === 'res.cloudinary.com' || u.hostname.endsWith('.res.cloudinary.com')) && url.includes('/image/upload/')) {
+      return `/api/media-proxy?url=${encodeURIComponent(url)}`
+    }
+    // Cloudinary 视频 → 直连不代理（Vercel 4.5MB 限制，视频远超此大小）
+    if (u.hostname === 'res.cloudinary.com' || u.hostname.endsWith('.res.cloudinary.com')) {
+      return url
+    }
+    if (IMG_PROXY_HOSTS.some(h => u.hostname === h || u.hostname.endsWith('.' + h))) {
       return `/api/media-proxy?url=${encodeURIComponent(url)}`
     }
   } catch {}
@@ -528,7 +536,7 @@ const Feed = () => {
                       muted
                       loop
                       playsInline
-                      preload="auto"
+                      preload="metadata"
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                       onLoadedMetadata={() => console.log('[VIDEO] metadata loaded:', currentPost?.id)}
                       onCanPlay={() => console.log('[VIDEO] can play:', currentPost?.id)}
