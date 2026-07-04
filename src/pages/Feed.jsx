@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import useStore from '../store/useStore'
 import { useUpload } from '../context/UploadContext'
@@ -362,16 +362,15 @@ const Feed = () => {
     return () => window.removeEventListener('wheel', handleWheel)
   }, [handleWheel])
 
-  // 切换帖子时自动播放视频
-  useEffect(() => {
+  // 切换帖子时自动播放视频（useLayoutEffect 确保在浏览器触发 canplay 前挂好监听器）
+  useLayoutEffect(() => {
     const video = videoRef.current
     const currentMedia = allPosts[currentIndex]?.media
     if (!video || !currentMedia || !isVideo(currentMedia)) {
       setVideoPlaying(false)
       return
     }
-    // video key 变化已触发元素重挂载，preload="auto" 正在后台加载
-    // 等待 canplay 事件后开始播放（始终保持 muted 确保跨浏览器兼容）
+
     const tryPlay = () => {
       video.play().then(() => {
         setVideoPlaying(true)
@@ -384,12 +383,22 @@ const Feed = () => {
         setVideoError(true)
       })
     }
+
+    // 如果浏览器已缓存且数据就绪，直接播放，无需等事件
+    if (video.readyState >= 2) {
+      tryPlay()
+      return
+    }
+
+    // 等待 canplay 事件
     video.addEventListener('canplay', tryPlay, { once: true })
-    // 超时兜底：5 秒后强制尝试
+
+    // 超时兜底：8 秒后强制尝试
     const fallbackTimer = setTimeout(() => {
       video.removeEventListener('canplay', tryPlay)
       tryPlay()
-    }, 5000)
+    }, 8000)
+
     return () => {
       video.removeEventListener('canplay', tryPlay)
       clearTimeout(fallbackTimer)
@@ -415,8 +424,8 @@ const Feed = () => {
     }, 2000)
   }
 
-  // 初始自动播放（muted 起播，保持 muted 确保跨浏览器兼容）
-  useEffect(() => {
+  // 初始自动播放（useLayoutEffect 确保监听器先于浏览器 canplay 事件挂载）
+  useLayoutEffect(() => {
     const video = videoRef.current
     if (!video || !isVideo(allPosts[0]?.media)) return
     const tryPlay = () => {
@@ -431,6 +440,9 @@ const Feed = () => {
       tryPlay()
     } else {
       video.addEventListener('canplay', tryPlay, { once: true })
+    }
+    return () => {
+      video.removeEventListener('canplay', tryPlay)
     }
   }, [])
 
