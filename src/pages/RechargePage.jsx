@@ -83,7 +83,7 @@ const RechargePage = () => {
 
         <div className="text-center mb-4">
           <h2 className="text-lg font-bold text-gray-700">Select Package</h2>
-          <p className="text-sm text-gray-500 mt-1">Points are credited instantly</p>
+          <p className="text-sm text-gray-500 mt-1">All packages support PayPal payment</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -128,34 +128,160 @@ const RechargePage = () => {
           ))}
         </div>
 
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleRecharge}
-          disabled={!selectedPackage || isRecharging}
-          className={`w-full py-4 rounded-2xl font-bold text-lg transition-all ${
-            selectedPackage && !isRecharging
-              ? 'gradient-bg text-white'
-              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          {isRecharging ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Recharging...
-            </span>
-          ) : (
-            `Recharge Now $${selectedPackage?.price || 0}`
-          )}
-        </motion.button>
+        {/* PayPal Payment Section — for $10 packages */}
+        {selectedPackage && selectedPackage.price === 10 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl p-6 mb-6 border-2 border-[#FFD140]/50"
+          >
+            <div className="text-center mb-4">
+              <div className="text-lg font-bold text-gray-800 mb-1">
+                PayPal Checkout — ${selectedPackage.price}.00 USD
+              </div>
+              <div className="text-sm text-gray-500">
+                {selectedPackage.coins} Points will be added to your account after payment
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <div>
+                <style>{`.pp-btn-recharge{text-align:center;border:none;border-radius:0.25rem;min-width:11.625rem;padding:0 2rem;height:2.625rem;font-weight:bold;background-color:#FFD140;color:#000000;font-family:"Helvetica Neue",Arial,sans-serif;font-size:1rem;line-height:1.25rem;cursor:pointer;}`}</style>
+                <form action="https://www.paypal.com/ncp/payment/T66CFEXS4JLGJ?locale.x=en_US" method="post" target="_blank" style={{display:'inline-grid',justifyItems:'center',alignContent:'start',gap:'0.5rem'}}>
+                  <input type="hidden" name="lc" value="US" />
+                  <input type="hidden" name="country.x" value="US" />
+                  <input className="pp-btn-recharge" type="submit" value="Pay with PayPal" />
+                  <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="cards" />
+                  <section style={{fontSize:'0.75rem',textAlign:'center'}}>
+                    Pay securely with <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="PayPal" style={{height:'0.875rem',verticalAlign:'middle'}} />
+                  </section>
+                </form>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-400 text-center mt-4">
+              You will be redirected to PayPal to complete your payment securely.
+              Points are credited automatically after successful payment.
+            </p>
+          </motion.div>
+        )}
+
+        {/* PayPal Payment Section — for $20 packages */}
+        {selectedPackage && selectedPackage.price === 20 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl p-6 mb-6 border-2 border-[#FFD140]/50"
+          >
+            <div className="text-center mb-4">
+              <div className="text-lg font-bold text-gray-800 mb-1">
+                PayPal Checkout — ${selectedPackage.price}.00 USD
+              </div>
+              <div className="text-sm text-gray-500">
+                {selectedPackage.coins} Points will be added to your account after payment
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <div>
+                <style>{`.pp-btn-recharge-20{text-align:center;border:none;border-radius:0.25rem;min-width:11.625rem;padding:0 2rem;height:2.625rem;font-weight:bold;background-color:#FFD140;color:#000000;font-family:"Helvetica Neue",Arial,sans-serif;font-size:1rem;line-height:1.25rem;cursor:pointer;}`}</style>
+                <form action="https://www.paypal.com/ncp/payment/5X7WAVHXUMJC2?locale.x=en_US" method="post" target="_blank" style={{display:'inline-grid',justifyItems:'center',alignContent:'start',gap:'0.5rem'}}>
+                  <input type="hidden" name="lc" value="US" />
+                  <input type="hidden" name="country.x" value="US" />
+                  <input className="pp-btn-recharge-20" type="submit" value="Pay with PayPal" />
+                  <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="cards" />
+                  <section style={{fontSize:'0.75rem',textAlign:'center'}}>
+                    Pay securely with <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="PayPal" style={{height:'0.875rem',verticalAlign:'middle'}} />
+                  </section>
+                </form>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-400 text-center mt-4">
+              You will be redirected to PayPal to complete your payment securely.
+              Points are credited automatically after successful payment.
+            </p>
+          </motion.div>
+        )}
+
+        {/* PayPal Payment Section — for $50 packages */}
+        {selectedPackage && selectedPackage.price === 50 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl p-6 mb-6 border-2 border-[#FFD140]/50"
+          >
+            <div className="text-center mb-4">
+              <div className="text-lg font-bold text-gray-800 mb-1">
+                PayPal Checkout — ${selectedPackage.price}.00 USD
+              </div>
+              <div className="text-sm text-gray-500">
+                {selectedPackage.coins} Points will be added to your account after payment
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <div>
+                <style>{`.pp-btn-recharge-50{text-align:center;border:none;border-radius:0.25rem;min-width:11.625rem;padding:0 2rem;height:2.625rem;font-weight:bold;background-color:#FFD140;color:#000000;font-family:"Helvetica Neue",Arial,sans-serif;font-size:1rem;line-height:1.25rem;cursor:pointer;}`}</style>
+                <form action="https://www.paypal.com/ncp/payment/MRUXQP3UQ3TML?locale.x=en_US" method="post" target="_blank" style={{display:'inline-grid',justifyItems:'center',alignContent:'start',gap:'0.5rem'}}>
+                  <input type="hidden" name="lc" value="US" />
+                  <input type="hidden" name="country.x" value="US" />
+                  <input className="pp-btn-recharge-50" type="submit" value="Pay with PayPal" />
+                  <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="cards" />
+                  <section style={{fontSize:'0.75rem',textAlign:'center'}}>
+                    Pay securely with <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="PayPal" style={{height:'0.875rem',verticalAlign:'middle'}} />
+                  </section>
+                </form>
+              </div>
+            </div>
+
+            <p className="text-xs text-gray-400 text-center mt-4">
+              You will be redirected to PayPal to complete your payment securely.
+              Points are credited automatically after successful payment.
+            </p>
+          </motion.div>
+        )}
+
+        {/* Non-PayPal packages fallback button */}
+        {selectedPackage && selectedPackage.price !== 10 && selectedPackage.price !== 20 && selectedPackage.price !== 50 && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleRecharge}
+            disabled={isRecharging}
+            className={`w-full py-4 rounded-2xl font-bold text-lg transition-all ${
+              !isRecharging
+                ? 'gradient-bg text-white'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            {isRecharging ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Recharging...
+              </span>
+            ) : (
+              `Recharge Now $${selectedPackage.price}`
+            )}
+          </motion.button>
+        )}
+
+        {!selectedPackage && (
+          <div className="text-center py-6 text-gray-400 text-sm">
+            Select a package above to continue
+          </div>
+        )}
 
         <div className="mt-6 space-y-3">
           <div className="flex items-center justify-between text-sm text-gray-500">
             <span>💳 Supported Payment Methods</span>
             <div className="flex gap-2">
+              <span className="px-2 py-1 bg-[#FFD140]/20 text-gray-700 rounded-lg text-xs font-medium">PayPal</span>
               <span className="px-2 py-1 bg-green-100 text-green-600 rounded-lg text-xs">WeChat</span>
               <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded-lg text-xs">Alipay</span>
             </div>
