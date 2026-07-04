@@ -362,60 +362,38 @@ const Feed = () => {
     return () => window.removeEventListener('wheel', handleWheel)
   }, [handleWheel])
 
-  // 切换帖子时自动播放视频（稍长延迟确保 Vercel 冷启动完成）
+  // 切换帖子时自动播放视频
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const video = videoRef.current
-      const currentMedia = allPosts[currentIndex]?.media
-      if (!video || !currentMedia || !isVideo(currentMedia)) {
-        setVideoPlaying(false)
-        return
-      }
-      // 强制重新加载（处理 src 变更后浏览器未加载的情况）
-      try {
-        video.currentTime = 0
-        video.load()
-      } catch {}
-      // 尝试播放（autoPlay 属性会并行处理）
-      const tryPlay = () => {
-        video.play().then(() => {
-          setVideoPlaying(true)
-          setVideoError(false)
-          try { video.muted = false; video.volume = 0.8 } catch(e) {}
-          setShowPlayPauseBtn(true)
-          if (playPauseBtnTimer.current) clearTimeout(playPauseBtnTimer.current)
-          playPauseBtnTimer.current = setTimeout(() => setShowPlayPauseBtn(false), 2000)
-        }).catch(err => {
-          console.error('[VIDEO] play() rejected:', err.name, err.message)
-          // 如果是 NotAllowedError，重试一次（Vercel 延迟加载）
-          if (err.name === 'NotAllowedError') {
-            setTimeout(() => {
-              video.muted = true
-              video.play().then(() => {
-                setVideoPlaying(true)
-                setVideoError(false)
-                try { video.muted = false; video.volume = 0.8 } catch(e) {}
-              }).catch(() => setVideoError(true))
-            }, 1000)
-          } else {
-            setVideoError(true)
-          }
-        })
-      }
-      // 等待视频数据开始加载后再尝试播放
-      if (video.readyState >= 2) {
-        tryPlay()
-      } else {
-        video.addEventListener('canplay', tryPlay, { once: true })
-        // 超时兜底：3 秒后强制尝试
-        const fallbackTimer = setTimeout(() => {
-          video.removeEventListener('canplay', tryPlay)
-          tryPlay()
-        }, 3000)
-        video.addEventListener('canplay', () => clearTimeout(fallbackTimer), { once: true })
-      }
-    }, 1500)
-    return () => clearTimeout(timer)
+    const video = videoRef.current
+    const currentMedia = allPosts[currentIndex]?.media
+    if (!video || !currentMedia || !isVideo(currentMedia)) {
+      setVideoPlaying(false)
+      return
+    }
+    // video key 变化已触发元素重挂载，preload="auto" 正在后台加载
+    // 等待 canplay 事件后开始播放（始终保持 muted 确保跨浏览器兼容）
+    const tryPlay = () => {
+      video.play().then(() => {
+        setVideoPlaying(true)
+        setVideoError(false)
+        setShowPlayPauseBtn(true)
+        if (playPauseBtnTimer.current) clearTimeout(playPauseBtnTimer.current)
+        playPauseBtnTimer.current = setTimeout(() => setShowPlayPauseBtn(false), 2000)
+      }).catch(err => {
+        console.error('[VIDEO] play() rejected:', err.name, err.message)
+        setVideoError(true)
+      })
+    }
+    video.addEventListener('canplay', tryPlay, { once: true })
+    // 超时兜底：5 秒后强制尝试
+    const fallbackTimer = setTimeout(() => {
+      video.removeEventListener('canplay', tryPlay)
+      tryPlay()
+    }, 5000)
+    return () => {
+      video.removeEventListener('canplay', tryPlay)
+      clearTimeout(fallbackTimer)
+    }
   }, [currentIndex])
 
   const handlePurchase = async () => {
@@ -437,23 +415,23 @@ const Feed = () => {
     }, 2000)
   }
 
-  // 初始自动播放（muted 起播 → 成功后恢复有声）
+  // 初始自动播放（muted 起播，保持 muted 确保跨浏览器兼容）
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const video = videoRef.current
-      if (video && isVideo(allPosts[0]?.media)) {
-        video.muted = true
-        video.play().then(() => {
-          setVideoPlaying(true)
-          try { video.muted = false; video.volume = 0.8 } catch(e) {}
-          // 初次显示播放/暂停按钮
-          setShowPlayPauseBtn(true)
-          if (playPauseBtnTimer.current) clearTimeout(playPauseBtnTimer.current)
-          playPauseBtnTimer.current = setTimeout(() => setShowPlayPauseBtn(false), 2000)
-        }).catch(err => console.log('[VIDEO] initial play failed:', err))
-      }
-    }, 200)
-    return () => clearTimeout(timer)
+    const video = videoRef.current
+    if (!video || !isVideo(allPosts[0]?.media)) return
+    const tryPlay = () => {
+      video.play().then(() => {
+        setVideoPlaying(true)
+        setShowPlayPauseBtn(true)
+        if (playPauseBtnTimer.current) clearTimeout(playPauseBtnTimer.current)
+        playPauseBtnTimer.current = setTimeout(() => setShowPlayPauseBtn(false), 2000)
+      }).catch(err => console.log('[VIDEO] initial play failed:', err))
+    }
+    if (video.readyState >= 2) {
+      tryPlay()
+    } else {
+      video.addEventListener('canplay', tryPlay, { once: true })
+    }
   }, [])
 
   const currentPost = allPosts[currentIndex]
@@ -532,13 +510,13 @@ const Feed = () => {
                       key={currentPost?.id || currentIndex}
                       ref={videoRef}
                       src={currentPost.media}
-                      autoPlay
                       muted
                       loop
                       playsInline
-                      preload="metadata"
+                      preload="auto"
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                       onLoadedMetadata={() => console.log('[VIDEO] metadata loaded:', currentPost?.id)}
+                      onLoadedData={() => console.log('[VIDEO] data loaded:', currentPost?.id)}
                       onCanPlay={() => console.log('[VIDEO] can play:', currentPost?.id)}
                       onPlay={() => { setVideoPlaying(true); setVideoError(false); }}
                       onPause={() => setVideoPlaying(false)}
