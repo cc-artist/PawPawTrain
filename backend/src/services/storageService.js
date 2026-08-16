@@ -37,6 +37,7 @@ const DATA_FILES = {
   userPreferences: 'user_preferences.json',
   workshopCreations: 'workshop_creations.json',
   auditLogs: 'audit_logs.json',
+  gameRecords: 'game_records.json',
 };
 
 /**
@@ -97,8 +98,9 @@ const storageService = {
     const rawUserPreferences = loadData('userPreferences');
     const rawWorkshopCreations = loadData('workshopCreations');
     const rawAuditLogs = loadData('auditLogs');
+    const rawGameRecords = loadData('gameRecords');
 
-    console.log(`  ✅ 用户: ${Object.keys(rawUsers).length} | 宠物记录: ${Object.keys(rawPets).length} | 帖子: ${rawPosts.length} | 创作: ${Object.keys(rawWorkshopCreations).length} | 审计: ${Array.isArray(rawAuditLogs) ? rawAuditLogs.length : 0}`);
+    console.log(`  ✅ 用户: ${Object.keys(rawUsers).length} | 宠物记录: ${Object.keys(rawPets).length} | 帖子: ${rawPosts.length} | 创作: ${Object.keys(rawWorkshopCreations).length} | 审计: ${Array.isArray(rawAuditLogs) ? rawAuditLogs.length : 0} | 游戏记录: ${Array.isArray(rawGameRecords) ? rawGameRecords.length : 0}`);
 
     return {
       users: rawUsers,
@@ -113,6 +115,7 @@ const storageService = {
       userPreferences: rawUserPreferences,
       workshopCreations: rawWorkshopCreations,
       auditLogs: rawAuditLogs,
+      gameRecords: Array.isArray(rawGameRecords) ? rawGameRecords : [],
     };
   },
 
@@ -198,6 +201,13 @@ const storageService = {
    */
   saveAuditLogs(logsArray) {
     saveData('auditLogs', logsArray);
+  },
+
+  /**
+   * 保存游戏对局记录
+   */
+  saveGameRecords(recordsArray) {
+    saveData('gameRecords', recordsArray);
   },
 
   /**

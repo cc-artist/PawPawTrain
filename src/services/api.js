@@ -117,4 +117,11 @@ export const workshopAPI = {
   getProductTypes: () => api.get('/workshop/product-types'),
 }
 
+// 宠物叫声对战游戏API
+export const gameAPI = {
+  saveRecord: (data) => api.post('/game/record', data),
+  getLeaderboard: () => api.get('/game/leaderboard'),
+  getMyRecords: () => api.get('/game/my'),
+}
+
 export default api

@@ -22,6 +22,7 @@ import TrainingHistory from './pages/TrainingHistory'
 import PetsPage from './pages/PetsPage'
 import GenerationHistory from './pages/GenerationHistory'
 import AIWorkshop from './pages/AIWorkshop'
+import GamePage from './pages/GamePage'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminLogin from './pages/AdminLoginPage'
 import { UploadProvider } from './context/UploadContext'
@@ -387,6 +388,14 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <RechargePage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/game" 
+              element={
+                <ProtectedRoute>
+                  <GamePage />
                 </ProtectedRoute>
               } 
             />

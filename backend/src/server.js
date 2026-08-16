@@ -14,6 +14,7 @@ import createPostsRoutes from './routes/posts.js';
 import createWorkshopRoutes from './routes/workshop.js';
 import createAdminRoutes from './routes/admin.js';
 import createDatasetRoutes from './routes/dataset.js';
+import createGameRoutes from './routes/game.js';
 
 // 加载环境变量（兼容 Vercel 和本地环境）
 try {
@@ -48,6 +49,7 @@ const dataStore = {
   userPreferences: persistedData.userPreferences,
   workshopCreations: persistedData.workshopCreations || {},
   auditLogs: persistedData.auditLogs || [],
+  gameRecords: persistedData.gameRecords || [],
 };
 
 // 设置推荐系统的持久化回调（当推荐数据变更时同步到 dataStore）
@@ -80,6 +82,7 @@ app.use('/api/posts', createPostsRoutes(dataStore));
 app.use('/api/workshop', createWorkshopRoutes(dataStore));
 app.use('/api/admin', createAdminRoutes(dataStore));
 app.use('/api/admin/dataset', createDatasetRoutes(dataStore));
+app.use('/api/game', createGameRoutes(dataStore));
 
 // ========== 媒体代理：绕过浏览器代理限制，由后端直接拉取 Cloudinary/Unsplash 等外部资源 ==========
 app.get('/api/media-proxy', async (req, res) => {
@@ -181,6 +184,7 @@ if (!process.env.VERCEL) {
     storageService.saveUserPreferences(dataStore.userPreferences);
     storageService.saveWorkshopCreations(dataStore.workshopCreations);
     storageService.saveAuditLogs(dataStore.auditLogs);
+    storageService.saveGameRecords(dataStore.gameRecords);
   }, 30000);
 }
 

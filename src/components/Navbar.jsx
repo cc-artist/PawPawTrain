@@ -134,6 +134,35 @@ const pagePreviews = {
       </div>
     )
   },
+  '/game': {
+    title: '🎮 Game',
+    titleEn: 'Game',
+    description: 'Pet roar battle arena',
+    descriptionEn: 'Pet roar battle arena',
+    preview: (
+      <div className="p-3">
+        <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-500 rounded-xl p-3 text-center text-white mb-2">
+          <span className="text-3xl">🐉</span>
+          <div className="text-xs font-medium mt-1">Roar Battle Arena</div>
+          <div className="text-[10px] opacity-70">Match your voice to defeat rivals</div>
+        </div>
+        <div className="grid grid-cols-3 gap-1">
+          <div className="bg-purple-100 rounded-lg p-1 text-center">
+            <span className="text-sm">🐱</span>
+            <div className="text-[10px] text-purple-600">Kitten</div>
+          </div>
+          <div className="bg-purple-100 rounded-lg p-1 text-center">
+            <span className="text-sm">🐯</span>
+            <div className="text-[10px] text-purple-600">Tiger</div>
+          </div>
+          <div className="bg-purple-100 rounded-lg p-1 text-center">
+            <span className="text-sm">🐉</span>
+            <div className="text-[10px] text-purple-600">Dragon</div>
+          </div>
+        </div>
+      </div>
+    )
+  },
   '/profile': {
     title: '👤 Profile',
     titleEn: 'Profile',
@@ -234,6 +263,7 @@ const Navbar = () => {
     { path: '/', icon: '🏠', label: 'Home', labelEn: 'Home', locked: true },
     { path: '/feed', icon: '📖', label: 'Posts', labelEn: 'Posts', locked: false },
     { path: '/shop', icon: '🛍️', label: 'Shop', labelEn: 'Shop', locked: true },
+    { path: '/game', icon: '🎮', label: 'Game', labelEn: 'Game', locked: true },
     { path: '/social', icon: '👥', label: 'Social', labelEn: 'Social', locked: true },
     { path: '/profile', icon: '👤', label: 'Profile', labelEn: 'Profile', locked: true },
   ]
@@ -648,8 +678,8 @@ const Navbar = () => {
             </motion.div>
           </motion.button>
 
-          {/* Right 3 nav items: Social, Profile + Login/Logout */}
-          {navItems.slice(3, 5).map((item) => {
+          {/* Right 4 nav items: Game, Social, Profile + Login/Logout */}
+          {navItems.slice(3, 6).map((item) => {
             const isActive = location.pathname === item.path
             const isLocked = item.locked && !isLoggedIn
             
