@@ -4,15 +4,17 @@ import useStore from '../store/useStore'
 import { gameAPI } from '../services/api'
 
 // ========== 宠物数据（对手从弱到强，8 级难度递增） ==========
+// sounds: 该宠物标准叫声关键词（SpeechRecognition 命中判定"叫声像"）
+// soundsLabel: 展示给玩家模仿的目标叫声
 const OPPONENTS = [
-  { id: 'kitten', name: '奶猫', emoji: '🐱', hp: 60, atk: 8,  tier: 1, desc: '软萌新星，叫声奶声奶气', color: 'from-pink-400 to-rose-500' },
-  { id: 'puppy',  name: '奶狗', emoji: '🐶', hp: 80, atk: 11, tier: 2, desc: '活力汪汪，初生牛犊不怕虎', color: 'from-amber-400 to-orange-500' },
-  { id: 'chick',  name: '战斗鸡', emoji: '🐔', hp: 95, atk: 14, tier: 3, desc: '咯咯咯，啄得你找不着北', color: 'from-yellow-400 to-lime-500' },
-  { id: 'fox',    name: '赤狐', emoji: '🦊', hp: 110, atk: 17, tier: 4, desc: '狡猾猎手，叫声狡黠', color: 'from-orange-400 to-red-500' },
-  { id: 'wolf',   name: '灰狼', emoji: '🐺', hp: 130, atk: 21, tier: 5, desc: '月下长嚎，荒野之王', color: 'from-gray-400 to-slate-600' },
-  { id: 'tiger',  name: '猛虎', emoji: '🐯', hp: 150, atk: 26, tier: 6, desc: '森林霸主，一声虎啸震山林', color: 'from-amber-500 to-orange-600' },
-  { id: 'dino',   name: '霸王龙', emoji: '🦖', hp: 175, atk: 32, tier: 7, desc: '远古霸主，嘶吼如雷', color: 'from-emerald-500 to-green-700' },
-  { id: 'dragon', name: '神龙', emoji: '🐉', hp: 200, atk: 40, tier: 8, desc: '终极传说，龙吟震九天', color: 'from-cyan-400 to-blue-600' },
+  { id: 'kitten', name: '奶猫', emoji: '🐱', hp: 60, atk: 8,  tier: 1, desc: '软萌新星，叫声奶声奶气', color: 'from-pink-400 to-rose-500', sounds: ['喵', '咪'], soundsLabel: '喵~喵~' },
+  { id: 'puppy',  name: '奶狗', emoji: '🐶', hp: 80, atk: 11, tier: 2, desc: '活力汪汪，初生牛犊不怕虎', color: 'from-amber-400 to-orange-500', sounds: ['汪', '旺'], soundsLabel: '汪汪汪！' },
+  { id: 'chick',  name: '战斗鸡', emoji: '🐔', hp: 95, atk: 14, tier: 3, desc: '咯咯咯，啄得你找不着北', color: 'from-yellow-400 to-lime-500', sounds: ['咯', '咕', '喔'], soundsLabel: '咯咯咯！' },
+  { id: 'fox',    name: '赤狐', emoji: '🦊', hp: 110, atk: 17, tier: 4, desc: '狡猾猎手，叫声狡黠', color: 'from-orange-400 to-red-500', sounds: ['呜', '嗷', '喔'], soundsLabel: '嗷呜~' },
+  { id: 'wolf',   name: '灰狼', emoji: '🐺', hp: 130, atk: 21, tier: 5, desc: '月下长嚎，荒野之王', color: 'from-gray-400 to-slate-600', sounds: ['嗷', '呜'], soundsLabel: '嗷呜——！' },
+  { id: 'tiger',  name: '猛虎', emoji: '🐯', hp: 150, atk: 26, tier: 6, desc: '森林霸主，一声虎啸震山林', color: 'from-amber-500 to-orange-600', sounds: ['吼', '嗷', '唬'], soundsLabel: '吼吼吼！' },
+  { id: 'dino',   name: '霸王龙', emoji: '🦖', hp: 175, atk: 32, tier: 7, desc: '远古霸主，嘶吼如雷', color: 'from-emerald-500 to-green-700', sounds: ['吼', '嘶', '哈'], soundsLabel: '吼嘶——！' },
+  { id: 'dragon', name: '神龙', emoji: '🐉', hp: 200, atk: 40, tier: 8, desc: '终极传说，龙吟震九天', color: 'from-cyan-400 to-blue-600', sounds: ['嗷', '吼', '鸣'], soundsLabel: '嗷呜吼——！' },
 ]
 
 // 玩家默认宠物（可用用户宠物 emoji 覆盖）
@@ -39,6 +41,9 @@ export default function GamePage() {
   const [loadingLb, setLoadingLb] = useState(false)
   const [micReady, setMicReady] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [speechSupported, setSpeechSupported] = useState(false) // 浏览器是否支持叫声识别
+  const [heardText, setHeardText] = useState('')               // 实时识别到的文本
+  const [matchMsg, setMatchMsg] = useState(null)               // "叫声像"命中提示
 
   const playerRef = useRef({ ...PLAYER_DEFAULT, emoji: pet?.emoji || pet?.type || '🐾', name: pet?.name || '我的宠物' })
   const energyRef = useRef(0)
@@ -46,10 +51,89 @@ export default function GamePage() {
   const audioCtxRef = useRef(null)
   const analyserRef = useRef(null)
   const rafRef = useRef(null)
+  const recognitionRef = useRef(null) // SpeechRecognition 实例
+  const lastHitRef = useRef(0)        // 上次命中时间戳
   const oppHpRef = useRef(0)
   const playerHpRef = useRef(0)
   const gameOverRef = useRef(false)
   const [isOver, setIsOver] = useState(false)
+
+  // ========== 叫声识别（SpeechRecognition，"像不像"判定） ==========
+  const stopRecognition = useCallback(() => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onresult = null
+        recognitionRef.current.onend = null
+        recognitionRef.current.onerror = null
+        recognitionRef.current.stop()
+      } catch (err) { /* already stopped */ }
+      recognitionRef.current = null
+    }
+    setHeardText('')
+  }, [])
+
+  const initRecognition = useCallback((opp) => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (!SR) {
+      setSpeechSupported(false)
+      return
+    }
+    try {
+      const rec = new SR()
+      rec.lang = 'zh-CN'
+      rec.continuous = true
+      rec.interimResults = true
+      rec.maxAlternatives = 3
+
+      rec.onresult = (e) => {
+        if (gameOverRef.current || !chargingRef.current) return
+        let text = ''
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          text += e.results[i][0].transcript
+        }
+        setHeardText(text.trim())
+        // 命中目标叫声关键词 → 判定"叫声像" → 能量大幅加成
+        const hit = opp.sounds.find((s) => text.includes(s))
+        if (hit && energyRef.current < 100) {
+          const now = Date.now()
+          // 1 秒内重复命中不重复计（防止 interim 结果重复触发）
+          if (now - lastHitRef.current > 1000) {
+            lastHitRef.current = now
+            const bonus = Math.min(30, 100 - energyRef.current)
+            energyRef.current = Math.min(100, energyRef.current + bonus)
+            setEnergy(energyRef.current)
+            setMatchMsg(`🎯 叫声超像「${opp.name}」！能量 +${Math.round(bonus)}`)
+            setTimeout(() => setMatchMsg(null), 2000)
+            setLog((l) => [...l, { who: 'player', text: `🎯 听到「${text.trim()}」—— 模仿${opp.name}太像了！能量+${Math.round(bonus)}` }])
+          }
+        }
+      }
+
+      rec.onerror = (e) => {
+        // not-allowed / service-not-allowed：权限拒绝，静默降级为音量模式
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+          stopRecognition()
+          setSpeechSupported(false)
+        }
+      }
+
+      rec.onend = () => {
+        // 浏览器超时自动结束后自动重启（战斗未结束且未手动停止）
+        if (!gameOverRef.current && recognitionRef.current) {
+          try {
+            if (recognitionRef.current === rec) rec.start()
+          } catch (err) { /* ignore */ }
+        }
+      }
+
+      recognitionRef.current = rec
+      rec.start()
+      setSpeechSupported(true)
+    } catch (err) {
+      console.warn('SpeechRecognition init failed:', err)
+      setSpeechSupported(false)
+    }
+  }, [stopRecognition])
 
   // ========== 麦克风音量检测 ==========
   const stopMic = useCallback(() => {
@@ -59,8 +143,9 @@ export default function GamePage() {
     }
     audioCtxRef.current = null
     analyserRef.current = null
+    stopRecognition()
     setMicReady(false)
-  }, [])
+  }, [stopRecognition])
 
   const initMic = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) return
@@ -111,13 +196,16 @@ export default function GamePage() {
     playerHpRef.current = 150
     oppHpRef.current = opp.hp
     setRound(1)
-    setLog([{ who: 'system', text: `⚔️ 挑战开始！你的宠物 vs ${opp.name}` }])
+    setLog([{ who: 'system', text: `⚔️ 挑战开始！模仿「${opp.name}」的叫声来攻击它！` }])
     setResult(null)
     setWaves([])
+    setMatchMsg(null)
+    setHeardText('')
     gameOverRef.current = false
     setIsOver(false)
     setStage('battle')
     initMic()
+    initRecognition(opp)
   }
 
   // ========== 攻击波 ==========
@@ -259,6 +347,8 @@ export default function GamePage() {
   }, [stage, loadLeaderboard])
 
   const retry = () => {
+    stopMic()
+    stopRecognition()
     setStage('select')
     setOpponent(null)
     setResult(null)
@@ -464,8 +554,24 @@ export default function GamePage() {
             </div>
           </div>
 
+          {/* 目标叫声提示 */}
+          <div className="mt-4 text-center">
+            <div className="text-[11px] text-white/50">模仿它的叫声，叫得越像攻击越猛：</div>
+            <div className={`inline-block mt-1 px-4 py-1 rounded-full bg-gradient-to-r ${opp.color} text-white font-bold text-base tracking-widest`}>
+              {opp.soundsLabel}
+            </div>
+            {speechSupported && heardText && (
+              <div className="mt-1.5 text-[11px] text-cyber-blue/80">
+                识别到：<span className="text-cyber-yellow font-bold">「{heardText}」</span>
+              </div>
+            )}
+            {!speechSupported && (
+              <div className="mt-1.5 text-[10px] text-white/35">当前浏览器不支持叫声识别，仅按吼叫音量判定</div>
+            )}
+          </div>
+
           {/* 蓄力能量条 */}
-          <div className="mt-4">
+          <div className="mt-3">
             <div className="flex justify-between text-[10px] mb-1">
               <span>⚡ 蓄力能量</span>
               <span>{Math.round(energy)}%</span>
@@ -478,6 +584,26 @@ export default function GamePage() {
               />
             </div>
           </div>
+
+          {/* "叫声像"命中提示 */}
+          <AnimatePresence>
+            {matchMsg && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="mt-3 text-center"
+              >
+                <motion.span
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 0.5, repeat: Infinity }}
+                  className="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold text-sm shadow-lg shadow-orange-500/30"
+                >
+                  {matchMsg}
+                </motion.span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* 战斗信息流 */}
           <div className="mt-3 h-24 glass-effect rounded-xl border border-white/10 p-2 overflow-y-auto">
@@ -508,7 +634,7 @@ export default function GamePage() {
                 className="w-40 h-40 rounded-full bg-gradient-to-br from-cyber-blue to-cyber-purple flex flex-col items-center justify-center shadow-2xl shadow-cyber-blue/50 border-4 border-white/20 active:from-cyber-pink active:to-red-500"
               >
                 <span className="text-4xl">📢</span>
-                <span className="font-bold text-sm mt-1">吼！！！</span>
+                <span className="font-bold text-sm mt-1">学它叫！</span>
                 <span className="text-[10px] opacity-80">{Math.round(energy)}% 松开发射</span>
               </motion.button>
             ) : (
@@ -519,8 +645,8 @@ export default function GamePage() {
                 className="w-40 h-40 rounded-full bg-gradient-to-br from-emerald-400 to-cyber-blue flex flex-col items-center justify-center shadow-2xl border-4 border-white/20"
               >
                 <span className="text-4xl">🐾</span>
-                <span className="font-bold text-sm mt-1">按住吼叫！</span>
-                <span className="text-[10px] opacity-80">用力学它的叫声</span>
+                <span className="font-bold text-sm mt-1">按住学它叫！</span>
+                <span className="text-[10px] opacity-80">叫得越像越厉害</span>
               </motion.button>
             )}
           </div>
