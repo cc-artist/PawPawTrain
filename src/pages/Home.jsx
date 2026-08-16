@@ -548,6 +548,17 @@ const Home = () => {
       <div className="p-4 glass-effect border-b border-cyber-blue/30">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            {/* 返回主菜单按钮：Home 页为全屏滚动容器，底部导航栏自动隐藏后难以唤回，提供固定出口 */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/feed')}
+              className="w-10 h-10 rounded-full bg-cyber-dark/80 border border-cyber-blue/50 flex items-center justify-center text-lg text-cyber-blue hover:border-cyber-pink/50 hover:text-cyber-pink transition-all flex-shrink-0"
+              aria-label="Back to menu"
+              title="Back to menu"
+            >
+              ←
+            </motion.button>
             <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${stageInfo.color} flex items-center justify-center text-2xl shadow-lg`}>
               {getPetEmoji(pet.type)}
             </div>
