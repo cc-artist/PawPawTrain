@@ -8,3 +8,8 @@ feed-page.png
 frontend/
 backend/src/uploads/
 backend/.env
+.codebuddy/
+backend/logs/
+PawPawTrain/
+PawPay Train/
+temp_*.jsx

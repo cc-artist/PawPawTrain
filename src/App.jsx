@@ -27,6 +27,8 @@ import AdminDashboard from './pages/AdminDashboard'
 import AdminLogin from './pages/AdminLoginPage'
 import { UploadProvider } from './context/UploadContext'
 import PetPostUploader from './components/PetPostUploader'
+import AudioStatusBadge from './components/AudioStatusBadge'
+import { bindGlobalUnlock } from './utils/audio'
 import { useUpload } from './context/UploadContext'
 import useStore from './store/useStore'
 import { authAPI } from './services/api'
@@ -240,6 +242,7 @@ function AppContent() {
   useEffect(() => {
     initializeSession()
     initializePageStates()
+    bindGlobalUnlock() // 任意用户手势自动解锁音频，解决全站无声
     
     const handleBeforeUnload = () => {
       clearAllPageStates()
@@ -403,6 +406,7 @@ function AppContent() {
         </div>
         {!isAdminRoute && <Navbar />}
         {!isAdminRoute && <UploadModal />}
+        <AudioStatusBadge />
       </UploadProvider>
     </PostsProvider>
   )

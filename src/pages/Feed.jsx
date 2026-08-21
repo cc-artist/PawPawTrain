@@ -79,6 +79,10 @@ const Feed = () => {
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [videoPlaying, setVideoPlaying] = useState(false)
   const [videoError, setVideoError] = useState(false)
+  // 视频静音为「受控状态」：JSX 中写死 muted 会导致点击取消静音后，
+  // setState 触发重渲染时被 React 重新置回 true（视频永远静音）。
+  // 改为受控后，点击视频即可真正开启声音。
+  const [videoMuted, setVideoMuted] = useState(true)
   const [showPlayIndicator, setShowPlayIndicator] = useState(false)
   // UI 始终可见
   const [showUI, setShowUI] = useState(true)
@@ -283,7 +287,9 @@ const Feed = () => {
     showUIWithTimeout()
 
     if (video.paused || video.ended) {
+      // 同步操作 DOM + 更新受控 state，防止重渲染时 React 将 muted 重置回 true
       video.muted = false
+      setVideoMuted(false)
       video.volume = 0.8
       video.play().then(() => {
         setVideoPlaying(true)
@@ -522,7 +528,7 @@ const Feed = () => {
                       key={currentPost?.id || currentIndex}
                       ref={videoRef}
                       src={currentPost.media}
-                      muted
+                      muted={videoMuted}
                       loop
                       playsInline
                       preload="auto"
@@ -598,6 +604,7 @@ const Feed = () => {
                               if (v) {
                                 v.load()
                                 v.muted = true
+                                setVideoMuted(true)
                                 v.play().catch(() => setVideoError(true))
                               }
                             }}

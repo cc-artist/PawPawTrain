@@ -119,6 +119,7 @@ export const workshopAPI = {
 
 // 宠物叫声对战游戏API
 export const gameAPI = {
+  startGame: (data) => api.post('/game/start', data),
   saveRecord: (data) => api.post('/game/record', data),
   getLeaderboard: () => api.get('/game/leaderboard'),
   getMyRecords: () => api.get('/game/my'),

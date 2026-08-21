@@ -9,6 +9,7 @@ import PetTasks from '../components/PetTasks'
 import { useUpload } from '../context/UploadContext'
 import { claimTrigger } from '../utils/taskTracker'
 import { t } from '../utils/i18n'
+import { unlockAudio } from '../utils/audio'
 
 const petTypeEmojis = {
   dog: '🐶',
