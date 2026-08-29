@@ -95,12 +95,16 @@ const getCloudinaryTranscodeFallback = (inputUrl, preset = '720p') => {
     const insert = `vc_h264,${sizePreset}`
     return p2 ? `${p1}${insert}/${p2}` : `${p1}${insert}/`
   })
-  // 5) 重新套回同源代理（保证零直连，因为 proxyMediaUrl 对已代理的会直接 return，这里要显式 encode）
-  if (transcodeRaw.startsWith('http')) {
-    return `/api/media-proxy?url=${encodeURIComponent(transcodeRaw)}`
-  }
+  // 5) 返回裸 Cloudinary 转码 URL（不再套 proxy）
+  // 由 proxyMediaUrl 根据 import.meta.env.PROD 决定是否套 /api/media-proxy：
+  //   - 生产(Vercel)：直连 Cloudinary CDN（规避 serverless 4.5MB 响应体限制）
+  //   - 开发：走本地 /api/media-proxy（无大小限制）
   return transcodeRaw
 }
+
+// Vite 生产构建 = Vercel 部署；开发模式 DEV
+const IS_PROD = import.meta.env.PROD
+const wrapProxy = (rawUrl) => `/api/media-proxy?url=${encodeURIComponent(rawUrl)}`
 
 const proxyMediaUrl = (url) => {
   if (!url || typeof url !== 'string') return url
@@ -110,36 +114,29 @@ const proxyMediaUrl = (url) => {
     const u = new URL(url)
     const isVideo = VIDEO_EXTS.test(u.pathname) || url.includes('/video/upload/')
     if (isVideo) {
-      // 🔧 2026-08-29「只有声音没画面」第二道修复：
-      // 经过实机字节探测，用户 Cloudinary 原始 mp4 的 ftyp/box 结构正确、
-      // 后端 media-proxy 的 Content-Type=video/mp4 / Range=206 也完全正确，
-      // 但 headless/软解环境 + 部分老旧 Chromium GPU 驱动仍然解不出 raw 源的 video track（videoWidth=0）。
-      // 所以对于 Cloudinary 的视频，在代理前**默认先套用 Cloudinary 官方 vc_h264 强制转码**：
-      //   vc_h264,w_720,h_720,c_limit,q_auto
-      // 这样保证：
-      //   1) 输出统一 H.264 baseline profile（所有 Chromium/软解都 100% 能解 → videoWidth>0）
-      //   2) 最高 720p，码率下降 50%+，软解也能实时出画面
-      //   3) 依然走 /api/media-proxy 同源代理（零直连，继续规避 CORS/CDN 截断）
-      //   4) 转码源错误时，错误面板里"🔁 H.264 转码源重试"按钮再把 preset 降到 480p 兜底
+      // Cloudinary 视频默认先套 vc_h264 720p 转码（解决软解 videoWidth=0），
+      // 再根据环境决定是否套 /api/media-proxy：
+      //   生产：直连 Cloudinary CDN（Vercel serverless 有 4.5MB 响应体限制，大视频必被截断）
+      //   开发：走本地后端 proxy（无大小限制，且便于调试）
       if (u.hostname === 'res.cloudinary.com' || u.hostname.endsWith('.res.cloudinary.com')) {
         const transcodeRaw = getCloudinaryTranscodeFallback(url, '720p')
         if (transcodeRaw && transcodeRaw !== url) {
-          return transcodeRaw // getCloudinaryTranscodeFallback 内部已套 /api/media-proxy
+          return IS_PROD ? transcodeRaw : wrapProxy(transcodeRaw)
         }
       }
-      // 非 Cloudinary 外部视频：走同源代理
-      return `/api/media-proxy?url=${encodeURIComponent(url)}`
+      // 非 Cloudinary 外部视频：生产直连，开发走 proxy
+      return IS_PROD ? url : wrapProxy(url)
     }
-    // Cloudinary 图片 → 走代理
+    // Cloudinary 图片 → 生产直连 CDN（图片小），开发走 proxy
     if ((u.hostname === 'res.cloudinary.com' || u.hostname.endsWith('.res.cloudinary.com')) && url.includes('/image/upload/')) {
-      return `/api/media-proxy?url=${encodeURIComponent(url)}`
+      return IS_PROD ? url : wrapProxy(url)
     }
-    // Cloudinary 其它资源（文档/生成图等）保守走代理
+    // Cloudinary 其它资源
     if (u.hostname === 'res.cloudinary.com' || u.hostname.endsWith('.res.cloudinary.com')) {
-      return `/api/media-proxy?url=${encodeURIComponent(url)}`
+      return IS_PROD ? url : wrapProxy(url)
     }
     if (IMG_PROXY_HOSTS.some(h => u.hostname === h || u.hostname.endsWith('.' + h))) {
-      return `/api/media-proxy?url=${encodeURIComponent(url)}`
+      return IS_PROD ? url : wrapProxy(url)
     }
   } catch {}
   return url
@@ -1061,7 +1058,7 @@ const Feed = () => {
                                 setVideoErrorMsg('')
                                 setTranscodeTier(preset)
                                 if (v && fallback) {
-                                  v.src = fallback
+                                  v.src = proxyMediaUrl(fallback)
                                   applyVideoMuted(true)
                                   v.load()
                                   v.play().then(() => { setVideoPlaying(true); restoreUserMutedAfterPlay(); }).catch(() => setVideoError(true))
@@ -1107,7 +1104,9 @@ const Feed = () => {
                                 const v = videoRef.current
                                 const src = currentPost?.media || ''
                                 if (v && src.startsWith('http')) {
-                                  const proxyUrl = '/api/media-proxy?url=' + encodeURIComponent(src)
+                                  // 用 vc_h264 转码源走 proxy（更小，更可能低于 Vercel 4.5MB 限制）
+                                  const transcodeSrc = getCloudinaryTranscodeFallback(src, transcodeTier === '480p' ? '480p' : '720p')
+                                  const proxyUrl = '/api/media-proxy?url=' + encodeURIComponent(transcodeSrc && transcodeSrc !== src ? transcodeSrc : src)
                                   v.src = proxyUrl
                                   applyVideoMuted(true)
                                   v.load()

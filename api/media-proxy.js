@@ -95,6 +95,27 @@ export default async function handler(req, res) {
     const contentType = upstream.headers['content-type'] || 'application/octet-stream';
     const contentLength = upstream.headers['content-length'];
 
+    // ====== 同步 backend/src/server.js 的 MIME 修复：
+    // 前端 <video> 的 src 是同源 /api/media-proxy?url=...（无 .mp4 扩展名），
+    // 当上游 Cloudinary 返回 application/octet-stream 等模糊 MIME 时，
+    // Chromium MIME sniff 会优先按音频解（只有声音 videoWidth=0）。
+    // 修复：按真实目标 URL 的扩展名/路径特征强制指定准确 MIME。
+    const pathname = urlObj.pathname || '';
+    const isVideoPath = pathname.includes('/video/upload/') || /\.(mp4|mov|webm|ogg|m4v|mkv|3gp)(\?|$)/i.test(pathname);
+    const isImagePath = pathname.includes('/image/upload/') || /\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/i.test(pathname);
+    let fixedContentType = contentType || '';
+    if (isVideoPath) {
+      const ext = (pathname.match(/\.(mp4|mov|webm|ogg|m4v|mkv|3gp)(\?|$)/i) || [])[1]?.toLowerCase() || 'mp4';
+      const mimeMap = { mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', ogg: 'video/ogg', m4v: 'video/x-m4v', mkv: 'video/x-matroska', '3gp': 'video/3gpp' };
+      fixedContentType = mimeMap[ext] || 'video/mp4';
+    } else if (isImagePath) {
+      const ext = (pathname.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/i) || [])[1]?.toLowerCase() || 'jpeg';
+      const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif' };
+      fixedContentType = mimeMap[ext] || 'image/jpeg';
+    } else if (!fixedContentType) {
+      fixedContentType = 'application/octet-stream';
+    }
+
     if (req.headers.range && upstream.status === 206) {
       res.status(206);
       if (upstream.headers['content-range']) {
@@ -104,10 +125,11 @@ export default async function handler(req, res) {
       res.status(200);
     }
 
-    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Type', fixedContentType);
     if (contentLength) res.setHeader('Content-Length', contentLength);
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Content-Disposition', 'inline');
 
     // 流式传输，并等待完成（防止 Vercel 提前终止函数）
     await new Promise((resolve, reject) => {
