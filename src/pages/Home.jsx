@@ -103,42 +103,12 @@ const Home = () => {
     }
   }, [pet])
 
-  // If checking pet data, show loading animation
-  if (isCheckingPet && (!pet || !pet.type)) {
-    return (
-      <div className="min-h-full flex flex-col items-center justify-center gradient-bg p-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="text-5xl mb-4"
-        >
-          🐾
-        </motion.div>
-        <p className="text-gray-400">Loading...</p>
-      </div>
-    )
-  }
-
   // If pet still not loaded, redirect to feed page
   useEffect(() => {
     if (!pet || !pet.type) {
       navigate('/feed', { replace: true })
     }
   }, [pet, navigate])
-
-  if (!pet || !pet.type) {
-    return (
-      <div className="min-h-full flex items-center justify-center gradient-bg">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-          className="text-4xl"
-        >
-          🐾
-        </motion.div>
-      </div>
-    )
-  }
 
   const learnedSkills = pet?.learnedSkills || []
 
@@ -539,6 +509,39 @@ const Home = () => {
     return `${hours}h`
   }
 
+  // ===== 提前渲染分支（必须放在所有 Hook 声明之后、任何 pet.X 同步访问之前！） =====
+  // If checking pet data, show loading animation
+  if (isCheckingPet && (!pet || !pet.type)) {
+    return (
+      <div className="min-h-full flex flex-col items-center justify-center gradient-bg p-4">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="text-5xl mb-4"
+        >
+          🐾
+        </motion.div>
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    )
+  }
+
+  // If pet still not loaded
+  if (!pet || !pet.type) {
+    return (
+      <div className="min-h-full flex items-center justify-center gradient-bg">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+          className="text-4xl"
+        >
+          🐾
+        </motion.div>
+      </div>
+    )
+  }
+
+  // ——— 以下同步代码可以安全访问 pet.X（上面的守卫已保证 pet 存在且有 type） ———
   const stageInfo = getStageName(pet.level || 1)
 
   return (

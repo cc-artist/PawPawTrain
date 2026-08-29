@@ -27,7 +27,9 @@ export default function AudioStatusBadge() {
   const color = status.ok ? 'bg-green-500' : status.state === 'suspended' ? 'bg-amber-500' : status.state === 'failed' ? 'bg-red-500' : 'bg-slate-500'
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100] flex items-center gap-2">
+    // 🔊 放页面右上角：避免被底部 Navbar（z-[10000] 级）遮挡
+    // 同时 z-index 提升到 20000，确保高于任何模态/导航
+    <div className="fixed top-4 right-4 z-[20000] flex items-center gap-2">
       {showTip && (
         <div className="max-w-[240px] rounded-lg bg-slate-900/95 px-3 py-2 text-xs text-slate-100 shadow-xl ring-1 ring-white/10">
           {status.msg}

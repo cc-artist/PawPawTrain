@@ -514,13 +514,27 @@ export default function GamePage() {
       // 开局消耗积分（后端校验余额并扣减，积分不足则拒绝开局）
       const resp = await gameAPI.startGame({ tier: opp.tier })
       if (!resp.data?.success) {
-        throw new Error(resp.data?.error || `Starting a battle costs ${ENTRY_FEE} points`)
+        const errMsg = resp.data?.error
+        const msg = typeof errMsg === 'string' ? errMsg
+          : errMsg?.message ? String(errMsg.message)
+          : `Starting a battle costs ${ENTRY_FEE} points`
+        throw new Error(msg)
       }
       if (typeof resp.data.points === 'number') {
         updateUserPoints(resp.data.points)
       }
     } catch (err) {
-      const msg = err.response?.data?.error || err.message || `Not enough points. Starting a battle requires ${ENTRY_FEE} points`
+      let msg
+      const respErr = err.response?.data?.error
+      if (typeof respErr === 'string') {
+        msg = respErr
+      } else if (respErr && typeof respErr === 'object' && respErr.message) {
+        msg = String(respErr.message)
+      } else if (typeof err.message === 'string' && !err.message.includes('[object')) {
+        msg = err.message
+      } else {
+        msg = `Not enough points. Starting a battle requires ${ENTRY_FEE} points`
+      }
       setMenuMsg(`⚠️ ${msg}`)
       alert(`⚠️ ${msg}`)
       startingRef.current = false

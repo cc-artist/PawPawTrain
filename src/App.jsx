@@ -27,7 +27,6 @@ import AdminDashboard from './pages/AdminDashboard'
 import AdminLogin from './pages/AdminLoginPage'
 import { UploadProvider } from './context/UploadContext'
 import PetPostUploader from './components/PetPostUploader'
-import AudioStatusBadge from './components/AudioStatusBadge'
 import { bindGlobalUnlock } from './utils/audio'
 import { useUpload } from './context/UploadContext'
 import useStore from './store/useStore'
@@ -406,7 +405,6 @@ function AppContent() {
         </div>
         {!isAdminRoute && <Navbar />}
         {!isAdminRoute && <UploadModal />}
-        <AudioStatusBadge />
       </UploadProvider>
     </PostsProvider>
   )

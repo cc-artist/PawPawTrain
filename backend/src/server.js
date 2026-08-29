@@ -124,6 +124,29 @@ app.get('/api/media-proxy', async (req, res) => {
     const contentType = response.headers['content-type'];
     const contentLength = response.headers['content-length'];
 
+    // ====== 🔧 2026-08-29「只有声音没画面」根因修复：
+    // 前端 <video> 的 src 是同源 /api/media-proxy?url=...（无 .mp4 扩展名），
+    // 当上游 Cloudinary 偶尔返回「application/octet-stream / binary/octet-stream / 空」这类不明确 MIME 时，
+    // Chromium MIME sniff 会优先把它当成音频（只解 audio track → 播放出来就是 "只有声音 videoWidth=0"）。
+    // 修复：按真实目标 URL 的扩展名 + /video/upload/ 路径特征，强制指定准确 MIME（video/mp4、image/webp…），
+    // 让浏览器 demuxer 走视频分支 → videoWidth/Height 立刻有值。
+    const pathname = urlObj.pathname || '';
+    const isVideoPath = pathname.includes('/video/upload/') || /\.(mp4|mov|webm|ogg|m4v|mkv|3gp)(\?|$)/i.test(pathname);
+    const isImagePath = pathname.includes('/image/upload/') || /\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/i.test(pathname);
+    let fixedContentType = contentType || '';
+    if (isVideoPath) {
+      // 视频扩展名到 MIME 的精确映射
+      const ext = (pathname.match(/\.(mp4|mov|webm|ogg|m4v|mkv|3gp)(\?|$)/i) || [])[1]?.toLowerCase() || 'mp4';
+      const mimeMap = { mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', ogg: 'video/ogg', m4v: 'video/x-m4v', mkv: 'video/x-matroska', '3gp': 'video/3gpp' };
+      fixedContentType = mimeMap[ext] || 'video/mp4';
+    } else if (isImagePath) {
+      const ext = (pathname.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?|$)/i) || [])[1]?.toLowerCase() || 'jpeg';
+      const mimeMap = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif' };
+      fixedContentType = mimeMap[ext] || 'image/jpeg';
+    } else if (!fixedContentType) {
+      fixedContentType = 'application/octet-stream';
+    }
+
     if (range && response.status === 206) {
       res.status(206);
       res.set('Content-Range', response.headers['content-range']);
@@ -131,11 +154,13 @@ app.get('/api/media-proxy', async (req, res) => {
       res.status(200);
     }
 
-    if (contentType) res.set('Content-Type', contentType);
+    res.set('Content-Type', fixedContentType); // 🔧 用补全后的 MIME（不用上游的模糊值）
     if (contentLength) res.set('Content-Length', contentLength);
     res.set('Accept-Ranges', 'bytes');
     res.set('Cache-Control', 'public, max-age=86400');
     res.set('Access-Control-Allow-Origin', '*');
+    // 🔧 强制 inline（告诉浏览器直接用 video/img element 渲染，不要弹下载对话框）
+    res.set('Content-Disposition', 'inline');
 
     response.data.pipe(res);
 
