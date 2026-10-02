@@ -998,40 +998,32 @@ const Feed = () => {
                         </motion.div>
                       )}
                     </AnimatePresence>
-                    {/* 视频错误提示：展示 MediaError.code + 中文解释 + 重播/跳过两个按钮 */}
+                    {/* 视频错误：优雅降级为静态占位卡片（错误详情仅输出到控制台，不再打断界面） */}
                     <AnimatePresence>
                       {videoError && (
                         <motion.div
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 20 }}
-                          className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/75 px-4"
+                          className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-4 bg-gradient-to-b from-black/85 via-black/80 to-black/90"
                           style={{ zIndex: 25 }}
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <div className="text-4xl">⚠️</div>
+                          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-cyber-purple/50 to-cyber-blue/50 flex items-center justify-center ring-1 ring-white/10 shadow-2xl">
+                            <span className="text-5xl">{currentPost?.emoji || '🎬'}</span>
+                          </div>
                           <p className="text-white text-base font-semibold">{t('feed.videoError')}</p>
-                          {videoErrorMsg && (
-                            <div className="w-full max-w-sm rounded-lg bg-white/10 px-3 py-2 text-xs text-white/90 break-all ring-1 ring-white/10">
-                              <div className="mb-1 font-medium text-orange-300">Error / 错误码：{videoErrorMsg}</div>
-                              <div className="text-white/70 leading-5">
-                                • VIDEO_TRACK_NO_OUTPUT：<b className="text-white">「只有声音没画面」</b>专属错误，视频轨在 2s 内无任何像素输出 → 已自动尝试 Cloudinary H.264 转码源；仍不显示请点下方「🔁 H.264 转码源重试」或切换 Fit。
-                                <br />• MEDIA_ERR_ABORTED(1)：请求被中断，可能是 CDN 临时限流，点「重试」一般可恢复。
-                                <br />• MEDIA_ERR_NETWORK(2)：网络错误/跨域失败，建议「跳过到下一条」。
-                                <br />• MEDIA_ERR_DECODE(3)：视频流损坏或浏览器不支持该编码（高码率/10bit/H.265 都可能），<b className="text-white">点「🔁 转码源」</b>可强制切 H.264 720p/480p 解码兼容源。
-                                <br />• MEDIA_ERR_SRC_NOT_SUPPORTED(4)：格式不支持或该资源在云端不存在。
-                              </div>
-                            </div>
-                          )}
-                          <div className="flex flex-wrap items-center justify-center gap-2">
+                          <p className="text-white/50 text-xs -mt-2">{t('feed.videoUnavailableHint')}</p>
+                          <div className="flex items-center gap-3 mt-1">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
+                                if (videoErrorMsg) console.warn('[VIDEO] retry, last error:', videoErrorMsg)
                                 setVideoError(false)
                                 setVideoErrorMsg('')
                                 const v = videoRef.current
                                 if (v) {
                                   applyVideoMuted(true)
-                                  // 强制重新 load + 带时间戳绕过 CDN 坏缓存
                                   try {
                                     const raw = v.getAttribute('src') || v.currentSrc || currentPost?.media || ''
                                     const sep = raw.includes('?') ? '&' : '?'
@@ -1041,48 +1033,9 @@ const Feed = () => {
                                   v.play().then(() => { setVideoPlaying(true); restoreUserMutedAfterPlay(); }).catch(() => setVideoError(true))
                                 }
                               }}
-                              className="px-4 py-2 bg-orange-500/90 hover:bg-orange-500 text-white rounded-full text-sm transition-all shadow-lg"
+                              className="px-5 py-2 bg-cyber-blue/80 hover:bg-cyber-blue text-white rounded-full text-sm transition-all shadow-lg"
                             >
-                              🔄 Retry / 重试
-                            </button>
-                            {/* ====== 🔧「只有声音没画面」专属按钮 1：手动强制切 Cloudinary H.264 转码源（vc_h264,w_720,h_720,c_limit,q_auto） */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                // 当前默认 720p → 再点就换 480p；480p 再点就回 720p（循环尝试）
-                                const preset = transcodeTier === '720p' ? '480p' : '720p'
-                                const v = videoRef.current
-                                const src = (v?.currentSrc || currentPost?.media || '')
-                                const fallback = getCloudinaryTranscodeFallback(src, preset)
-                                setVideoError(false)
-                                setVideoErrorMsg('')
-                                setTranscodeTier(preset)
-                                if (v && fallback) {
-                                  v.src = proxyMediaUrl(fallback)
-                                  applyVideoMuted(true)
-                                  v.load()
-                                  v.play().then(() => { setVideoPlaying(true); restoreUserMutedAfterPlay(); }).catch(() => setVideoError(true))
-                                }
-                              }}
-                              className="px-4 py-2 bg-purple-500/90 hover:bg-purple-500 text-white rounded-full text-sm transition-all shadow-lg"
-                              title="强制切 Cloudinary vc_h264 H.264 转码源（720p → 480p），专治「只有声音没画面 / 编码不兼容」"
-                            >
-                              🔁 H.264 转码源重试
-                            </button>
-                            {/* ====== 🔧「只有声音没画面」专属按钮 2：object-fit 手动切换 cover ↔ contain（极端横纵比时 contain 两侧留黑边看起来"没画面"，cover 会铺满） */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setFrameFit(prev => (prev === 'cover' ? 'contain' : 'cover'))
-                                const v = videoRef.current
-                                if (v) {
-                                  try { v.style.objectFit = (frameFit === 'cover' ? 'contain' : 'cover') } catch (_) {}
-                                }
-                              }}
-                              className="px-4 py-2 bg-slate-600/80 hover:bg-slate-600 text-white rounded-full text-sm transition-all shadow-lg"
-                              title="视频画面铺满方式：cover=裁剪留画面(不黑边) / contain=保留全画面(可能黑边)"
-                            >
-                              🖼️ Fit: {frameFit === 'cover' ? 'Cover(铺满)' : 'Contain(全显)'}↔
+                              🔄 {t('common.retry')}
                             </button>
                             <button
                               onClick={(e) => {
@@ -1091,31 +1044,9 @@ const Feed = () => {
                                 setVideoErrorMsg('')
                                 handleNext()
                               }}
-                              className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white rounded-full text-sm transition-all ring-1 ring-white/20"
+                              className="px-5 py-2 bg-white/15 hover:bg-white/25 text-white rounded-full text-sm transition-all ring-1 ring-white/20"
                             >
-                              ⏭ Skip / 跳过到下一条
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                // 用后端 media-proxy 兜底走同源：跨域/证书问题一般可通过代理绕过
-                                setVideoError(false)
-                                setVideoErrorMsg('')
-                                const v = videoRef.current
-                                const src = currentPost?.media || ''
-                                if (v && src.startsWith('http')) {
-                                  // 用 vc_h264 转码源走 proxy（更小，更可能低于 Vercel 4.5MB 限制）
-                                  const transcodeSrc = getCloudinaryTranscodeFallback(src, transcodeTier === '480p' ? '480p' : '720p')
-                                  const proxyUrl = '/api/media-proxy?url=' + encodeURIComponent(transcodeSrc && transcodeSrc !== src ? transcodeSrc : src)
-                                  v.src = proxyUrl
-                                  applyVideoMuted(true)
-                                  v.load()
-                                  v.play().then(() => { setVideoPlaying(true); restoreUserMutedAfterPlay(); }).catch(() => setVideoError(true))
-                                }
-                              }}
-                              className="px-4 py-2 bg-blue-500/80 hover:bg-blue-500 text-white rounded-full text-sm transition-all shadow-lg"
-                            >
-                              🔁 Try via Proxy / 后端代理重试
+                              ⏭ {t('common.skip')}
                             </button>
                           </div>
                         </motion.div>

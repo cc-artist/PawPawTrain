@@ -88,6 +88,7 @@ const translations = {
     play: { zh: '播放', en: 'Play' },
     pause: { zh: '暂停', en: 'Pause' },
     videoError: { zh: '视频加载失败', en: 'Video load failed' },
+    videoUnavailableHint: { zh: '网络或视频源暂时不可用，可稍后重试', en: 'Network or media source temporarily unavailable, try again later' },
   },
   shop: {
     myPoints: { zh: '我的积分', en: 'My Points' },
@@ -510,6 +511,8 @@ const translations = {
     cancel: { zh: '取消', en: 'Cancel' },
     confirm: { zh: '确认', en: 'Confirm' },
     close: { zh: '关闭', en: 'Close' },
+    retry: { zh: '重试', en: 'Retry' },
+    skip: { zh: '下一条', en: 'Next' },
     submit: { zh: '提交', en: 'Submit' },
     loading: { zh: '加载中...', en: 'Loading...' },
     success: { zh: '成功', en: 'Success' },
