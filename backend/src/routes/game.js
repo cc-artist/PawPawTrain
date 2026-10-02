@@ -34,14 +34,30 @@ const createGameRoutes = (dataStore) => {
   }
 
   // 在持久化用户数据中定位当前用户（users 以 username / email 为键，同一用户可能是两个键）
+  // Serverless 环境（Vercel 等）冷启动后内存用户数据为空：
+  // 基于有效 JWT 自动重建用户记录（与 /api/auth/login 的自动注册逻辑一致，初始积分 500），
+  // 确保持有有效 token 的用户始终可以开局/结算，不再返回 404。
   function findUser(authUser) {
     const usersObj = dataStore.users || {};
-    return (
+    const found =
       usersObj[authUser.username] ||
       usersObj[authUser.email] ||
-      Object.values(usersObj).find((u) => u.id === authUser.id) ||
-      null
-    );
+      Object.values(usersObj).find((u) => u.id === authUser.id);
+    if (found) return found;
+
+    if (!authUser || (!authUser.username && !authUser.email)) return null;
+    const rebuilt = {
+      id: authUser.id || Date.now().toString(36) + Math.random().toString(36).slice(2),
+      username: authUser.username || String(authUser.email).split('@')[0],
+      email: authUser.email || `${authUser.username}@pawtrain.com`,
+      points: 500,
+      createdAt: new Date().toISOString(),
+    };
+    if (authUser.username) usersObj[authUser.username] = rebuilt;
+    if (authUser.email) usersObj[authUser.email] = rebuilt;
+    dataStore.users = usersObj;
+    persistUsers();
+    return rebuilt;
   }
 
   // OPTIONS 预检处理（确保 CORS 预检通过）
@@ -59,13 +75,13 @@ const createGameRoutes = (dataStore) => {
       const { tier = 0 } = req.body || {};
       const user = findUser(req.user);
       if (!user) {
-        return res.status(404).json({ success: false, error: '用户不存在' });
+        return res.status(404).json({ success: false, error: 'User not found' });
       }
       const balance = Number(user.points) || 0;
       if (balance < ENTRY_FEE) {
         return res.status(400).json({
           success: false,
-          error: `积分不足，开局需要消耗 ${ENTRY_FEE} 积分（当前仅 ${balance} 积分）`,
+          error: `Insufficient points: a battle costs ${ENTRY_FEE} points (you have ${balance})`,
           need: ENTRY_FEE,
           balance,
         });
@@ -75,7 +91,7 @@ const createGameRoutes = (dataStore) => {
       res.json({ success: true, points: user.points, entryFee: ENTRY_FEE, tier: Number(tier) || 0 });
     } catch (error) {
       console.error('Game start failed:', error.message);
-      res.status(500).json({ success: false, error: '开局失败，请稍后再试' });
+      res.status(500).json({ success: false, error: 'Failed to start the battle, please try again' });
     }
   });
 
@@ -85,12 +101,12 @@ const createGameRoutes = (dataStore) => {
    */
   router.post('/record', authMiddleware, (req, res) => {
     try {
-      const { opponentId = 'unknown', opponentName = '神秘对手', result = 'lose', damageDealt = 0, damageTaken = 0, score = 0 } = req.body || {};
+      const { opponentId = 'unknown', opponentName = 'Mystery Rival', result = 'lose', damageDealt = 0, damageTaken = 0, score = 0 } = req.body || {};
 
       const record = {
         id: uuidv4(),
         userId: String(req.user.id),
-        username: req.user.username || req.user.name || '玩家',
+        username: req.user.username || req.user.name || 'Player',
         opponentId: String(opponentId),
         opponentName: String(opponentName),
         result, // 'win' | 'lose' | 'draw'
@@ -123,7 +139,7 @@ const createGameRoutes = (dataStore) => {
       res.json({ success: true, record, points, pointsEarned });
     } catch (error) {
       console.error('Game record save failed:', error.message);
-      res.status(500).json({ success: false, error: '保存对局记录失败' });
+      res.status(500).json({ success: false, error: 'Failed to save the battle record' });
     }
   });
 
@@ -138,7 +154,7 @@ const createGameRoutes = (dataStore) => {
       if (!stats[key]) {
         stats[key] = {
           userId: key,
-          username: r.username || '玩家',
+          username: r.username || 'Player',
           games: 0,
           wins: 0,
           losses: 0,
